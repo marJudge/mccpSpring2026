@@ -1,0 +1,59 @@
+\section{Introduction}
+
+Graphs have been widely used in a lot of emerging applications, including bioinformatics, chemi-informatics, software engineering, and computer vision. Nearest neighbor (NN) search is a fundamental query in graph databases \cite{KL2004navigating, KR2002, CoverTree}. Graph edit distance (GED) is one of the most widely used distance measure in NN search \cite{Nass}. However, exact NN search in a large database is too time consuming due to the NP-hardness of GED computation. Therefore, approximate NN (ANN) search becomes promising as it can significantly reduce the time cost with a slight reduce of accuracy.  
+
+% Proximity graph (PG) is the state of the art index for ANN search. .... Most existing PGs focus on the Euclidean space. However, the space of graphs is not an Euclidean space. The space and time complexity of existing PGs do not hold in graph space. 
+
+The space $\mathcal U$ = $(M, d)$ is a metric space, where $M$ is the set of graphs and $d$ is GED. Proximity graph (PG) is the state-of-the-art index for ANN search in metric spaces. The key idea of PG is to transform the time cost from online to offline. Given a database, build an index in advance, and use the index to accelerate searching step. PG can be used repeatedly.
+
+Existing PGs fall into two extremes. At one extreme, the PGs are designed for the ANN search in the general metric space, where $\tt HNSW$ \cite{hnsw} is the latest work. $\tt HNSW$  empirically has poly-log search time of the database size $N$. However, the search accuracy of $\tt HNSW$ has no guarantee. At the other extreme, the PGs are designed for the ANN search in the Euclidean space. $\tt MRNG$ \cite{nsg}, $\tau$-$\tt MG$ \cite{tauMG} are the latest works. $\tt MRNG$ and $\tau$-$\tt MG$ can be adapted to the general metric space while assuring to find the exact NN of $Q$ if $Q\in {\mathcal D}$ and $d(Q, NN)<\tau$, respectively. However, the search time complexities of $\tt MRNG$ and $\tau$-$\tt MG$ are $O(N)$ in the general metric space. 
+
+
+In this paper, we study a practical setting, which falls between the two extremes. It is motivated by the observation that the space of GED obtains three good properties for constructing a PG and fast searching: restricted expansion rate, one-heap distribution and discreteness. This three properties will be discussed in Section~\ref{sec-method}.
+
+
+The works in the first category study ANN search in the general metric space. $\tt MRNG$ \cite{nsg}, $\tau$-$\tt MG$ \cite{tauMG}, and $\tt HNSW$ \cite{hnsw} are the latest works in this category. $\tt MRNG$ and $\tau$-$\tt MG$ guarantee to find the exact NN of $Q$ if $Q\in {\mathcal D}$ and $d(Q, NN)<\tau$, respectively. However, the search time complexities of $\tt MRNG$ and $\tau$-$\tt MG$ are $O(N)$ in the general metric space, where $N$ is database size. $\tt HNSW$  empirically has poly-log search time of $N$. However, the search accuracy of $\tt HNSW$ has no guarantee. The works in the second category study ANN search in the metric space with bounded doubling dimension. $\tt CoverTree$ \cite{CoverTree} is the latest index in this category. $\tt CoverTree$ guarantees that the ANN search takes $O(c^{10}\log N)$ to find a exact answer, where $c$ is the doubling factor of the metric space. The doubling factor of a metric space is the maximum ratio of the number of points in a ball of radius $2r$ to a ball of radius $r$ with the same center.
+
+
+% We prove that if the distribution of graphs is normal, the doubling factor will be stable with the growth of $n$.
+
+
+We observe that the doubling factor of the space {\em $\mathcal{U}$} of real-world graphs is $n^\alpha$, where $n$ is the largest graph size and $f_{GED}(\alpha)$ is the heap of GED distribution. Therefore, the time complexity of ANN search of $\tt CoverTree$ is $O(n^{10\alpha}\log N)$. Although $\alpha$ is proved to be nearly a constant in the Section~\ref{sec-method}, the search time complexity is still not satisfying.
+
+In this paper, we propose a new index, namely \ourPG. Based on our observation, there always exists a constant $H^*$ in database of GED space, such that when the distance larger than $H^*$, the space follows the property of growth-restricted space, and when the distance smaller than $H^*$, the expansion rate is also bounded by another property (details in Section~\ref{sec-method}). The time complexity of the nearest neighbor search of \ourPG is reduced to $O(C_{\delta}^5 \times \log_{2}{(H_{max}-H^*)}+C_{\epsilon}^{2\tau +1}\times H^*)$, where $C_{\delta}$ and $C_{\epsilon}$ are two expansion factor of the GED space (to be introduced in Section~\ref{sec-preliminaries} in detail). 
+
+
+
+For GED computation, $A^*$ search is the widely-accepted method. A lower bound of GED is used to guide the $A^*$ search. The tightness of the lower bound is critical for the performance of $A^*$ search. $\tt BED$ \cite{bed} is currently the  tightest lower bound with polynomial time complexity. In this paper, we propose a new lower bound of GED, namely $\tt uBED$, and prove that $\tt uBED$ is tighter than $\tt BED$ and the time complexity of $\tt uBED$ is the same as $\tt BED$.
+
+
+\begin{table*}
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}\hline
+Method  & space requirement & index time & index size & query time & guarantee \\\hline
+\hline
+$\tt HNSW$ & metric space & $O(N)$ & $O(N)$ & $O(N)$ & None\\\hline
+$\tt MRNG $ & Euclidean space & $O(N^2)$ & $O(N^2)$ & $O(N)$ & Exact$^*$\\\hline
+$\tt KR \cite{KR2002}$ & growth-restricted space & $O(N\log N \log \log N)$ & $O(N\log N)$ & $O(\log N)^{**}$ & $Exact$\\\hline
+$\tt Navigating\ net \cite{KL2004navigating}$ & doubling space & $2^{O(dim(S))}N\log \Delta \log \log \Delta$ & $O(N)$ & $ 2^{O(dim(S))}\log{\Delta + (1/\epsilon)^{O(dim(S))}}$ & $(1+\epsilon)$-opt\\\hline
+$\tt CoverTree \cite{CoverTree}$ & growth-restricted space & $O(c^{10} N\log N)$ & $O(N)$ & $O(c^{10} \log N)$ & $Exact$\\\hline
+
+\end{tabular}
+\caption{Summary on related work ($c$ denotes the doubling factor of the growth-restricted space, $dim$ denotes the KL-dimension of the doubling space, $\Delta$ denotes the spread (the ratio of maximum distance to the minimum distance) of the database, $N$ denotes database size, and $^*$ means $Q\in {D}$, $^{* *}$ means with high probability.}
+\label{tab:sumRW}
+\end{table*}
+
+\noindent
+{\bf Contributions.} The contributions of this paper are as follows.
+
+\begin{itemize}
+\item We take an in-depth study of the properties of GED space.
+\item According to the properties of GED space, we proposes a novel index called \ourPG, which reduces the search time complexity.
+% \item We proposes a tighter lower bound of GED, which can accelerate the GED computation.
+\end{itemize}
+
+% When recall is 0.95 and 0.98, our method is about 2.7x to 47x and 2.6x to 25x faster than existing methods on well-known real-world datasets, respectively.
+
+\noindent
+{\bf Organizations.} The rest of this paper is organized as follows. Section~\ref{sec-related} discusses the related work. The preliminaries are presented in Section~\ref{sec-preliminaries}. Section~\ref{sec-GEDspace} discuss the space of GED. Section~\ref{sec-method} presents \ourPG and our lower bound. 
+$\tau MNG${} is presented in Section~\ref{sec-tauMNG}. The experimental evaluation is presented in Section~\ref{sec-expt}. Section~\ref{sec-conc} concludes this paper. For presentation clarity, we put the detailed proofs in Section~\ref{appendix}.

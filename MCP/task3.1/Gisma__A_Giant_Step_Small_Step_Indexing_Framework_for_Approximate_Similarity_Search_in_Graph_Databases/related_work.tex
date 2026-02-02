@@ -1,0 +1,42 @@
+\section{Related Work}
+\label{sec:related-work}
+\eat{In this section, we first review methods for similarity search in doubling spaces, then summarize existing studies on graph similarity search, including exact and approximate methods.}
+
+
+\eat{
+Existing methods for similarity search in general metric spaces can be categorized into four groups: (1) \emph{Tree-based methods} \cite{ANNTree,SpillTree}, which hierarchically partition the metric space and prune unpromising subtrees; (2) \emph{Quantization-based methods} \cite{jegou2010PQ,gao2024rabitq, gou2025symphonyqg}, which approximate high-dimensional vectors by using discrete codebooks to significantly reduce computational costs; (3) \emph{Hashing-based methods} \cite{MetricLSH_David,MetricLSH_Eric,tian2023db,wei2024detlsh}, which partition data points into buckets by hashing, allowing efficient retrieval from nearby buckets; and (4) \emph{Graph-based methods} \cite{nsg,nssg,hnsw,l2route,gbdtpg}, which index the database using proximity graphs and employ greedy routing to answer $\ssq$s. Readers can refer to recent surveys \cite{PGSurveyIS,PGSurveyVLDB21} for more comprehensive discussions.
+}
+
+\noindent\textbf{Similarity search in doubling space}
+Several studies~\cite{KR2002, navnet, CoverTree} observed that similarity search queries
+can be answered more efficiently in metric spaces with bounded intrinsic dimensionality.
+Specifically, Karger et al.~\cite{KR2002} introduced the \emph{expansion constant} $c$ to measure the growth of metric spaces.
+\yk{
+In a metric space, for any point $p$ in the space and any radius $r$, a ratio is defined between the number of points within a ball of radius $2r$ and that within a ball of radius $r$, both centered at $p$.
+The maximum of this ratio over all $p$ and $r$ is defined as the \emph{expansion constant} $c$ of the space.
+}
+Based on this constant, a sampling-based index for nearest neighbor search was designed in \cite{KR2002};
+Similar to \cite{KR2002}, Krauthgamer and Lee~\cite{navnet} proposed the \emph{doubling constant} $\lambda$, which is defined as the minimum number of balls having radius $r$ by which a ball with radius $2r$ can be covered. Then, they proposed the $\mathsf{Navigating}$-$\mathsf{nets}$ index, which guarantees $(1+\epsilon)$-approximate nearest neighbor searches.
+Beygelzimer et al.~\cite{CoverTree} proposed $\mathsf{cover}$-$\mathsf{tree}$, achieving search complexity $O(c^{12}\log N)$, where $N$ is the dataset size. Izbicki and Shelton~\cite{izbicki2015faster} proposed parallel algorithms for constructing and searching in cover trees.
+Recently, Elkin and Kurlin~\cite{compressedCoverTree} proposed a compressed version of the cover tree, providing a rigorous complexity analysis.
+Another hierarchical structure, the $\mathsf{Net}$-$\mathsf{tree}$~\cite{NetTree}, organizes data into hierarchical subsets ($r$-nets) using the doubling constant to efficiently answer queries.
+\yk{
+Some studies observed that the doubling property of metric spaces can vary substantially across different regions or scales, and proposed corresponding notions and structures such as \emph{nearly doubling spaces}~\cite{gottlieb2013proximity} and the \emph{t-restricted doubling dimension} with the \emph{net-forest} index~\cite{choudhary2015local}.
+}
+
+
+\stab
+\noindent\textbf{Exact graph similarity search.}  
+The {\em filtering-and-verification} framework \cite{qgram, GEDNPhard, MLIndex, SEGOS, inves, NassGED, LSaICDE20, LBMaTKDE22} is widely adopted for graph similarity search. Here,  we briefly review a few recent representative $\ged$ methods.
+
+
+Specifically, Fankhauser et al. \cite{riesen2007speeding} proposed a practical $\ged$ computation method \emph{A$^*$GED} by adopting the best-first search strategy. To improve A$^*$ search for $\ged$ verification, Chang et al. \cite{LSaICDE20} proposed $\mathsf{AStar}$-$\mathsf{LSa}$, which reduces search space by discarding dummy vertices, rearranging matching order, and providing a tighter lower bound ($\mathsf{LSa}$). They subsequently introduced an even tighter lower bound ($\mathsf{BMao}$) in $\ABMao$ \cite{LBMaTKDE22}, which is the SOTA method for non-index-based graph similarity search. Abu-Aisheh et al. \cite{DFGED} and Gouda and Hassaan \cite{CSIGED} proposed the $\mathsf{DF}$-$\mathsf{GED}$ and $\mathsf{CSI}$-$\mathsf{GED}$ methods, respectively, using a depth-first search strategy. Kim \cite{inves} proposed a tight lower bound method, called $\mathsf{Inves}$, integrated into an index-based method $\Nass$ \cite{NassGED}, the SOTA for index-based $\ged$ search. However, it is costly to construct the $\Nass$ index, as it requires $O(N^2)$ $\ged$ computations.
+
+\stab
+\noindent{\bf Approximate graph similarity search.}  
+Several studies address approximate graph similarity search \cite{ghash, LAN, graphsim}. Qin et al. \cite{ghash} proposed $\GHashing$, which employs hash codes and continuous embeddings as machine-learning-based filters for candidate selection, and then, verified by exact $\ged$. $\LAN$ \cite{LAN} enhances a proximity graph to query graph databases, which proposes learning-based initial point selection and neighbor pruning to reduce $\ged$ computations.
+
+\eat{Exact $\ged$ computation quickly becomes expensive as graph size or distance increases. Thus, } 
+Machine-learning-based methods \cite{bai2019simgnn, noah, GREED, GEDGNN} are proposed to approximate $\ged$. Specifically, $\mathsf{SimGNN}$ \cite{bai2019simgnn} employs graph convolutional networks (GCNs) and neural tensor networks for $\ged$ prediction. $\mathsf{Noah}$ \cite{noah} integrates the A$^*$-beam search with a \emph{Graph Path Network (GPN)} heuristic. $\mathsf{GREED}$ \cite{GREED} enables a linear-time $\ged$ prediction. $\mathsf{GEDGNN}$ \cite{GEDGNN} jointly predicts $\ged$ values and vertex mappings. These approaches provide practical approximations when exact $\ged$ computations do not finish. Cheng et al. \cite{cheng2025computing} proposed $\GEDHOT$, an ensemble method that combines a supervised inverse optimal transport model ($\GEDIOT$) with an unsupervised Gromov–Wasserstein–based model ($\GEDGW$). It reports state-of-the-art accuracy for machine-learning based approximate GED estimation. 
+
+Recently, Xu et al. \cite{xu2025graph} proposed a heuristic approximate $\ged$ computation method $\AppBMao$, which adapts the A$^*$ search framework with an iteration limit mechanism to achieve speedup with limited accuracy loss. 

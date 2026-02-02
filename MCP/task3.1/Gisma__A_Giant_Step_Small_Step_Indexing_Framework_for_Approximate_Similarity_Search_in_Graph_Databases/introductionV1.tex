@@ -1,0 +1,303 @@
+\section{Introduction}
+
+
+Similarity search in graph databases aims to retrieve graphs that are similar to a given query graph. It is a fundamental problem with a wide range of applications, including bioinformatics, cheminformatics, software engineering, and computer vision \cite{MCP, ChemExample, parsk, LigandGED, naderi2016graph, zhuTKDE20, GEDdynamicEmb, DFGED, ghash, SoftworeExample, SEGOS}. 
+For example, in bioinformatics, molecular structures can be naturally represented as graphs, and a typical task is to search a compound database for molecules whose structures are similar to that of a given drug molecule. 
+
+For graph similarity search, the \emph{graph edit distance} ($\ged$), which is the number of edit operations that transforms a graph into another, has been widely used as the similarity metric~\cite{bai2019simgnn, noah, ghash, LAN, inves, NassGED, LSaICDE20, LBMaTKDE22}.
+Specifically, given a query graph and a distance threshold $\tau$, the task of graph similarity search is to retrieve all graphs from the database whose graph edit distance to the query is within $\tau$. 
+As $\ged$ computation is NP-hard~\cite{starVLDB09}, performing similarity search over large graph databases is computationally expensive, and hence, a variety of approximate methods have been proposed to accelerate graph similarity search in recent years. 
+% In general, these works fall into two categories: 
+% (i) reducing the number of $\ged$ computations by approximate indexing or pruning techniques; and 
+% (ii) accelerating individual $\ged$ computations by approximate estimation methods.
+
+
+\stab
+\noindent\textbf{Existing solutions.}
+In general, works on approximate graph similarity search fall into two categories: (i) reduction on the number of $\ged$ computations and (ii) acceleration on individual $\ged$ computations. 
+For category (i), GHashing~\cite{ghash} leverages graph neural networks with hashing for efficient filtering, while LAN~\cite{LAN} modifies the HNSW framework for graph databases to support $\aknn$ queries. 
+For category (ii), App-BMao~\cite{xu2025graph} extends the state-of-the-art exact method AStar-BMao~\cite{LBMaTKDE22} by introducing an iteration limit to approximate $\ged$, achieving speedups at the cost of slight accuracy loss, 
+whereas GEDHOT~\cite{cheng2025computing} adopts an ensemble strategy, combining supervised and unsupervised models for approximate $\ged$ estimation. 
+% Although App-BMao and GEDHOT are fundamentally $\ged$ estimation methods rather than direct solutions for graph similarity search, their original studies evaluate them on $\aknn$ query tasks by performing exhaustive traversal.
+
+
+% However, as $\ged$ computation is NP-hard, performing similarity search over large graph databases is computationally expensive, so a practical way to accelerate the searching process is to reduce the number of $\ged$ computations through indexing.
+
+
+\begin{figure}[t]
+  \centering
+  \begin{minipage}[t]{0.33\linewidth}
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/index_introduction/r-net-expansion-rate.png}
+    \vspace{0ex}
+    \subcaption{}
+    \label{fig:r-net}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.65\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/index_introduction/graph_edit_path.png}
+    \vspace{-4ex}
+    \subcaption{}
+    \label{fig:graph_edit_path}
+  \end{minipage}
+  
+  \vspace{-3ex}
+  \caption[Examples of $r$-net and graph edit path]{(a) 
+%   An example of doubling constant $\lambda$, expansion constant $c$, and $r$-net. All the black markers (solid dots and small circles) represent data points in the database $\mathcal{X}$.
+% The constants $\lambda$ and $c$ are defined globally as $\max_{p,r}\lambda(p,r)$ and $\max_{p,r}c(p,r)$, respectively, 
+% and the figure illustrates how $\lambda(p,r)$ and $c(p,r)$ are computed. 
+% In addition, the set $Y=\{p_1,\ldots,p_6\}$ forms an $r$-net of $\mathcal{X}$: (i) the balls $B(p_i,r)$ cover all points in $\mathcal{X}$, and (ii) any two centers $p_i,p_j$ satisfy $d(p_i,p_j)\ge r$
+A simple illustration of doubling metrics, where all the black markers (solid dots and small circles) represent data points in database $\mathcal{X}$ such that the set $Y=\{p_1,\ldots,p_6\}$ forms an $r$-net of $\mathcal{X}$;
+%In addition, the set $Y=\{p_1,\ldots,p_6\}$ forms an $r$-net of $\mathcal{X}$;
+%(b) A graph edit path from $G$ to $G'$ with the sequence of operations $[O_1,O_2,O_3]$: $O_1$ inserts vertex $v_5$, $O_2$ inserts edge $(v_1,v_5)$, and $O_3$ relabels vertex $v_4$. The sequence length is $3$, which equals the graph edit distance $d(G,G')$.
+(b) A graph edit path  $[O_1,O_2,O_3]$ that transforms graph $G$ into graph $G'$, resulting in a $\ged$ of 3 between them.}
+
+
+  \label{fig:combined_rnet_editpath}
+  \vspace{-2ex}
+\end{figure}
+
+
+The classic concept of doubling metrics is widely used in metric spaces~\cite{navnet, CoverTree, NetTree, izbicki2015faster, compressedCoverTree}, 
+since it enables the construction of indexes that reduce the number of distance computations during query processing. In this work, we adopt the doubling metrics to accelerate the query process.
+%\lv{one sentence to cue the application of doubling metrics.}
+
+\stab 
+\noindent
+\textbf{Doubling metrics.} 
+A metric space $(\mathcal X, d)$ is \emph{doubling} if it has a finite \emph{doubling constant} $\lambda$, 
+defined as the smallest number such that, for every $p \in \mathcal X$ and every $r>0$, 
+the ball $B(p,2r)$ can be covered by at most $\lambda$ balls of radius $r$.
+ For later use, we denote the covering number of a given $p$ and $r$ by $\lambda(p,r)$.\footnote{$\lambda = \max_{p,r}\,\lambda(p,r)$, where $\lambda(p,r) = \min\{ k : B(p,2r) \subseteq \bigcup_{i=1}^k B(p'_i,r) \}$.}
+We call such a metric space a \emph{doubling space} for concise presentation. Here, $B(p,r) = \{ q \in \mathcal{X} \mid d(p,q) \le r \}$ denotes the ball centered at $p$ with radius $r$. 
+Besides doubling constant $\lambda$, the \emph{expansion constant} $c$ is another perspective to measure the expansion rate, defined as the maximum ratio $|B(p,2r)|/|B(p,r)|$ over all $p$ and $r$.\footnote{$c = \max_{p,r}\,c(p,r)$, where $c(p,r) = |B(p,2r)|/|B(p,r)|$.} 
+For later use, we denote the ratio for a given $p$ and $r$ by $c(p,r)$. 
+We remark that $\lambda \le c^4$~\cite{navnet}.
+These constants directly influence the search time complexity: for example, the search time complexities of Net-tree~\cite{NetTree} and Cover Tree \cite{CoverTree} are $O(\lambda^{O(1)}\log N)$ and $O(c^{12}\log N)$, respectively, where $N$ is the size of the database. 
+Intuitively, a large expansion rate leads to large fanout in the indexes, which significantly increases the query cost. \yk{In such indexes, each node $p$ corresponds to a ball $B(p, r(p))$ that covers the data points within distance $r(p)$ of $p$, 
+where higher layers are associated with larger radii $r(p)$. 
+During top-down query traversal, balls that cannot contain answers are pruned to minimize distance computations.
+}
+
+
+\begin{figure}[t]
+    \centering
+    \subcaptionbox{\label{fig:ged_small}}
+    [0.49\columnwidth]{%
+        \includegraphics[width=\linewidth]{figures/ged_dist/ged_frequency_under_15.png}}
+    \hfill
+    \subcaptionbox{\label{fig:ged_cp}}
+    [0.49\columnwidth]{%
+        \includegraphics[width=\linewidth]{figures/ged_dist/expansion_constant_under_15.png}}
+    \vspace{-2ex}
+    \caption[Distributions of $\ged$ and $c(p,r)$]{(a) Distribution curve of pairwise $\ged$s in the AIDS dataset (graphs with at most 15 vertices). The area under the curve up to $r$ is proportional to $|B(p,r)|$, and the ratio $|B(p,2r)|/|B(p,r)|$ is $c(p,r)$; 
+    (b) Variation of $c(p,r)$ in the same setting. Three cases of doubling methods efficiency: I. Efficient, II. Inefficient, and III. Efficiency sensitive to $r$.}
+    \label{histo}
+    \vspace{-2ex}
+\end{figure}
+
+
+
+
+\stab
+\noindent\textbf{Our proposal.}
+To the best of our knowledge, {\em doubling metrics have not been explored in the context of GED-based graph similarity search}. 
+We take the first step to investigate doubling metrics in the $\ged$ space by examining the distribution of $\ged$s on real world datasets. 
+Based on our analysis on the distributions, we propose a new indexing framework, called \textbf{Gi}ant-\textbf{S}tep-\textbf{Sma}ll-Step ($\net$), that exploits the two-stage phenomenon of the $\ged$ space. Specifically, $\net$ combines \emph{giant steps} in $\upperpart$ for identifying the subspace that contains answers (a.k.a the candidate region), and \emph{small steps} in $\lowerpartfull$ for fine-grained search and pruning within the candidate region.
+\begin{itemize}[wide, labelwidth=!, labelindent=0pt]
+
+\item\textbf{Observation on $\ged$ distributions.}
+Figure~\ref{histo}(a) shows the exact $\ged$ distribution for graphs in the AIDS dataset with at most 15 vertices, 
+since computing all pairwise exact $\ged$ values for the entire dataset is too time-consuming to complete. 
+Figure~\ref{histo}(b) shows the values of $c(p,r)$ computed from the same setting. 
+Our observations are:
+
+First, Figure~\ref{histo}(a) reveals a clear unimodal distribution of $\ged$s: the frequency rises rapidly, reaches a peak, and then decays gradually into a long tail. 
+This pattern is consistent across different databases, suggesting an intrinsic property of a part of the $\ged$ space.\footnote{%
+The distribution is consistent with 
+the one of approximate $\ged$ computed by GREED~\cite{GREED} on the entire AIDS dataset. 
+We adopt GREED since it is currently the fastest approximate $\ged$ computation method 
+that achieves a mean absolute error (MAE) of only 1.059 on the AIDS dataset.
+}
+
+\eat{
+Second, Figure~\ref{histo}(a) can also be interpreted from the perspective of balls in the metric space: 
+for a given point $p$ and radius $r$, the area under the curve up to $r$ corresponds to $|B(p,r)|$, and the ratio $|B(p,2r)|/|B(p,r)|$ gives the local expansion constant $c(p,r)$ (whose maximum over $p,r$ is the expansion constant $c$). 
+Figure~\ref{histo}(b) directly plots $c(p,r)$ as a function of $r$, which clearly shows a \emph{two-stage phenomenon}: 
+(i) for small $r$, the rapid rise of $|B(p,r)|$ makes $c(p,r)$ very large
+(ii) for large $r$, $|B(p,r)|$ already covers a significant proportion of the distribution, and $c(p,r)$ stabilizes around a small value
+Moreover, three cases of doubling methods efficiency can be identified: case I (efficiency sensitive to $r$), case II (inefficient due to large $c(p,r)$), and case III (efficient with small and stable $c(p,r)$). 
+In case II, large $c(p,r)$ values cause the query complexity of doubling methods such as the cover tree to become high. 
+In case I, the sensitivity of $c(p,r)$ to small changes in $r$ makes doubling-based guarantees unstable and unreliable. 
+This illustrates the two-stage behavior of the $\ged$ space in terms of doubling metrics. 
+Cases I and II, which concentrate in the small $\ged$ stage, are unsuitable for doubling methods, while only case III enables efficient use of them.
+}
+
+
+\yk{
+Second, besides showing the overall pairwise $\ged$ frequency, Figure~\ref{histo}(a) can also be interpreted by fixing a graph $p$ and viewing the distribution of distances from $p$ to all other graphs~\cite{hoeffding1992class}. 
+From this perspective, the area under the curve up to radius $r$ is $|B(p,r)|$, and the ratio of the areas at $2r$ and $r$ is $c(p,r)$. The distribution curves reveal a clear two-stage phenomenon of the $\ged$ space:
+When $r$ is small, the rapid rise of $|B(p,r)|$ makes $c(p,r)$ very large; 
+when $r$ is large, $c(p,r)$ remains small and stable. 
+As shown in Figure~\ref{histo}(b), there are three cases that affect the efficiency of doubling methods: 
+Cases I and II in the small-$\ged$ stage, where large or unstable $c(p,r)$ makes doubling methods inefficient, 
+and Case III in the large-$\ged$ stage, where $c(p,r)$ is small and stable and doubling methods become efficient. 
+}
+
+
+
+
+\item\textbf{$\net$ index.}
+Building on the above insights, $\net$ consists of two stages. The first stage, $\upperpart$, leverages doubling metrics when $\ged$s are large: it organizes a database of graphs into a hierarchical structure that allows traversal by giant steps, efficiently narrowing down the search space to a small region of the $\ged$ space. Importantly, in $\upperpart$, we apply doubling-based indexing only when $\ged \ge \alpha$, where the doubling constant is $\lambda_{\alpha}=\max_{p,r\ge\alpha}\lambda(p,r)$. The query processing of $\upperpart$ starts from the top layer and traverses down. It terminates in the leaf layer, where the distance threshold $\alpha$ is reached. The set of graphs near this leaf graph is considered the candidate region, and the graphs in the region are a candidate set.
+The second stage, $\lowerpartfull$ ($\lowerpartshort$), focuses on fine-grained querying within the candidate region identified by $\upperpart$. It organizes the candidate graphs into a tree-structured index, called $\lowerpartsinglefull$, which indexes the graph edit paths between graphs and enables search in $\ged$ subspaces in \emph{small steps}. The two-stage design enables $\net$ to achieve both high efficiency and high recall.
+
+
+\end{itemize}
+
+\stab
+\noindent
+{\bf Contributions.} The contributions of this paper are as follows.
+\begin{itemize}[leftmargin=\parindent, topsep=0pt, itemsep=0pt]
+\item By analyzing the expansion rate of the $\ged$ space, we observe that it exhibits a two-stage phenomenon as the $\ged$ varies. Motivated by this,
+%observation, 
+we propose a novel two-stage indexing framework called $\net$ for approximate graph similarity search.
+\item For the first stage of $\net$, we propose a hierarchical index~called $\upperpart$, which efficiently identifies a candidate region by exploiting the doubling metrics. $\upperpart$ supports \emph{giant-step} traversals and achieves $O(\lambda_{\alpha}^{\log_2{20}} \cdot \phi)$ worst-case query time, where $\lambda_{\alpha} = \max_{p,r \geq \alpha}\lambda(p,r)$. This achieves the lowest query time complexity among existing doubling-based methods. The design of threshold $\alpha$ avoids the high complexity of doubling-based methods when $\ged$ is small.
+\item For the second stage of $\net$, we propose an index structure that indexes graph edit paths, called $\lowerpartfull$, which enables searches in \emph{small steps} within the candidate regions identified by $\upperpart$. 
+%The search proceeds in \emph{small steps} and incorporates 
+To minimize the number of $\ged$ computations, 
+we further propose pruning techniques based on structural properties of $\ged$, including path-based pruning and look-ahead subtree pruning.
+\item We conduct comprehensive experiments on four widely-used benchmark datasets (AIDS, PubChem, Chemical1M, and SYN) against six
+representative
+%baselines
+methods. The results show that $\net$ outperforms %existing
+these methods in almost all cases. The speedups are more significant when $\tau$s are~large.
+%at larger values of $\tau$.
+\end{itemize}
+
+\noindent
+\stab
+{\bf Organization.} 
+The rest of this paper is organized as follows.  Section~\ref{sec:preliminaries} introduces the preliminaries and formally defines the problem. Section~\ref{sec:analysis} analyzes the $\ged$ space and presents our cost model for determining the threshold $\alpha$. Sections~\ref{sec:ND} and~\ref{sec:EPT} detail the two stages of $\net$: $\upperpart$ for search in giant steps in the GED space and $\lowerpartfull$ for small-step search, respectively. Section~\ref{sec:exp} presents comprehensive experimental evaluations. Section~\ref{sec:related-work} reviews related work. Section~\ref{sec:conclusion} concludes the paper.
+
+% \footnotetext{\url{https://cactus.nci.nih.gov/download/nci/AID2DA99.sdz}}
+
+
+% There have been works on applying similarity search/approximate $k$-nearest neighbor ($\aknn$) search in metric spaces ${\mathcal U}({\mathcal G}, d)$ to graph similarity search, as $\ged$ is a metric \cite{serratosa2019graph}, where ${\mathcal U}$ denotes the space, ${\mathcal G}$ is a set of graphs (or more generally, data points) and $d$ is the distance function between two points. 
+% Existing methods can be described with two extremes of the assumptions on the {\em expansion rate}, where the expansion rate $c$ measures "how fast the metric space grows" — specifically, $c$ quantifies the number of times more covering balls are needed when the search radius doubles, corresponding to two commonly used definitions: the {\em expansion constant} and the {\em doubling constant}. These two constants are closely related (see Section \ref{sec:related-work} for their precise relationship).
+
+% There have been works on applying similarity search/approximate $k$-nearest neighbor ($\aknn$) search in metric spaces ${\mathcal U}({\mathcal G}, d)$ to graph similarity search, as $\ged$ is a metric \cite{serratosa2019graph}, where ${\mathcal U}$ denotes the space, ${\mathcal G}$ is a set of data points (or, in this context, graphs) and $d$ is the distance function between two points.
+
+\eat{
+\choi{Challenges}
+
+Existing methods can be described with two extremes of the assumptions on the {\em expansion rate}, where the expansion rate measures ``how fast the metric space grows''. Specifically, the expansion rate can be formulated in two closely related ways (see Section \ref{sec:related-work} for their precise relationship): the {\em doubling constant} $\lambda$, which uses a covering-based formulation - a ball $B(p, 2r)$ in a doubling space can be covered by $\lambda$ balls with radius $r$; and the {\em expansion constant} $c$, which uses a counting-based formulation - the ratio of the number of points $|B(p,2r)|/|B(p,r)|$ when radius doubles. Here, $B(p,r)$ denotes the set of all points $p'$ such that $d(p, p') \leq r$ (\ie the ball centered at $p$ with radius $r$), and $|B(p,r)|$ denotes the number of points within the ball.
+
+At one extreme, the expansion rate is assumed to be bounded by a constant. In particular, a space with a constant {\em doubling constant} $\lambda$ is called a doubling space. By exploiting the fact that the expansion rate is constant in such doubling spaces, Nearest Neighbor Search (NNS) methods build hierarchical indices to accelerate search. $\tt NavNet$ \cite{navnet} and $\tt CoverTree$ \cite{CoverTree} and their variants \cite{compressedCoverTree, gu2022parallel, elkin2023new} are the latest methods that require this assumption. \choi{{\bf (later)} Their search time complexity is $O(\lambda^{O(1)}\log N)$ or $O(c^{12}\log N)$, where $N$ is the number of points in the database.}
+
+\choi{Discussion of Figure 1(a) and 1(b) directly here. i) Mention the right-hand side of the distribution. ii) how the methods of the first extreme are efficient for pruning. iii) give an example of time complexity.}
+
+\choi{same handling of the methods in another extreme. i) the left-hand side of the distribution. ii) the prior methods will not be efficient (large fanout) to keep high recall. iii) the constants in the time complexity of the first exteme methods will be large?}
+
+Methods at the other extreme assume that the expansion rate is not bounded. These do not utilize the expansion properties of the space, and thus cannot achieve the acceleration benefits that come from exploiting the geometric structure. $\tt HNSW$ \cite{hnsw}, $\tt MRNG$ \cite{nsg}, and $\tau$-$\tt MG$ \cite{tauMG} are the latest works of AKNN search, which are general in metric spaces. Among them, the search accuracy and search time complexity of $\tt HNSW$ has no theoretical guarantee. \choi{{\bf (later)} Although $\tt MRNG$ and $\tau$-$\tt MG$ find the exact Nearest Neighbor (NN) $R$ of $Q$ when $d(Q,R)=0$ and $d(Q,R)<\tau$, respectively, the number of distance computations (NDCs) of $\tt MRNG$ and $\tau$-$\tt MG$ are $O(N)$ time in metric spaces.}
+
+
+\choi{Other existing solution.}
+In addition to these metric-space methods, a number of recent approaches have been developed specifically for $\ged$ computation or graph similarity search. 
+AStar-BMao~\cite{LBMaTKDE22} is the state-of-the-art in exact $\ged$ verification, employing an A$^*$ framework with a carefully designed lower bound; App-BMao~\cite{xu2025graph} follows the same framework but introduces an iteration limit to approximate $\ged$, achieving significant speedup with small accuracy loss. 
+GEDHOT~\cite{cheng2025computing} is an ensemble approach that combines supervised and unsupervised models for approximate $\ged$ estimation. 
+Beyond $\ged$ computation, GHashing~\cite{ghash} employs graph neural networks and hashing techniques for approximate graph similarity search, while LAN~\cite{LAN} adapts the hierarchical navigable small world (HNSW) framework to graph databases for efficient $\aknn$ search. 
+Nass~\cite{NassGED} provides an index-based solution for exact similarity search by precomputing pairwise distances within a given $\ged$ range and applying triangle inequality–based pruning. 
+These methods represent the current landscape of graph similarity search, but none of them systematically exploit the structural properties of the $\ged$ space, which motivates our work.
+
+\choi{Our solution}
+In this paper, we study the approximate graph similarity search with the $\ged$ metric under a practical setting between the two extremes: {\it the expansion rate is a distance-dependent function}, varying with the search radius rather than being a global constant. 
+As shown in Figure~\ref{histo}(a) and (b), which present the frequency distributions of pairwise $\ged$s computed on the AIDS dataset, $\ged$ exhibits a clear unimodal distribution with a peak. We can set a threshold $\alpha$ (e.g., around the peak) that effectively separates the distribution into two parts with clearly different trends of expansion: for distances below $\alpha$, the metric space expands rapidly with increasing radius; and for distances above $\alpha$, the expansion rate stabilizes at a small value.
+
+ 
+
+This frequency distribution not only captures the global pairwise distance statistics but also reveals the $\ged$ distribution from an individual graph to the rest of the database. From the single-graph perspective, there are very few graphs that have small distances to the graph, followed by an explosive growth in the number of graphs as the distance increases towards $\alpha$, and finally a long-tail distribution beyond $\alpha$. This pattern directly determines the expansion rate behavior: when $d < \alpha$, the rapid growth means that $|B(p, 2r)|$ can be orders of magnitude larger than $|B(p, r)|$, resulting in a large value of the expansion rate; when $d > \alpha$, the growth rate decreases significantly, yielding a small and stable expansion rate. This reveals the limitation of traditional doubling-based methods (such as $\CoverTree$) in $\ged$ spaces in practice. The search complexity of $\CoverTree$ is $O(c^{12}\log N)$. When the expansion rate reaches extremely large values at small scales, the search time becomes prohibitively large.
+
+
+
+
+
+\eat{
+\begin{figure}[t]
+\centering
+\includegraphics[scale=0.35]{figures/dimsetting}
+\caption{A comparison of \yk{$c=O(\alpha log_2n)?$} ($N$ is the number of objects in the database.)}
+\vspace{-1ex}
+\label{fig:dimsetting}
+\vspace{-2ex}
+\end{figure}
+}
+
+
+In this paper, we propose a new index, called $\net$. $\net$ comprises two parts that exploit the dual nature of the $\ged$ space, with the threshold $\alpha$ determined through a cost model (detailed in Section~\ref{sec:analysis}) to minimize search cost. When $d \geq \alpha$, we exploit the fact that the $\ged$ space behaves as a doubling metric with a small doubling constant to build a hierarchical index $\upperpart$. In this index, each layer is an $r$-net (mentioned in Definition \ref{def:r-net}). The value of $r$ from top to bottom is $2^{l-1}\alpha, 2^{l-2}\alpha, \ldots, 2\alpha, \alpha$, totaling $l$ layers. The search proceeds from the top layer to the bottom layer. During the search, only one node $p$ is maintained at each layer, and our method guarantees that all results lie within $B(p, r + 2\tau)$, where $\tau$ is the similarity search range. As $r$ decreases as the layer increases, the final range for the candidate answers narrows down accordingly. For $d < \alpha$, we build a novel index called $\lowerpartsinglefull$ ($\lowerpartsingleshort$) for each point in the $\alpha$-net (\ie the last layer of $\upperpart$). All $\lowerpartsingleshort$s collectively form the $\lowerpartfull$ ($\lowerpartshort$). Each $\lowerpartsingleshort$ consists of a tree rooted at a point in the $\alpha$-net and its nearby points. Based on the range determined by the search in $\upperpart$, we identify which $\lowerpartsingleshort$ indices may contain answers, and then perform a fine-grained search with several pruning techniques in these $\lowerpartsingleshort$s.
+
+
+\noindent
+\stab
+{\bf Contributions.} The contributions of this paper are as follows.
+\begin{itemize}[leftmargin=\parindent]
+\item We evaluate the $\ged$ space and observe that when the distance between graphs exceeds a threshold $\alpha$, the space behaves as a doubling metric with a small expansion rate, whereas for smaller distances the expansion rate grows rapidly.
+Based on this observation, we design a novel indexing scheme and its corresponding search methods for the graph approximate similarity search.
+\item We propose the hierarchical index structure $\upperpart$, which utilizes the properties of a doubling space for ``coarse localization'', for identifying candidate query answers (\ie filtering non-answers). Its DAG-based navigation facilitates traversals of the $\ged$ space in giant steps, achieving $O(\lambda_{\alpha}^{\log_2(20)} \cdot \phi)$ worst-case time complexity, where $\lambda_{\alpha}$ is the doubling constant for the $\ged$ $\geq \alpha$ region (where the expansion rate is stable). This avoids the prohibitive search complexity that would result from applying doubling-based methods in regions with excessively large expansion rates.
+\item We propose $\lowerpartfull$ that allows a fine-grained search within the coarse localization identified by $\upperpart$. The search traverses the $\ged$ space in small steps. We propose optimizations that include path-based pruning, look-ahead subtree pruning, and search tree reuse.
+\item We conduct experimental evaluation on four benchmark datasets (AIDS, PubChem, Chemical1M, and SYN) against five state-of-the-art baselines. \choi{The results show that our method outperforms all existing approaches in most cases, with speedups more pronounced at larger values of $\tau$.}
+\end{itemize}
+
+\noindent
+\stab
+{\bf Organization.} 
+The rest of this paper is organized as follows.  Section~\ref{sec:preliminaries} introduces the preliminaries and formally defines the problem. Section~\ref{sec:analysis} analyzes the $\ged$ space and presents our cost model for determining the threshold $\alpha$. Sections~\ref{sec:ND} and~\ref{sec:EPT} detail the two stages of our index: $\upperpart$ for coarse localization and $\lowerpartfull$ for fine-grained search, respectively. Section~\ref{sec:exp} presents comprehensive experimental evaluations. Section~\ref{sec:related-work} reviews related work. Section~\ref{sec:conclusion} concludes the paper.
+
+\begin{table*}[htbp]
+\centering
+\begin{threeparttable}
+\footnotesize  
+%     \setlength{\tabcolsep}{3pt}  
+%     \renewcommand{\arraystretch}{0.9}  
+\caption[Summary of index-based similarity search methods]{Summary of characteristics of index-based similarity search methods}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Methods} & \textbf{Query time complexity} & \textbf{Index size} & \textbf{Construction time complexity} \\
+\hline\hline
+\textsc{NSW}
+& $O(\log N)^*$ 
+& $O(N)$ 
+& $O(N\log N)^*$  \\
+\hline
+\textsc{HNSW}
+& $O(\log N)^*$ 
+& $O(N \log N)$ 
+& $O(N\log N)^*$  \\
+\hline
+\textsc{Cover Tree} 
+& $O(c^{12}\log N)$ 
+& $O(c^6 N)$ 
+& $O(c^6 N\log N)$ \\
+\hline
+\textsc{Net-tree} 
+& $O(\lambda^{O(1)}\log N)$ 
+& $O(\lambda^{O(1)} N)$ 
+& $O(\lambda^{O(1)} N\log N)$ \\
+\hline
+\textsc{$\net$} (Ours)
+& $O(\lambda_{\alpha}^{\log_2(20)} \cdot \phi + |B(Q, 2\alpha + 2\tau)|)$ 
+& $O(\lambda_{\alpha}^{\log_2(10)}N)$ 
+& $O(\lambda_{\alpha}^{O(1)}N \cdot \phi)$  \\
+\hline
+\end{tabular}
+\begin{tablenotes}
+\item[*] Without theoretical guarantee.
+\item $c$: global expansion constant; $\lambda$: global doubling constant (with $\lambda \leq c^4$). Note that both $c$ and $\lambda$ refer to the constants for the entire metric space, in contrast to $\lambda_{\alpha}$ below.
+\item $\lambda_{\alpha}$: doubling constant for the $\ged$ $\geq \alpha$ region (the stable region).
+\item $\phi = O(\log(\Delta/\alpha))$: number of layers in $\upperpart$, where $\Delta$ is the maximum pairwise distance in the database.
+\item $|B(Q, 2\alpha + 2\tau)|$: number of graphs within distance $2\alpha + 2\tau$ from the query $Q$.
+\end{tablenotes}
+\label{tab:complexity}
+\end{threeparttable}
+\end{table*}
+}

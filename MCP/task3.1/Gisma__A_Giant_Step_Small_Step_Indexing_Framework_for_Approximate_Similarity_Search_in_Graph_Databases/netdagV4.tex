@@ -1,0 +1,579 @@
+\section{$\upperpart$: Hierarchical doubling-based index for graphs having large GEDs}
+\label{sec:ND}
+
+In this section, we propose $\upperpart$, a hierarchical doubling-based index designed for indexing graphs having large GEDs using balls with large radii, defined in Definition~\ref{def:netdag}. 
+Then, we describe how $\upperpart$ is constructed from the database and present its query algorithm. 
+Finally, we compare $\upperpart$ with other existing doubling-based indexes to demonstrate that it achieves the lowest query complexity.
+
+\begin{definition}[$\upperpart$]
+\label{def:netdag}
+Given a graph database of $N$ points $\mathcal{D} = \{p_0, p_1, \ldots, p_{N-1}\}$, a threshold $\alpha>0$, 
+a constant $\tau$ with $0 \le \tau \le \alpha$, and an integer $\phi \ge 0$, 
+a $\upperpart$ is defined as a $\phi$-layered DAG 
+\[
+  H = (Y_1, Y_2, \ldots, Y_\phi, E),
+\]
+where:
+\begin{itemize}[wide, labelwidth=!, labelindent=0pt]
+    \item Each layer $Y_i$ is a set of points in $\mathcal{D}$ forming an $(\alpha \cdot 2^i)$-net~\cite{navnet} of $\mathcal{D}$;
+    \item $E = \{(p_j^{i+1}, p_k^i) \mid d(p_j^{i+1}, p_k^i) \le 3\alpha \cdot 2^i + 2\tau\}$,  
+    where $i = 1,\ldots,\phi-1$ and $p_k^i$ denotes the point $p_k$ in layer $Y_i$.
+\end{itemize}
+\end{definition}
+
+
+\noindent\textbf{Remarks.}  
+The top layer is $Y_\phi$, and the leaf layer is $Y_1$.  
+For any node $p_j^{i+1} \in Y_{i+1}$, its children are
+\[
+   \operatorname{children}(p_j^{i+1})
+   := \{\, p_k^i \in Y_i \mid (p_j^{i+1}, p_k^i) \in E \,\}.
+\]
+
+Since a node in $Y_i$ may be connected to multiple nodes in $Y_{i+1}$, $H$ is a DAG rather than a tree. We can analyze a lower query time complexity (see Theorem 4.10) than Net-Tree's.
+
+
+\eat{
+Note that the main difference between $\upperpart$ and 
+Net-Tree~\cite{NetTree} lies in how children are selected for each node:
+each $p_j^{i+1}$ connects to all nodes $p_k^i$ within distance 
+$3\alpha\cdot 2^i + 2\tau$.
+}
+
+
+
+
+\subsection{Index construction}
+\label{sec:ND_construction}
+
+We construct $\upperpart$ based on the greedy permutation 
+(Definition~\ref{def:greedy-permutation}) of the dataset.  
+We follow the incremental construction procedure in~\cite{NetTree} 
+(as introduced in Definition~\ref{def:greedy-permutation}), which iteratively generates 
+the centers.  
+We recall that for each center $p_k$, the value 
+$r_k = \min_{1 \le i < k} d(p_k,p_i)$ denotes its distance to the nearest 
+earlier center, and the sequence ($r_1 \ge r_2 \ge \cdots \ge r_{k-1}$) is non-increasing.
+Using the fact that every prefix $\langle p_1,\ldots,p_k\rangle$ of the greedy 
+permutation forms an $r_k$-net of $\mathcal{D}$, each layer $Y_i$ of $\upperpart$ is obtained 
+by taking the prefix generated when $r_k$ first satisfies 
+$r_k \le \alpha \cdot 2^i$.  
+The procedure terminates when the first $t$ with $r_t \le \alpha$ is reached, 
+at which point the prefix $\langle p_1,\ldots,p_{t-1}\rangle$ forms an $\alpha$-net, denoted as $Y_0$.  
+The detailed construction is as follows.
+
+
+\begin{enumerate}[leftmargin=*]
+
+\item \textbf{Generation of layers.}
+When the radius decreases from $r_{k-1} > \alpha\cdot 2^i$ to 
+$r_k \le \alpha\cdot 2^i$, we generate the $(\alpha\cdot 2^i)$-net layer
+$Y_i := \{p_1,\ldots,p_{k-1}\}$.
+
+\item \textbf{Generation of edges.}
+When the layer $Y_i = \{p_1,\ldots,p_{k-1}\}$ is generated, we assign to each 
+center $q \in Y_{i+1}$ its children drawn from $Y_i$.
+For each such $q$, we check only the points in its friends list (see the discussion of Definition~\ref{def:greedy-permutation})
+that lie in $Y_i$ and add an edge for every $p_\ell \in Y_i$ satisfying 
+$d(p_\ell,q) \le 3\alpha\cdot 2^i + 2\tau$.
+
+\item \textbf{Termination.}
+When $t$ that satisfies $r_t \le \alpha$ is reached, the construction 
+terminates, and the points $\{p_1,\ldots,p_{t-1}\}$ forms the $\alpha$-net $Y_0$.
+
+\end{enumerate}
+
+
+\begin{theorem}
+\label{theorem:upperpart-construction}
+The construction of $\upperpart$ requires
+$O(\lambda_\alpha^{O(1)} N \phi)$ distance computations.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+Section~3.1 and Theorem~3.1 in~\cite{NetTree} analyze the running cost of constructing the greedy permutation using the doubling constant~$\lambda$.
+The number of distance computations performed during this construction is $O(\lambda^{O(1)} N s)$, where $s$
+is the number of distinct radii encountered. In our construction, the radius decreases from
+$\alpha\cdot 2^\phi$ to $\alpha$, which corresponds to $\phi+1$
+distinct radii and hence, $\phi+1$ layers in $\upperpart$.  Since all
+radii used in this prefix satisfy $r\ge\alpha$, the bound remains valid
+with $\lambda$ replaced by $\lambda_{\alpha}$, giving
+$O(\lambda_{\alpha}^{O(1)} N \phi)$ distance computations for generating
+$p_1,\ldots,p_t$.  Moreover, assigning parent--child edges reuses the
+distances already computed when maintaining the \emph{friends lists} and
+therefore incurs no additional distance computations.  The full proof is
+given in Appendix~\ref{appendix:proof-upperpart-construction}.
+\end{proof}
+
+
+
+
+
+
+
+\begin{theorem}
+\label{theorem:upperpart-space}
+The space complexity of $\upperpart$ is $O(\lambda_{\alpha}^{O(1)} N)$.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+We prove the space bound by first showing that $\upperpart$ contains $O(\lambda_\alpha^{O(1)} N)$ nodes, and then showing that each node has at most $\lambda_\alpha^{O(1)}$ children.
+
+For the first part, Appendix~\ref{appendix:upperpart-space} shows that each data point contributes to only $\lambda_\alpha^{O(1)}$ nodes in total in $\upperpart$ (summing over all layers). This follows by combining properties of doubling spaces with the layered $r$-net structure. Since there are $N$ database points, the total number of nodes in $\upperpart$ is $O(\lambda_\alpha^{O(1)} N)$.
+
+For the second part, Corollary~\ref{coro:bounded-children} follows directly from Lemma~\ref{point_count} (the packing bound of Gottlieb et al.~\cite{Gottlieb2014efficient}), applied to the $(\alpha\cdot 2^i)$-net $Y_i$ inside a ball of radius $3\alpha\cdot 2^i + 2\tau$. Thus each node has at most $\lambda_\alpha^{O(1)}$ children.
+
+Combining these two bounds gives a total space of $O(\lambda_\alpha^{O(1)} N)$ for $\upperpart$.
+\end{proof}
+
+
+
+
+
+\subsection{Query algorithm}
+\label{sec:ND_query}
+
+
+\begin{algorithm}[t]
+  \caption{Query Algorithm for $\upperpart$}
+  \label{alg:searchND}
+  \footnotesize
+
+  \SetKwProg{Fn}{Procedure}{}{}
+
+  \KwIn{$H$: $\upperpart$ $(Y_0, Y_1, \ldots, Y_\phi, E)$; $Q$: query graph; $\tau$: threshold}
+  \KwOut{$\mathcal{A}$: set of leaf-layer nodes selected as entry points for the next-stage search}
+
+
+  $\mathcal{A} \gets \emptyset$\;
+  Set the root of $\upperpart$ as $p^{\phi}$\;\label{line:root}
+  \For(\tcp*[f]{decrement of $i$: from root layer to leaf layer}){$i = \phi-1$ \textnormal{to} $1$}{\label{line:for-i}
+
+    $found \gets \textbf{false}$\;\label{line:found-init}
+    \For(){$p^i_j$ \textnormal{such that} $(p^{i+1}, p^i_j) \in E$}{\label{line:for-child}
+      \If(){$d(p^i_j, Q) \le \alpha \cdot 2^i + \tau$}{\label{line:cond-child}
+        $p^i \gets p^i_j$\;\label{line:update-pivot}
+        $found \gets \textbf{true}$\;\label{line:found-true}
+        \textbf{break}\;\label{line:break}
+      }
+    }
+    \If(){$\textnormal{not }found$}{\label{line:not-found}
+      \Return $\emptyset$\;\label{line:return-empty}
+    }
+  }
+  \BlankLine
+  \For(){$p^0_k$ \textnormal{such that} $(p^{1}, p^0_k) \in E$}{\label{line:for-base}
+    \If(){$d(p^0_k, Q) \le \alpha + \tau$}{\label{line:cond-base}
+      $\mathcal{A} \gets \mathcal{A} \cup \{p^0_k\}$\;\label{line:add-base}
+    }
+  }
+
+  \Return $\mathcal{A}$\;\label{line:return-A}
+\end{algorithm}
+
+
+
+
+Algorithm~\ref{alg:searchND} presents the query algorithm for $\upperpart$.
+The algorithm performs a top-down traversal through the hierarchical structure, keeping a single pivot node (which is a ball center) at each layer, and we later prove that this is sufficient to identify all query answers \yk{(see Theorem~\ref{theorem:netdag-correctness}, Theorem~\ref{theorem:entry-correctness}, and 
+Theorem~\ref{theorem:empty-correctness})}.
+Starting with the root of $\upperpart$, denoted as $p^{\phi}$ in the top layer $Y_\phi$ (Line~\ref{line:root}), it iteratively descends through the layers.
+At each layer $i$, it searches for children of the current pivot $p^{i+1}$ that satisfy the distance constraint $d(p^i_j, Q) \leq \alpha \cdot 2^i + \tau$ (Lines~\ref{line:for-child}–\ref{line:cond-child}).
+Algorithm~\ref{alg:searchND} takes the first child that satisfies the distance constraint as the new pivot and proceeds to the next layer (Lines~\ref{line:update-pivot}–\ref{line:break}), without the need to check the remaining children.
+If no such child exists, the algorithm returns empty (Line~\ref{line:return-empty}).
+Upon reaching the layer $Y_1$, we examine the children of the final pivot $p^{1}$ in the layer $Y_0$.
+Those children $p^{0}_k$ that satisfy $d(p^{0}_k, Q) \le \alpha + \tau$ (Lines~\ref{line:for-base}–\ref{line:add-base}) are collected into the set $\mathcal{A}$, as each ball $B(p^{0}_k,\alpha)$ may contain an answer.
+Each node in $\mathcal{A}$ serves as an entry point for the subsequent $\lowerpartfull$ search.
+We remark that as the query descends through the layers, the distance between the pivot and the query graph roughly halves at each step, 
+rapidly narrowing the search space that may contain answers.
+
+
+
+\begin{lemma}
+\label{lemma:root-init}
+Given an $\upperpart$ whose top layer $Y_\phi=\{p^\phi\}$ is an
+$(\alpha\cdot 2^\phi)$-net of the database $\mathcal{D}$,  
+all query answers $g$ with $d(g,Q)\le\tau$ lie in
+$
+B\bigl(p^\phi,\,\alpha\cdot 2^\phi + 2\tau\bigr).
+$
+\end{lemma}
+
+\begin{proof}
+Since $Y_\phi=\{p^\phi\}$ is an $(\alpha\cdot 2^\phi)$-net of $\mathcal{D}$,
+every database graph $g\in\mathcal{D}$ satisfies
+$d(g,p^\phi)\le \alpha\cdot 2^\phi$, and hence
+$\mathcal{D} \subseteq B(p^\phi,\alpha\cdot 2^\phi)$.
+Any query answer $g$ with $d(g,Q)\le\tau$ belongs to $\mathcal{D}$, so
+$d(g,p^\phi)\le \alpha\cdot 2^\phi$.
+By the triangle inequality,
+\[
+d(g,p^\phi)
+  \le d(g,Q)+d(Q,p^\phi)
+  \le \tau + \alpha\cdot 2^\phi
+  < \alpha\cdot 2^\phi + 2\tau.
+\]
+Thus all answers lie in $B(p^\phi,\alpha\cdot 2^\phi + 2\tau)$.
+\end{proof}
+
+
+\begin{lemma}
+\label{lemma:coverage}
+Given an $\upperpart$ and $r=\alpha\cdot 2^i$, 
+for any node $p^{i+1}\in Y_{i+1}$,
+\[
+B(p^{i+1},\,2r+2\tau)
+\;\subseteq\;
+\bigcup_{p^i\in \operatorname{children}(p^{i+1})} B(p^i,\,r).
+\]
+\end{lemma}
+
+\begin{proof}
+Let $x$ be an arbitrary point in $B(p^{i+1},2r+2\tau)$. 
+Since $Y_i$ is an $r$-net of $\mathcal{D}$, there exists $p^i\in Y_i$ such that 
+$d(x,p^i)\le r$, and thus $x\in B(p^i,r)$.
+Furthermore,
+\[
+d(p^{i+1},p^i)
+  \le d(p^{i+1},x)+d(x,p^i)
+  \le (2r+2\tau)+r
+  = 3r+2\tau.
+\]
+By Definition~\ref{def:netdag}, this implies $(p^{i+1},p^i)\in E$, 
+so, $p^i\in\operatorname{children}(p^{i+1})$. 
+\end{proof}
+
+\begin{corollary}
+\label{coro:child-properties}
+Given an $\upperpart$ and $r=\alpha\cdot 2^i$, 
+if all query answers lie in $B(p^{i+1},\,2r+2\tau)$ for some $p^{i+1}\in Y_{i+1}$,
+then there exists a child $p^i\in\operatorname{children}(p^{i+1})$, such that
+\[
+d(p^i,Q)\le r+\tau.
+\]
+\end{corollary}
+
+
+\begin{lemma}
+\label{lemma:answer-ball}
+Given an $\upperpart$ and $r=\alpha\cdot 2^i$, 
+if a pivot $p^i$ at layer $i$ satisfies $d(p^i,Q)\le r+\tau$, 
+then every query answer $g$ with $d(g,Q)\le\tau$ lies inside $B(p^i,\,r+2\tau)$.
+\end{lemma}
+
+\begin{proof}
+Let $g$ be any query answer with $d(g,Q)\le\tau$.
+By the triangle inequality,
+\[
+d(g,p^i)\;\le\; d(g,Q)+d(Q,p^i)\;\le\; \tau + (r+\tau)\;=\; r+2\tau,
+\]
+so $g\in B(p^i,r+2\tau)$.
+Since this holds for every answer $g$, all query answers lie in $B(p^i,r+2\tau)$.
+\end{proof}
+
+\begin{theorem}
+\label{theorem:netdag-correctness}
+In Algorithm~\ref{alg:searchND}, the pivot $p^1$ selected at layer~1 satisfies
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\;\subseteq\;
+B\bigl(p^1,\,2\alpha+2\tau\bigr).
+\]
+\end{theorem}
+
+
+\begin{proof}
+For each layer index $i$, let $r_i = \alpha\cdot 2^i$.
+We prove by an induction on $i$ from $\phi$ to $1$ that
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\;\subseteq\;
+B(p^i,\, r_i + 2\tau).
+\tag{$\star_i$}
+\]
+
+\medskip\noindent
+\textbf{Base case ($i=\phi$).}
+By Lemma~\ref{lemma:root-init},
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\subseteq
+B(p^\phi,\, r_\phi+2\tau),
+\]
+so $(\star_\phi)$ holds.
+
+\medskip\noindent
+\textbf{Inductive step.}
+Assume $(\star_{i+1})$ holds for some $i+1\ge2$, i.e.,
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\subseteq 
+B(p^{i+1},\, r_{i+1}+2\tau)
+= B(p^{i+1},\,2r_i+2\tau).
+\tag{1}
+\]
+Since all points in the set on the left-hand side of (1) lie in this ball,
+Corollary~\ref{coro:child-properties} ensures that there exists a child 
+$p^i$ of $p^{i+1}$ satisfying
+\[
+d(p^i,Q)\le r_i+\tau.
+\]
+By Lemma~\ref{lemma:answer-ball}, such a pivot satisfies
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\subseteq
+B(p^i,\, r_i+2\tau),
+\]
+so $(\star_i)$ holds.
+
+\medskip
+By induction, $(\star_i)$ holds for all $i=\phi,\phi-1,\ldots,1$.  
+By substituting $i=1$ yields
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\subseteq
+B(p^1,\, r_1+2\tau)
+= B(p^1,\, 2\alpha+2\tau).
+\]
+\end{proof}
+
+
+
+\begin{theorem}
+\label{theorem:entry-correctness}
+Let $p^1$ be the pivot returned by Algorithm~\ref{alg:searchND} at layer~1,
+and let $\mathcal{A}$ be the set of layer–0 nodes selected by the algorithm.
+Then
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\;\subseteq\;
+\bigcup_{p^0_k \in \mathcal{A}} B(p^0_k,\, \alpha).
+\]
+\end{theorem}
+
+\begin{proof}
+By Theorem~\ref{theorem:netdag-correctness}, all query answers satisfy
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\subseteq
+B\bigl(p^1,\,2\alpha+2\tau\bigr).
+\tag{1}
+\]
+
+Since $r_0=\alpha$, Lemma~\ref{lemma:coverage} is applied to Layers $1$ and $0$ gives:
+\[
+B(p^1,\,2\alpha+2\tau)
+\subseteq
+\bigcup_{p^0_k:\,(p^1,p^0_k)\in E} B(p^0_k,\,\alpha).
+\tag{2}
+\]
+Combining (1) and (2), every query answer $g$ with $d(g,Q)\le\tau$ lies in
+some ball $B(p^0_k,\alpha)$ for a child $p^0_k$ of $p^1$.
+
+For such a $p^0_k$, we have
+\[
+d(p^0_k,Q)
+\le d(p^0_k,g) + d(g,Q)
+\le \alpha + \tau,
+\]
+so Algorithm~\ref{alg:searchND} includes $p^0_k$ in $\mathcal{A}$.  
+Thus every query answer lies in $B(p^0_k,\alpha)$ for some $p^0_k\in\mathcal{A}$, proving that
+\[
+\{\, g \in \mathcal{D} \mid d(g,Q)\le\tau \,\}
+\;\subseteq\;
+\bigcup_{p^0_k \in \mathcal{A}} B(p^0_k,\, \alpha).
+\]
+\end{proof}
+
+\begin{theorem}
+\label{theorem:empty-correctness}
+If Algorithm~\ref{alg:searchND} returns $\emptyset$, then
+\[
+\{\, g\in\mathcal{D}\mid d(g,Q)\le\tau\,\}=\emptyset.
+\]
+\end{theorem}
+
+
+\begin{proof}
+Assume Algorithm~\ref{alg:searchND} returns $\emptyset$.
+Then there exists a layer $i\in\{1,\ldots,\phi-1\}$ at which 
+no child $p^i$ of $p^{i+1}$ satisfies $d(p^i,Q)\le r_i+\tau$,
+where $r_i=\alpha\cdot 2^i$.
+
+If there existed some $g\in\mathcal{D}$ with $d(g,Q)\le\tau$, then by 
+Corollary~\ref{coro:child-properties}
+there would exist a child $p^i$ of $p^{i+1}$ satisfying
+$d(p^i,Q)\le r_i+\tau$, contradicting the algorithm's observation.
+Hence no such $g$ exists, and the answer set is empty.
+\end{proof}
+
+
+
+
+
+%noindent\textbf{Remark.}
+The correctness 
+of Algorithm~\ref{alg:searchND} can be established by putting Theorem~\ref{theorem:netdag-correctness}, 
+Theorem~\ref{theorem:entry-correctness}, and 
+Theorem~\ref{theorem:empty-correctness} together.  
+% They ensure that keeping a single pivot at each layer in $\upperpart$ is sufficient to preserve answer coverage when descending through the $\upperpart$.
+
+
+
+
+
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.4\linewidth]{figures/index_introduction/ball_contact.png}
+  \vspace{1ex}
+  \caption[Distances in $\upperpart$]{Distances between $p$ and $Q$ in $\upperpart$. 
+If the pivot $p$ satisfies $d(p,Q)\le 2r+\tau$, then $B(p,2r+2\tau)$ covers $B(Q,\tau)$. 
+All children of $p$ lie within $B(p,3r+2\tau)$, and according to Corollary~\ref{coro:child-properties}, there exists a child $p'$ such that $d(p',Q)\le r+\tau$.}
+  \label{fig:ball_contact}
+  \vspace{-2ex}
+\end{figure}
+
+
+\begin{example}
+To illustrate the traversal (as shown in Figure~\ref{fig:ND_overview}), we set $\phi=3$, so that $\upperpart$ shows three layers $Y_\phi, Y_{\phi-1},$ and $Y_1$. Let the root pivot be $p^{\phi}_0 \in Y_\phi$, which satisfies $d(p^{\phi}_0, Q) \le \alpha \cdot 2^{\phi} + \tau$. Then the ball $B(p^{\phi}_0,\, \alpha \cdot 2^{\phi} + 2\tau)$ covers $B(Q,\tau)$. According to Corollary~\ref{coro:child-properties}, we can find one of its children, say $p^{\phi-1}_1 \in Y_{\phi-1}$, such that $d(p^{\phi-1}_1, Q) \le \alpha \cdot 2^{\phi-1} + \tau$. The ball $B(p^{\phi-1}_1,\, \alpha \cdot 2^{\phi-1} + 2\tau)$ still covers $B(Q,\tau)$. Similarly, we select a child of $p^{\phi-1}_1$ in $Y_1$, say $p^{1}_4$, satisfying $d(p^{1}_4, Q) \le \alpha + \tau$. Consequently, the ball $B(p^{1}_4,\, 2\alpha + 2\tau)$ covers $B(Q,\tau)$. The children of $p^{1}_4$ in layer $Y_0$ that may contain answers. The balls form a candidate region of answers.
+\end{example}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{theorem}[Time Complexity of Querying $\upperpart$]
+\label{thm:netdag-search}
+Given a $\upperpart$ with $\phi$ layers, Algorithm~\ref{alg:searchND} completes in $O(\lambda_{\alpha}^{\log_2(20)} \cdot \phi)$ distance computations (NDCs).
+\end{theorem}
+
+\begin{proof}[Proof idea]
+At each layer the pivot has at most $\lambda_{\alpha}^{\log_2(20)}$ children
+(detailed in \yk{Corollary~\ref{coro:uniform-bounded-children}} of Appendix~\ref{sec:appendix}), and the algorithm checks at most this many of them to find the next pivot.
+And there are $\phi$ layers.
+Thus, the overall complexity is $O(\lambda_{\alpha}^{\log_2(20)} \cdot \phi)$.
+A detailed proof is deferred to Appendix~\ref{sec:appendix}.
+\end{proof}
+
+
+
+
+
+
+\subsection{Analysis of $\upperpart$ and other doubling-based indexes }
+\label{sec:comparative-netdag}
+
+
+
+\begin{table*}[t]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3pt}
+\caption{Comparison of $\upperpart$ and representative doubling-based methods ($\kappa=2$)}
+\label{tab:why-netdag-extended}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+\textbf{Index} 
+& \textbf{Child Range} 
+& \textbf{Child Separation} 
+& \textbf{\# Children} 
+& \textbf{Index traversal proceeds to}
+& \textbf{NDC / layer}
+& \textbf{Cand.\ Range} 
+& \textbf{Cand.\ Separation}
+& \textbf{Size of cand.\ set} 
+& \textbf{Dist.\ to $Q$} \\
+\midrule
+
+\textbf{$\upperpart$} 
+& $\textcolor{red}{\mathbf{3r + 2\tau}}$ 
+& $\mathbf{r}$ 
+& $\lambda_{\alpha}^{\log_2 \textcolor{red}{\mathbf{20}}}$ \textit{(or $c_{\alpha}^{\textcolor{red}{\mathbf{6}}}$)} 
+& \textcolor{red}{\textbf{ONE}} child
+& $\lambda_{\alpha}^{\log_2 \textcolor{red}{\mathbf{20}}}$ \textit{(or $c_{\alpha}^{\textcolor{red}{\mathbf{6}}}$)} 
+& N/A 
+& N/A
+& $\textcolor{red}{\mathbf{1}}$
+& $\le \textcolor{red}{\mathbf{\alpha}}+\tau$ \\
+
+\midrule
+\textbf{Net-Tree}~\cite{NetTree} 
+& $2\kappa r$ 
+& $\tfrac{1}{4\kappa}r$ 
+& $\lambda_{\alpha}^{7}$ 
+& all children
+& $\lambda_{\alpha}^{12 + \log_2 13}$ 
+& $13r$ 
+& $\tfrac{1}{4\kappa}r$ 
+& $\lambda_{\alpha}^{5+\log_2 13}$ 
+& $\le 2\alpha+\tau$ \\
+
+\midrule
+\textbf{Navigating Nets}~\cite{navnet}
+& $8r$
+& $r$
+& $\lambda_{\alpha}^{5}$
+& all children
+& $\lambda_{\alpha}^{5+\log_{2} 20}$
+& $d_{\min}(Q,\,\text{cand\_set}) + 2r$
+& $r$
+& $\lambda_{\alpha}^{\log_{2} 20}$
+& $\le 2\alpha+\tau$ \\
+
+\midrule
+\textbf{Cover Tree}~\cite{CoverTree}
+& $2r$
+& $r$
+& $c_{\alpha}^{4}$
+& all children
+& $c_{\alpha}^{9}$
+& $d_{\min}(Q,\,\text{cand\_set}) + 2r$
+& $r$
+& $c_{\alpha}^{5}$
+& $\le 2\alpha+\tau$ \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+
+
+
+
+We compare $\upperpart$ with other representative doubling-based indexes~\cite{NetTree, navnet, CoverTree} and summarize the results in Table~\ref{tab:why-netdag-extended}.
+All these methods organize data points into a hierarchical structure with decreasing radii.
+We denote the radius of the layer $i$ as $r_i=\alpha\cdot 2^i$; and 
+$r$ denotes the current-layer radius $r_i$. For comparison, the ratio of the radius of the parent layer to its child layer is $\kappa=2$, for all methods. That is, $r_i / r_{i-1}$ = 2. (We remark that $\kappa$ of Net-Tree~\cite{NetTree} can be any constant greater than~1.)
+
+Foremost, for methods that specify only ranges and separations while giving asymptotic bounds of the form $\lambda^{O(1)}$, we compute their child count and candidate size using the same packing/counting method as in $\net$ (\ie via Lemma~\ref{point_count} and Corollary~\ref{coro:net-points-ball}) to ensure consistency. Full derivations are deferred to Appendix~\ref{sec:appendix}.
+
+Next, we highlight some columns of Table~\ref{tab:why-netdag-extended} from left to right. Answering a query is done by traversing the index top-down. The efficiency is determined by two crucial factors, namely (i) the per-layer complexity and (ii) the guarantee of the distance to the query. The per-layer complexity equals the product of the number of children per node and the size of the candidate set at the layer. 
+In Table~\ref{tab:why-netdag-extended}, the columns “{\em Child Range}’’ and “{\em Child Separation}’’ indicate the radius of the ball centered at the parent, whereas the latter is the minimum pairwise distance between its children. In the analysis, these two columns are used together to determine the number of children in the ball centered at the parent. 
+Similarly, the “{\em Cand.~Range}’’ and “{\em Cand.~Separation}’’ columns describe the radius of the ball within which the candidates are bounded, and the minimum pairwise distance between them, respectively. They describe the size of the candidate set after pruning, which will be expanded when traversing to the next layer. As the radius of the candidate ball in $\upperpart$ is large and the edge definition of $\upperpart$, the query processing proceeds to one ball of the next layer. In particular, according to Algorithm~\ref{alg:searchND}, the traversal proceeds only to the child $p_j^i \in Y_i$ that satisfies $d(p_j^i, Q) \le r_i + \tau$. This explains the reduced per-layer complexity ("{\em NDC / layer}").
+Also, the columns of “{\em Cand.~Range}’’ and “{\em Cand.~Separation}’’ of $\upperpart$ are not applicable. 
+
+
+
+
+The distance to $Q$ in the table represents the bound of the distance between the query and the centers of candidate balls that require the subsequent search of $\lowerpartfull$. Specifically, according to Algorithm~\ref{alg:searchND}, after identifying the candidate in the leaf layer $Y_1$, $\upperpart$ retrieves its children and selects all candidate balls whose centers satisfy $d(p,Q)\le \alpha+\tau$. In contrast, existing doubling-based methods can only guarantee a bound of $2\alpha+\tau$, or $\ged$ verifications are used to refine their candidate answers.
+
+
+
+
+
+
+

@@ -1,0 +1,29 @@
+%\section{Updates}
+\section{Maintenance of Indexes}
+
+%\subsection{Insert}
+\subsection{Graph Insertion}
+% 当一个新graph$u$插入我们的index的时候，首先设$\tau=0$, 对$u$进行query操作。在query过程中，在{\tt GBH}阶段，若$u$不位于任何一个$R$-ball内（此时$u$位于半径为$R$的一层中）。设$u$与此层最近的$R$-ball的center的距离为$d_u(R)$，若$d_u(R)>2.5R+2\tau$，则$u$不会位于index中任何一个$r$-ball内（$r<R$），且不会有任何一个$R/2$-ball的center $c$满足$d(u,c)\leq 1.5R+2\tau$。这意味着除了$u$本身之外，$u$在$R/2$-ball这层没有child。并且在这种情况下，$R$-ball以及以下的每一层的{\tt GBH}，都要加入$u$作为一个新的center，且除本身之外没有child。
+When a new graph \( g \) is inserted into our index, we first set \( \tau = 0 \) and perform a query operation on \( g \). There are two stages during query processing: {\tt GBH} stage and {\tt ABEH} stage.
+
+In the {\tt GBH} stage, if \( g \) is not located inside any \( R \)-ball. Suppose the query processing reaches a layer of radius \( R \), and let the distance between \( g \) and the closest \( R \)-ball center be \( d_g(R) \).
+\begin{enumerate}[leftmargin=*]
+    \item If \( d_g(R) > 2.5R + 2\tau \), then \( g \) will not be inside any \( r \)-ball (\( r < R \)), and there will be no center \( c \) of any \( R/2 \)-ball satisfying \( d(g, c) \leq 1.5R + 2\tau \). This implies that besides \( g \) itself, it has no children in the \( R/2 \)-ball layer. Furthermore, for every layer from \( R \)-ball and below in {\tt GBH}, \( g \) is added as a new center of a new ball with no children except itself.
+    \item If \( R \leq d_g(R) \leq 2.5R + 2\tau \), and assume \( g \) is within \( B(c', 2R) \), where \( B(c', 2R) \) is a ball at the \( 2R \)-ball layer. We traverse all the children's children of \( B(c', 2R) \) (this range completely covers the potential children's range of \( B(u, 1.5R + 2\tau) \), which is a constant), and set the children within the range of \( B(u, 1.5R + 2\tau) \) as the children of \( g \) at the \( r/2 \) layer.
+    \item If \( g \) is within the \( R \)-ball $B_g$, record its center $c_g$.
+
+\end{enumerate}
+% 若$R\leq d_u(R)\leq 2.5R+2\tau$, 假设$u$位于$B(c',2R)$内，where$B(c',2R)$是{\tt GBH}在$2R$-ball的这一层的ball。遍历$B(c',2R)$的所有的children的children（这个范围完全覆盖$B(u,1.5R+2\tau)$的可能的children的范围，并且是constant），将$B(u,1.5R+2\tau)$范围内的children作为$u$在$r/2$这层的children。
+% 若$u$位于某个$R$-ball内，记录这个ball的id。
+% 自{\tt GBH}的底层向顶层循环，若该层中$u$是center，找到比$u$高两层的$u'$或$u'$所在的ball的center$c_u$。遍历$B(u',2R)$（或$B(c_u,2R)$）的所有的children$ch$(children的个数是常数），若$d(ch, u)\leq 1.5R+2\tau$，则将$u$加入$ch$的children。
+% {\tt ABEH}阶段，若$u$不位于任何{\tt GBH}最底层的ball内， $u$则作为新的pathtree的root。若$u$位于{\tt GBH}最底层的ball的$B(c'', \alpha + 2\tau)$内（这样的ball的个数是常数个），则计算$u$到这些centers的GED path。
+% 综上，对于{\tt GBH}的每一层，最多做了常数次距离计算，最后$u$被插入常数个pathtree，所以insert操作的时间复杂度是$O(log N)$.
+From the bottom to the top layer of {\tt GBH}, if \( g \) is a center at any layer, find the center \( c_g \) of the ball two layers above \( g \) which contains \( g \). Traverse all the children \( ch \) of \( B(u', 2R) \) (or \( B(c_g, 2R) \)) (the number of children is a constant), if \( d(ch, u) \leq 1.5R + 2\tau \), then add \( g \) to the children of~\( ch \).
+
+In the {\tt ABEH} stage, if \( g \) is not within any ball at the bottom layer of {\tt GBH}, \( g \) will be the root of a new path tree. If \( g \) is within \( B(c'', \alpha + 2\tau) \) of the bottom layer of {\tt GBH} (the number of such balls is a constant), then compute the GED path from \( g \) to these centers.
+
+In all, for every layer of {\tt GBH}, at most a constant number of distance computations have been done, and the number of layers is $O(\log N)$. While in the {\tt ABEH} stage, \( g \) is inserted into a constant number of path trees, each cost 1 distance computation. Therefore, the time complexity of the insert operation is \( O(\log N) \).
+
+%\subsection{Delete}
+\subsection{Graph Deletion}
+When a graph \( g \) is deleted from our index, we adopt the masking strategy \cite{xu2022proximity} to preserve the connectivity of our index. Specifically, \( g \) is not removed but can be used in routing; and \( g \) cannot be returned as a query result. The time complexity of deletion is $O(1)$.

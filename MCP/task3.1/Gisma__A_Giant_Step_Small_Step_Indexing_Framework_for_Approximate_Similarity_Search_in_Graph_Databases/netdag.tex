@@ -1,0 +1,316 @@
+\section{NetDAG}
+
+
+
+
+\subsection{Index structure}
+
+
+\begin{definition}
+Given a metric space $(X,d)$ and a constant $\tau$, a geometric net directed acyclic graph (GNDAG) is a layered graph $H_0$, where
+\begin{itemize}
+\item The set of nodes at the $i$-th layer is a $2^i$-net of $X$;
+\item A node $u$ at the $i$-th layer has an edge to each node $v$ at the $i-1$-th layer if $d(u,v)<1.5\times 2^i+2\tau$.
+\end{itemize}
+\end{definition}
+
+
+
+\begin{definition}
+Given a metric space $(X,d)$ and a constant $\tau$, an arithmetic ball directed acyclic graph (ABDAG) is a layered graph $H_1$, where
+\begin{itemize}
+\item A node at the $i$-th layer is a ball with radius $i$;
+\item A ball $B(p, i)$ has an edge to a ball $B(q, i-1)$ for any $q$ located at the shell of $B(p, 2\tau)$.
+\end{itemize}
+\end{definition}
+
+
+
+\begin{definition}
+Given a metric space $(X,d)$, a constant $\tau$, and a parameter $\alpha$, a hybrid dag index (HDI) $\mathcal H$ is a layered graph.
+\begin{itemize}
+    \item $\mathcal H$ totally has $\alpha$ + $\log \Delta$ layers;
+    \item The layers from the $(\log\Delta)$-th layer to the $(\log\alpha)$-th layer are an GNDAG; and
+    \item The layers from the $(\log\alpha)$-th layer to the $1$-st layer are an ABDAG.
+\end{itemize}
+\end{definition}
+
+\begin{lemma}
+Given a metric space $(X,d)$ with expansion rate $c$, an $r$-net $Y_{r}$, and an $(r/2)$-net $Y_{r/2}$ of $X$, for any point $p\in Y_{r}$, the number of points of $Y_{r/2}$ in $B(p, 2^ar)$ is $c^{a+4}$.
+\end{lemma}
+\begin{proof}
+According to our assumption, $\forall q \in (X, d)$ and $r \geq \alpha,$
+\begin{equation}
+    \frac{|B(q, 2r)|}{|B(q, r)|} \leq c. \label{eq:KR-assumption}
+\end{equation}
+
+Let $p'$ be an arbitrary point in $Y_{r/2} \cap B(p, 2^ar)$. $B(p', 2^{a+1}r)$ covers $B(p, 2^ar)$. Then
+\begin{equation}
+    |B(p, 2^ar)| \leq |B(p', 2^{a+1}r)|
+\end{equation}
+Using Eq. (\ref{eq:KR-assumption}) repeatedly, we have
+\begin{equation}
+    |B(p, 2^{a+1}r)| \leq c|B(p, 2^ar)| \leq c|B(p', 2^{a+1}r)| \leq c^{a+4}|B(p', r/4)| \label{eq:continuous_scaling}
+\end{equation}
+Consider a list of balls $L$ containing balls $B(s, r/4)$ where $s \in Y_{r/2} \cap B(p, 2^ar)$. Those balls have no overlap with each other, and they are all covered by $B(p, 2^{a+1}r)$. Therefore,
+\begin{equation}
+    \sum_{s \in Y_{r/2} \cap B(p, 2^ar)}|B(s, r/4)| \leq |B(p, 2^{a+1}r)| \label{eq:sum}
+\end{equation}
+According to Eq. (\ref{eq:continuous_scaling}), 
+\begin{equation}
+    \sum_{s \in Y_{r/2} \cap B(p, 2^ar)}|B(s, r/4)|\leq c^{a+4}|B(p', r/4)| \label{eq:r/4}
+\end{equation}
+Let the number of balls in $L$ be $N_L$. It equals to the number of points of $Y_{r/2}$ in $B(p, 2^ar)$. Note that Eq. (\ref{eq:r/4}) holds for every $p'$ in $Y_{r/2} \cap B(p, 2^ar)$. Let $p'' = \mathop{\arg\min}\limits_{p' \in Y_{r/2} \cap B(p, 2^ar)}|B(p', r/4)|$. 
+\begin{equation}
+    \sum_{s \in Y_{r/2} \cap B(p, 2^ar)}|B(s, r/4)|\leq c^{a+4}|B(p'', r/4)| 
+\end{equation}
+Note that for any $s \in Y_{r/2} \cap B(p, 2^ar)$,
+\begin{equation}
+    |B(s, r/4)|\geq |B(p'', r/4)| 
+\end{equation}
+Therefore,
+\begin{equation}
+    N_L \leq \frac{\sum_{s \in Y_{r/2} \cap B(p, 2^ar)}|B(s, r/4)|}{|B(p'', r/4)|} \leq c^{a+4}
+\end{equation}
+\end{proof}
+
+
+
+\subsection{Index construction}
+
+
+The PG construction algorithm is presented in Figure~\ref{alg:pgbuild}.
+
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{construction above $\alpha$}
+\begin{algorithmic}[1]
+    \Statex \hspace{-3.5ex} {\bf Input: } a metric space $(X,d)$, parameters $\alpha$ and $\tau$
+    \Statex \hspace{-3.5ex} {\bf Output: } $H_0$
+    \State initialize a max-heap $M$, $r_0=\infty$, $i=0$, a list $Y_{r_0}=[]$
+    \State randomly select a point $p_0$ in $X$ and $Y_{r_0}.append(p_0)$
+    \State $p_0.cluster = X\backslash Y_{r_0}$  
+    \State $\overline{p_0} = \arg\max_{q\in p_0.cluster} d(q, p_0)$
+    \State $M.insert((p_0, \overline{p_0}, d(p_0, \overline{p_0})))$ \Comment{$M$ is ordered by $d$}
+    \State $H$ = $[]$ \Comment{initialize the NetDag}
+    \State $r' = r_0$
+    \State $\Phi_{p_0} = \max_{q\in p_0.cluster} d(q, p_0)$
+    \For {$l$ in $[\lfloor\log_2(\Phi_{p_0}/\alpha)\rfloor,..., 2,1]$}
+    \State $r=2^l\alpha$
+    \State $Y_r$ = $\tt net\_build\_step$$(X, d, Y_{r'}, r, M, i, r')$
+    \State $H_0[i] = Y_r$ and $H_0[i].radius$ = $r$
+    \If {$|H_0|>1$} 
+    \For {each point $p$ in $H_0[i-1]$} 
+    \For {each point $q$ in $H_0[i].friends(p)$}  \Comment{$p$ must be in $H_0[i]$}
+    \If {$q\in B(p,1.5\times H_0[i-1].radius+2\tau)$}
+    \State add an edge $(p,q)$ into $H_0$
+    \EndIf
+    \EndFor 
+    \EndFor
+    \EndIf
+    \State $r' = r$ and $i++$
+    \EndFor
+    \State {\bf return} $H_0$ and $i$
+\end{algorithmic} \label{alg:build_above}
+\end{algorithm}
+
+
+
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{ construction below $\alpha$}
+\begin{algorithmic}[1]
+    \Statex \hspace{-3.5ex} {\bf Input: } a metric space $(X,d)$, parameters $\alpha$ and $\tau$, $H_0$
+    \Statex \hspace{-3.5ex} {\bf Output: } $H_1$
+    \State $i$ = the number of levels of $H_0$
+    \State $\mathcal B$ = all balls $B(p,r)$ at the $(i-1)$-th level of $H_0$
+    \While {the radius of the ball in $\mathcal B$ is larger than 1}
+    \For {each $B(p, r)$ in $\mathcal B$}
+    \For {each $q\in$ the shell of $B(p, 2\tau+1)$}
+    \State add $B(q, r-1)$ to $H_1[i]$
+    \State maintain $B(q,r-1+2\tau)$ and $B(q,2\tau+1)$ for $q$
+    \State add edge $(p,q)$ into $H_1$
+    \EndFor
+    \EndFor
+    \State $i++$
+    \State $\mathcal B$ = all balls $B(p,r)$ at the $(i-1)$-th level of $H_1$
+    \EndWhile
+    \State {\bf return} $H_1$
+\end{algorithmic} \label{alg:build_under}
+\end{algorithm}
+
+
+
+
+% \begin{algorithm}[t]
+% \footnotesize
+% \caption{ construction below $\alpha$}
+% \begin{algorithmic}[1]
+%     \Statex \hspace{-3.5ex} {\bf Input: } database $DB$, the upper part of  of $DB$: $ND_{upper}$ 
+%     \Statex \hspace{-3.5ex} {\bf Output: } the lower part of  of $DB$: $ND_{lower}$
+%     \State $H \leftarrow H^*$
+%     \While{$H\ge 1$}
+%         \State $H_{next} \leftarrow H-1$
+%         \For {each center $c_H \in$ the $H$-th layer}
+%             \State $CoverList \leftarrow Cover(c_H)$ \Comment{$Cover(c_H)$ means points covered by $B(c_H, H)$}
+%             \State $CoverQueue \leftarrow CoverList$
+%             \While{$CoverQueue \neq \emptyset$}
+%                 \State $p_{new} \leftarrow CoverQueue.pop()$
+%                 \State $c_{new} \leftarrow$ a generated point such that $d(c_{new}, c_H)+d(c_{new},p_{new})=d(c_H,p_{new})$ \Comment{the time complexity of this step is the same as a GED computation}
+%                 \For{$p \in CoverList$}
+%                     \If{$d(p, c_{new}) \leq H_{next}$}
+%                     \State $Cover(c_{new}).add(p)$
+%                     \EndIf
+%                 \EndFor
+%                 \State $ND_{lower}.add(c_{new})$ \Comment{use Hash to prune the duplicates}
+%                 \State $ND_{lower}.add((c_H, c_{new}))$
+%             \EndWhile
+%         \EndFor
+%         \State $H \leftarrow H_{next}$
+%     \EndWhile
+    
+%     \State {\bf return} $ND_{lower}$
+% \end{algorithmic} \label{alg:build_under}
+% \end{algorithm}
+
+
+
+
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{Build NetDag ($\tt NetDagBuild$)}
+\begin{algorithmic}[1]
+  \Statex \hspace{-3.5ex} {\bf Input: } DB $\mathcal D$, parameters $\alpha$ and $\tau$
+  \Statex \hspace{-3.5ex} {\bf Output: } $\tt NetDag$ of $\mathcal D$
+  \State $H_0$ = $\tt build\_above$$({\mathcal D}, \alpha, \tau)$
+  \State $H_1$ = $\tt build\_below$$(H_0, \alpha, \tau)$
+  \State {\bf return} $(H_0, H_1)$
+\end{algorithmic} \label{alg:pgbuild}
+\end{algorithm}
+
+
+\begin{theorem}
+Given a database $\mathcal D$ of $N$ graphs, the time to construct $H_0$ is $O(N (\log_2 N) (\log_2 (n^2 - \alpha))$.
+\end{theorem}
+
+
+\begin{proof}
+Since the number of layers in $H_0$ is $\log_2 (n^2 - \alpha)$ and the time for each layer is $O(N\log_2 N)$, the total time complexity is $O(N (\log_2 N) (\log_2 (n^2 - \alpha))$.
+\end{proof}
+
+
+\begin{theorem}
+Given a database $\mathcal D$ of $N$ graphs, the time to construct $H_1$ and the size of $H_1$ is $O(n^{(4\tau+2)\alpha} N)$.
+\end{theorem}
+
+
+\begin{proof}
+Since each ball $B$ has $n^{4\tau+2}$ children, each point in $B$ can be contained in $O(n^{4\tau+2})$ children, and the number of layers in $H_1$ is $\alpha$, the total time to construct $H_1$ is $O(n^{(4\tau+2)\alpha} N)$.
+\end{proof}
+
+
+
+
+
+
+
+\subsection{ANN Search Algorithm}
+
+
+The search algorithm on our PG is presented in Figure~\ref{alg:pgsearch}.
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{Search algorithm ($\tt Search$)}
+\begin{algorithmic}[1]
+  \Statex \hspace{-3.5ex} {\bf Input: } $(H_0, H_1)$ of DB $\mathcal D$, query $Q$
+  \Statex \hspace{-3.5ex} {\bf Output: } NN $R$ of $Q$
+  \State ball $B(p,r)$ = the root of $H_1$
+  \State {\bf return} $\tt search\_step$$(H_0,H_1,Q,B(p,r))$
+  \vspace{1ex}
+  \State {\bf function} $\tt search\_step$$(H_0,H_1,Q,B(p,r))$
+  \If {$r = 1$}
+  \State {\bf return} the point in $B(p,2\tau+1)$ that is the closest to $Q$ 
+  \EndIf
+  \For {each child $B'(q,r')$ of $B$}
+  \If {$d(Q,q)\leq r'+\tau$}
+  \State $\tt search\_step$$(H_0,H_1,Q,B'(q,r'))$
+  \EndIf
+  \EndFor
+\end{algorithmic} \label{alg:pgsearch}
+\end{algorithm}
+
+
+
+\begin{theorem}
+Given a database $\mathcal D$, a query graph $Q$, and a constant $\tau$, the time complexity of Algorithm~\ref{alg:pgsearch} is $O(\log_{2}{(n^2-\alpha)}+\alpha n^{4\tau +2})$.
+\end{theorem}
+
+\begin{proof}
+The searching time in $H_1$ is $O(\log_{2}{(n^2-\alpha)})$. The reason is as follows. For a ball $B$ in $H_1$, the number of children of $B$ is $O(2^4)=O(1)$. Since the number of layers in $H_1$ is $O(\log_{2}{(n^2-\alpha)})$, the total time in $H_1$ is $O(\log_{2}{(n^2-\alpha)})$. 
+
+The searching time in $H_0$ is $O(\alpha n^{4\tau +2})$. The reason is as follows. For a ball $B$ in $H_0$, the number of children of $B$ is $O(n^{2(2\tau+1)})=O(n^{4\tau+2})$. The number of layers in $H_0$ is $\alpha$. Therefore, the total time in $H_0$ is $O(\alpha n^{4\tau +2})$.
+
+In sum, the total time is $O(\log_{2}{(n^2-\alpha)}+\alpha n^{4\tau +2})$.
+\end{proof}
+
+
+
+\subsection{GED lower bound}
+
+
+
+
+
+
+\begin{definition}
+    A {\bf star} is a structure consist of a {\bf center vertex} $V_c$, all {\bf neighbor edges} $e_1, e_2, ..., e_m$ connected to the center node $V_c$, and $1/d_1, 1/d_2, ..., 1/d_m$ of the corresponding {\bf partial vertices} $v_1, v_2, ..., v_m$ connected to $e_1, e_2, ..., e_m$, where $d_i$ is the degree of $v_i (i = 1, 2, ..., m)$. A {\bf lollipop} $l_i$, denoted as $l_i=(e_i, v_i)$, is consist of a neighbor edge $e_i$ and its corresponding partial vertex $v_i$. Note that each vertex $v$ in a graph $G$ can be the center vertex of a star. Thus, a graph $G$ with $n$ vertices can generate $n$ stars by iteratively assuming $v_i$ in $G$ as the center vertex. A {\bf star set} of $G$ is a set containing all these $n$ stars. Figure~\ref{fig:divide_to_stars} provides an example of the above notions. 
+\end{definition}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{figures/divide_to_stars.pdf}
+  \caption{Let $v_{G}$ be the center vertex $v_c$, it forms $Star_1$, which also includes edges $e_1, e_2$ connected to $v_c$ and $1/2$ of $v_1$ and $1/4$ of $v_2$. $l_1=(e_1, v_1)$ is a lollipop. In this figure, different color stands for different vertex label, and single/double line stands for different edge label.}
+  \label{fig:divide_to_stars}
+\end{figure}
+
+\begin{lemma}
+A graph $G$ with $n$ vertices can be divided to $n$ stars, and the $n$ stars can exactly cover $G$ twice.
+\end{lemma}
+\begin{proof}
+Cover vertices twice: Each vertex $v$ in $G$ is as a center vertex once. And $v$ with $d$ degree is divided to $d$ parts as the neighbor vertex of $d$ different stars, and each part is a $1/d$ vertex. In total, $v$ appears $d\times 1/d=1$ time as partial vertex. Therefore, each vertex in $G$ is covered by stars twice.
+
+Cover edges twice: Each edge $e$ in $G$ appears in two stars. Therefore, each edge in $G$ is covered by stars twice.
+
+\end{proof}
+
+\begin{definition}
+    {\bf Lollipop edit distance} ($\tt LED$) is the edit distance between two lollipops. Let $l_1=(e_1, v_1), l_2=(e_2, v_2)$ be two lollipops. $LED$ is consist of the distance between two edges and the distance between two partial vertices.
+    \begin{equation}
+        LED(l_1, l_2) = ED(e_1, e_2) + PD(v_1, v_2),
+    \end{equation}
+    where $ED$ is edge distance and $PD$ is partial vertex distance.
+    \begin{equation}
+    \label{eq:ED}
+    ED(e_1, e_2)=\left\{
+    \begin{aligned}
+    0 & , & if\ l(e_1)=l(e_2), \\
+    1 & , & if\ l(e_1)\neq l(e_2),
+    \end{aligned}
+    \right.
+    \end{equation}
+    where $l(e_i)$ is the edge label of $e_i$.
+
+    \begin{equation}
+    \label{eq:PD}
+    PD(v_1, v_2)=\left\{
+    \begin{aligned}
+    0 & , & if\ l(e_1)=l(e_2), \\
+    1 & , & if\ l(e_1)\neq l(e_2).
+    \end{aligned}
+    \right.
+    \end{equation}
+\end{definition}

@@ -1,0 +1,69 @@
+\section{Conclusion}
+\label{sec:conclusion}
+In this paper, we presented $\net$, a novel two-stage index for approximate graph similarity search. 
+\eat{Our analysis revealed that the GED space has a two-stage property: when the distance between graphs exceeds a threshold $\alpha$, the space satisfies the doubling property with a small expansion rate; when the distance is below $\alpha$, the expansion rate grows rapidly. Based on this observation, $\net$ consists of two parts.}
+The first stage of $\net$, namely $\upperpart$. It is the first index that leverages the doubling property of $\ged$. Querying $\upperpart$ reduces the search space efficiently. The second stage, 
+%, $\lowerpartfull$ ($\lowerpartshort$), 
+called $\lowerpartshort$, indexes the edit path of graphs that have small edit distances between them. Querying $\lowerpartshort$ is a fine-grained search of the candidate graphs near the query. 
+%optimizations including path-based pruning, look-ahead subtree pruning, and search tree reuse.
+We proposed several optimizations.
+Experiments on four benchmark datasets verify that $\net$ outperforms existing methods in most cases with high recalls.
+As for future work, we plan to study the I/O optimization of $\upperpart$ and $\lowerpartshort$.
+%we will include a deeper study of GED spaces within the framework of doubling metrics to obtain tighter theoretical bounds, as well as designing indexing structures based on $\lowerpartshort$ that further exploit the properties of $\ged$.
+
+\eat{
+\section*{Schedule towards SIGMOD 10/18 Deadline}
+
+
+\subsection*{By Sep 22}
+\begin{itemize}[leftmargin=*]
+\item {SIGMOD 26 template} \yk{done}
+  \item Complete \textbf{$\alpha$ impact experiments} \yk{done}
+  
+  \item Add \textbf{GEDHOT[SIGMOD'25]} experiments \yk{done}
+  \item \textbf{Organize all code and results}
+
+  \item Revise \textbf{Abstract / Introduction / Related Work  / Preliminaries}
+    \begin{itemize}
+      \item In the Introduction, highlight contributions, especially emphasize the \textbf{Giant--Small-Step logic} to give readers a clearer intuition \yk{done}
+      \item Revise \textbf{Fig.~2b} \yk{done}
+  \item Rewrite the definition of \textbf{$r$-net} based on \textbf{NetTree} \yk{done}
+  \item Revise \textbf{Fig.~3a}, and update \textbf{Fig.~3b} according to the new notation \yk{done}
+  \item Organize and simplify the \textbf{notation in the Gisma overview}
+    \end{itemize} \yk{done}
+  
+\end{itemize}
+
+\subsection*{By Sep 29}
+\begin{itemize}[leftmargin=*]
+
+  \item Draw \textbf{cost model plots} for the four datasets \yk{no need}
+  \item Revise \textbf{NetDag definition and proofs} according to Preliminaries \yk{done}
+  \item Check the \textbf{consistency of proofs, notation, and definitions} \yk{done}
+  \item Reorganize pseudocode to fit \textbf{DB paper style} \yk{done}
+  \item Add discussion, proofs, and comparisons of the \textbf{complexity and distance} for \textbf{Cover Tree / Net-Tree / NavNet}, and write an analysis of why \textbf{NetDag} is better \yk{done}
+  \item Conduct comparison experiments by replacing \textbf{NetDag} with \textbf{Cover Tree / Net-Tree / NavNet} \yk{to be done in revision}
+  \item \textbf{EPT component experiments}: add \textbf{path-based pruning} and \textbf{look-ahead subtree pruning} (search tree reuse already done) \yk{done}
+\end{itemize}
+}
+
+\eat{
+\subsection*{By Oct 6}
+\yk{Focus on writing the following contents:}
+\begin{itemize}[leftmargin=*]
+  \item Revise \textbf{EPT, Experiments, and Conclusion} sections
+  \item \textbf{Merge the baseline and optimized versions of EPT} (no longer distinguish them)
+
+  \item Revise the \textbf{definition of EPT} and its \textbf{construction pseudocode}
+  \item Add analysis of \textbf{why EPT construction is designed this way}
+  \item Add examples of \textbf{pruning in EPT search} and \textbf{reuse in EPT search}
+  \item Refine the \textbf{description language in Experiments}
+  \item Standardize \textbf{figure fonts, colors, and formatting}
+\end{itemize}
+
+\subsection*{Oct 7 -- Oct 17}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Review the full draft}
+  \item \textbf{Fix minor bugs in the draft} (logic, notation, formatting, figure details, etc.)
+\end{itemize}
+}

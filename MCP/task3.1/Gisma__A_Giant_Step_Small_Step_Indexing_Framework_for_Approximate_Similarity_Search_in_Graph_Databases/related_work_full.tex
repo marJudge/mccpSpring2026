@@ -1,0 +1,189 @@
+\section{Related Work}
+
+% \subsection{Approximate graph similarity search}
+
+% LAN \cite{LAN}
+
+% GHash \cite{ghash}
+
+% CTree \cite{CTree}
+
+
+
+In this section, we first introduce some related works on approximate nearest neighbor search ($\ann$) in general metric spaces. 
+Then, we introduce some works on $\ann$ in the growth-restricted space due to its natural application.
+Lastly, we summarize the related works on graph similarity search, that is, nearest neighbor search ($\nn$) in the specific \emph{graph edit distance} ($\ged$) space. 
+\lv{Yikai, different from other works, the current Section 2 is too long (over 1 complete page). Are there any contents to be compressed?}
+%due to its growth-restricted nature. 
+%based on the growth-restricted nature of the GED space, we will introduce the application of ANN search in growth-restricted spaces. 
+%Lastly, we briefly survey the work on GED similarity search.
+
+
+
+\subsection{$\ann$ in general metric spaces}
+
+\choi{This section can be compressed into one paragraph. Check LAN for an example. For methods that do not have the same setup of the Gisma's approach, you can just use one or two sentences to *list* them. No way to describe them clearly anyway. Section 2.2 is more related to Gisma.}
+
+To respond to $\ann$, existing methods can be classified into the following four categories: 
+%non-graph-based methods and graph-based methods. 
+
+ 
+\stab
+%\noindent
+{\bf Tree-based methods.}
+%({\it e.g.}, \cite{SpillTree, ANNTree})
+Lin et al. \cite{ANNTree} and Liu et al. \cite{SpillTree}
+hierarchically partition the metric space and then use the tree structure to index the partitioned subspaces. By traversing the index tree, $\ann$ can be responded to with a pruning on unpromising subtree based on the triangle inequality.
+%A traversal on the tree is used to evaluate the query and the unpromising subtrees are pruned by the triangle inequality.
+
+\stab
+{\bf Quantization-based methods.}
+Quantization methods \cite{jegou2010PQ, gao2024rabitq} are commonly employed in high-dimensional vector databases. They use a limited set of discrete values to approximate continuous high-dimensional vectors. These methods significantly reduce the data representation while minimizing reconstruction (encoding) error, thereby lowering overall computational costs.
+% Collado et al. \cite{PermPAMI08} and Naidan et al. \cite{NaidanBN15}
+% %({\it e.g.}, \cite{NaidanBN15, PermPAMI08}) 
+% select a set of \lyu{data points as} pivots and then represent each data point by using the permutation of distances from this point to the pivots. Accordingly, the distance permutations of \lyu{adjacent} data points are expected to be \lyu{similar}  \lyu{that $\ann$ can be responded to  by finding similar distance permutations.}
+%use the permutation of distances to the pivots to represent each data point. Similar data points are expected to have close distance permutations. 
+
+\stab
+{\bf Hashing-based methods.}
+%({\it e.g.}, \cite{MetricLSH_Eric, MetricLSH_David}) 
+Novak et al. \cite{MetricLSH_David} and Tellez et al. \cite{MetricLSH_Eric} divide the data points into buckets by hashing adjacent data points into the same bucket with a high probability that $\ann$ can be responded to by finding data points in the same bucket.
+%Novak et al. \cite{MetricLSH_David} and Tellez et al. \cite{MetricLSH_Eric} assign data points into buckets such that close data points have a high probability to be hashed into the same bucket.
+
+\stab
+%noindent
+{\bf Graph-based methods.} 
+%The main idea of 
+Graph-based methods index the database using a graph \cite{nsg, tauMG, hnsw, LAN, l2route, gbdtpg}, where i) each node in this index graph
+is a data point in the database; and ii) each edge represents that the two adjacent nodes satisfy specific proximity property.
+%two nodes have an edge if they satisfy some proximity property. 
+Existing $\ann$ works construct various proximity graphs with different proximity properties. Specifically, Dong et al. \cite{NNDescent} formulate the proximity 
+%for KNN-graph 
+by using the $k$-nearest neighbor relationship; Fu et al. \cite{nsg} and Peng et al. \cite{tauMG} use the relative neighborhood as the proximity; and  Malkov et al. \cite{hnsw} specify the proximity by using the small-world condition \cite{nsw}. Regardless of the specific proximity property used, $\ann$ queries can be answered by conducting greedy routing on the proximity graph \cite{LAN, l2route, gbdtpg}.
+%ANN search is evaluated by a greedy routing on the proximity graph \cite{LAN, l2route, gbdtpg}.}
+%Existing proximity graphs can be differentiated by their proximity properties. For example, in KNN-graph \cite{NNDescent}, proximity is formulated by the $k$-nearest neighbor relationship. NSG \cite{nsg} and $\tau$-MG \cite{tauMG} uses the relative neighborhood to define the proximity. The proximity of HNSW \cite{hnsw} is specified by the small-world condition. ANN search is evaluated by a greedy routing on the proximity graph \cite{LAN, l2route, gbdtpg}. 
+%Interested readers may refer to excellent surveys ({\it e.g.}, \cite{PGSurveyIS, PGSurveyVLDB21}) for more details.
+Interested readers may refer to $\ann$ surveys \cite{PGSurveyIS, PGSurveyVLDB21} for more details.
+
+
+% Proximity graphs are the state-of-the-art index for ANN search in general metric space. However, existing PGs have no performance guarantee in general metric spaces. 
+
+% \vspace{0.5ex}
+% \noindent
+% {\bf Delaunay graph} ($\tt DG$) is the dual graph of the Voronoi diagram \cite{Voronoi}. For any query $q$ in the $m$-dimensional Euclidean space $E^m$, $\tt DG$ guarantees to find the nearest neighbor of $q$ by a greedy routing \cite{hnsw}. However, when $m$ is large, $\tt DG$ becomes a complete graph \cite{FANNG}, which makes the routing time-consuming. To reduce the node degree of $\tt DG$, $k$-nearest neighbor graph ($\tt kNNG$) is proposed as an approximation of $\tt DG$, where each node is connected to its top-$k$ nearest neighbors. For example, Jin et al. \cite{IEH} and Hajebi et al. \cite{GNNS} propose $\tt IEH$ and $\tt GNNS$ using $\tt kNNG$ for ANN search, respectively. 
+% Since constructing $\tt kNNG$ is time-consuming, which takes $O(n^2)$ time, some research studies propose to construct the approximate $\tt kNNG$.
+% In particular, Dong et al. \cite{NNDescent} propose a PG, namely $\tt KGraph$ to approximate $\tt kNNG$. $\tt KGraph$ initializes the neighbors of each node randomly and then iteratively improves the neighbors of each node based on the principle that ``a neighbor of a neighbor is likely a neighbor''. Instead of a random initialization, $\tt EFANNA$ \cite{EFANNA} first builds KD-trees on the database and uses ANN search on the KD-trees to initialize the neighbors of each node before executing NN-Descent. However, $\tt KGraph$ and $\tt EFANNA$ cannot ensure the connectivity of the constructed graph, which can significantly degrade the accuracy of the search results \cite{nsg}.
+% Recently, Wen et al. \cite{annsExpt} propose $\tt DPG$ that diversifies the neighboring edges of each node. However, $\tt DPG$ neither reduces the time complexity nor provides an error guarantee for the search results.
+
+% \vspace{0.5ex}
+% \noindent
+% {\bf Navigable small world graph} ($\tt NSWG$) has attracted much research attention since the well-known Milgram's social experiment \cite{Milgram}. Milgram observes that two nodes in a large graph are connected by a short path and the path can be found by a greedy routing. Many works are proposed to explain and analyze the performance of $\tt NSWG$. For example, Watts and Strogatz \cite{Watts} propose a 2-dimensional lattice model and prove the existence of a path of the length $O(\ln n)$  between two nodes in the lattice. Kleinberg \cite{Kleinberg} proves that the greedy routing cannot find the path.
+%  Kleinberg \cite{Kleinberg} proposes another 2-dimensional lattice model that guarantees to find the path of the length $O(\ln n)$ by the greedy routing in $O((\ln n)^2)$ expected time. Martel and Nguyen \cite{Nguyen} extend the work of Kleinberg \cite{Kleinberg} to support $m$-dimensional lattice. Inspired by Kleinberg's model, Malkov et al. \cite{nsw} propose a PG (namely $\tt NSW$) to support approximate ANN search in the $m$-dimensional Euclidean space. However, the node degree of $\tt NSW$ is high, which makes the routing costly. $\tt NSW$ does not ensure connectivity, which affects search accuracy. Recently, Malkov et al. \cite{hnsw} propose a hierarchical version of $\tt NSW$ (namely $\tt HNSW$) to ensure connectivity and support routing in polylogarithmic  time. However, the analysis of the time cost lacks rigorous theoretical support. Moreover, $\tt HNSW$ has no error guarantee on the search results.
+
+
+
+% % the expected time complexity of the greedy routing on the lattice of Watts and Strogatz is $O(n^{2/3})$, {\it i.e.}, although the lattice contains a path of the length $O(\ln n)$, 
+
+% % 
+
+
+% % \noindent
+% % {\bf K-nearest neighbor graph.}
+
+
+% \vspace{0.5ex}
+% \noindent 
+% {\bf Relative neighborhood graph} ($\tt RNG$) eliminates the longest edge in all possible triangles among the points in the database $D$, {\it i.e.}, if an edge $(u,v)$ is in the graph, $D$ has no point $u'$ satisfying $\delta(u,u')<\delta(u,v)$ and $\delta(u',v)<\delta(u,v)$. $\tt RNG$ guarantees the average degree of each node is a small constant \cite{RNG}. Later, Dearholt et al. \cite{MSNET} prove that $\tt RNG$ does not have sufficient edges 
+% to guarantee the accuracy of the search results of the greedy routing. Fu et al. \cite{nsg} propose the monotonic relative neighborhood graph ($\tt MRNG$). $\tt MRNG$ ensures that the average degree of each node is a constant and guarantees to find the nearest neighbor of $q$ if $q\in D$. However, if $q\not\in D$, $\tt MRNG$ has no error guarantee on the search results. $\tt FANNG$ \cite{FANNG} ensures to find the nearest neighbor $\bar{v}$ of $q$ if $\delta(q,\bar{v})<\tau$. However, $\tt FANNG$ does not provide theoretical analysis on node degree and time complexity of the greedy routing. Recently, Fu et al. \cite{nssg} extend $\tt MRNG$ to a satellite system graph ($\tt SSG$). Although $\tt SSG$ is designed for any $q\not\in D$, $\tt SSG$ has no error guarantee on the search results of the greedy routing.
+
+
+% Several works study improving the routing algorithm on PG. For example, Muñoz et al. \cite{HCNNG} propose to prune the neighbors that are not in the same quadrant as $q$ at each routing step. Baranchuk et al. \cite{l2route} use a graph neural network to select the neighbor to route to. Peng et al. \cite{LAN} use neural networks to prune unpromissing neighbors to reduce the number of distance computations. Li et al. \cite{gbdtpg} propose a learning-based method to early stop the routing to avoid unnecessary routing steps. However, these works have no error guarantee on the search results. Zhao et al. \cite{pgGPU} and Yu et al. \cite{GPUmultiQ} propose using GPUs to accelerate the routing on PG. However, this paper focuses on CPU, which is orthogonal to them.
+
+
+\subsection{$\ann$ in growth-restricted metric spaces}
+
+%Several works \lv{citation?} propose that if the growth of the metric space is restricted ({\it a.k.a} the metric space has a bounded intrinsic dimensionality), ANN search is more efficient than in the general metric space. 
+Several $\ann$ research studies \cite{KR2002, KL2004navigating, CoverTree} made an observation that $\ann$ can be conducted more efficiently in a restricted metric space (\eg the metric space having a bounded intrinsic dimensionality) than a general metric space.
+Specifically, Karger et al. \cite{KR2002} proposed the concept of \emph{expansion constant} (also known as the KR expansion constant), defined as the maximum ratio of the number of points in a ball $B(p, 2r)$ to that in $B(p, r)$, where $p$ is a point in the dataset and $B(p, r)$ denotes a ball centered at $p$ with radius $r$. They used the expansion constant to measure the growth of metric spaces and designed a sampling-based index suitable for metric spaces with bounded expansion constant. Similarly, Krauthgamer and Lee \cite{KL2004navigating} introduced the concept of \emph{doubling constant} (also known as the KL constant), defined as the minimum number of balls with radius $r$ required to cover a ball of radius $2r$, to characterize the growth of metric spaces. They further proposed a multi-layered graph index named \emph{NavNet}, which guarantees finding a $(1+\epsilon)$-approximate nearest neighbor. It is known from Krauthgamer and Lee~\cite{KL2004navigating} that the KR and KL constants are closely related: specifically, if the KR expansion constant is $c_{KR}$ and the KL doubling constant is $c_{KL}$, then it holds that $c_{KR} \leq c_{KL} \leq c_{KR}^2$.
+
+\choi{Just state the result of Cover Tree: Beygelzimer et al.~\cite{CoverTree} proposed the \emph{Cover Tree}, an efficient hierarchical data structure for nearest neighbor search. In the Cover Tree, each node at layer $i$ has exactly one parent node at layer $i-1$, forming a strict hierarchical structure, which significantly reduces complexity compared to NavNet. The query time complexity of Cover Tree is $O(c_{KR}^{12}\log N)$, where $c_{KR}$ denotes the KR expansion constant of the dataset, and $N$ denotes the number of data points.} Recently, Elkin and Kurlin~\cite{compressedCoverTree} proposed a compressed version of Cover Tree; however, its worst-case search complexity was not improved. Another related hierarchical structure, called \emph{Net-tree}, was introduced by Har-Peled and Mendel~\cite{NetTree}. Net-tree organizes data into hierarchical subsets (nets) at progressively finer scales and leverages the concept of doubling dimension (the logarithm of the KL doubling constant $c_{KL}$) to provide efficient approximate nearest neighbor searches with complexity dependent on the intrinsic dimensionality.
+
+Choudhary and Kerber~\cite{choudhary2015local} observed that certain datasets exhibit a large doubling dimension at larger scales while maintaining a smaller doubling dimension at smaller scales. This characteristic makes it challenging to effectively construct global structures such as net-trees. However, local construction of net-trees becomes comparatively easier and achieves better query performance. Motivated by this observation, they introduced the \emph{net-forest}, which consists of multiple local net-trees constructed independently, each restricted to a certain scale (\emph{t-restricted doubling dimension}, based on the KL doubling constant $c_{KL}$).
+
+
+\subsection{Graph similarity search}
+%{\bf Filtering-and-verification framework.} 
+\noindent\textbf{Exact graph similarity search.}
+To respond to the graph similarity search, the framework of {\em filtering-and-verification} is widely used \cite{qgram, GEDNPhard, MLIndex, SEGOS, inves, NassGED, LSaICDE20, LBMaTKDE22}.
+Specifically, the filtering step is to efficiently compute candidate sets by using indexing techniques and lower-bound pruning strategies, while the verification step is to verify whether the candidate graphs obtained by the filtering step are valid results.
+
+%The filtering part uses indexing and lower bound methods to quickly obtain a candidate set. Then, verification methods are used to check if the graphs in the candidate set are the final answers. The following parts will introduce the filtering methods and verification methods separately, and finally, approximate methods will be discussed.
+
+\eat{
+\stab
+%\noindent
+{\it 1. Filtering.}
+}
+For the filtering step, it will be more efficient to compute a lower bound instead of the exact value of $\ged$, and hence, there are some works that
+%Computing GED lower bound is much faster than computing exact GED thus several works 
+focus on designing lower bounds
+%to avoid compute GED for the whole database 
+\cite{qgram, GEDNPhard, MLIndex, SEGOS, bed, inves}. Moreover, the indexes of decomposed substructures of graph data are used to help accelerate the computation of lower bounds
+%Some of them decompose graphs into substructures to build indexes to reduce the number of lower bound computation 
+\cite{qgram, GEDNPhard, MLIndex, SEGOS}.
+
+\eat{
+\stab
+%\noindent
+{\it 2. Verification.}
+}
+Regarding the verification step,
+Fankhauser et al.\cite{VJ} proposed the first and practical $\ged$ computation method A$^*$GED by dopting the best-first search strategy.
+To further improve A$^*$ search on GED verification, Chang et al.~\cite{LSaICDE20} proposed AStar-LSa, which reduces the search space by discarding the dummy vertices, rearrange matching order and provide a tighter lower bound $LSa$; Chang et al.~\cite{LBMaTKDE22} proposed a tighter lower bound $BMao$ for partial mappings than $LSa$, 
+% \lv{can the following sentence be removed?}
+% which improves the speed of GED verification and eliminates the problem of out-of-memory when the graph size becomes relatively larger.
+%A$^*$GED is the first and most classical GED computing method, adopting the best-first search strategy. 
+%\lv{Yikai: please fix the following by showing the abbreviation of authors of the references} 
+By adopting the depth-first search strategy, Abu-Aisheh et al.
+~\cite{DFGED} and Gouda and Hassaan
+~\cite{CSIGED} proposed 
+%propose 
+the DF-GED and CSI-GED $\ged$ computation methods, respectively. 
+%Compared to 
+Kim ~\cite{inves} proposed a tight lower bound method called Inves for efficient filtering, and then integrated this lower bound into an index-based solution called Nass~\cite{NassGED} that simultaneously performs filtering and verification.
+However, constructing Nass index requires $O(N^2)$ GED computations, which is impractical when the dataset size or the query range is large.
+
+\stab
+%\noindent
+{\bf Approximate graph similarity search.} 
+There are researches on approximate graph similarity search~\cite{ghash, LAN, graphsim} due to its high efficiency in real-world applications.
+%Several studies focus on approximate graph similarity search \cite{ghash, LAN}. 
+Specifically, Qin et al.~\cite{ghash} proposed the 
+GHashing, which follows the filtering-and-verification framework, using hash codes and continuous embeddings as two layers of machine-learning-based filters to obtain a candidate set. The exact GED is then used for verification. LAN \cite{LAN} applies the HNSW \cite{hnsw} method to graph databases, building models to perform pruning during the routing step and optimize the selection of the initial point, thereby reducing the number of GED computations.
+
+%\stab
+%\noindent
+%{\bf Machine-learning-based approximate GED computation methods.} 
+% \lv{New paragraph is enough, no need to add one more subtitle for "Machine-learning-based approximate GED computation methods" since it also belongs to "approximate graph similarity search"}
+For graphs with a large number of vertices and a long distance, computing the exact GED is extremely difficult. Therefore, some works focus on using machine learning methods to compute the approximate GED \cite{bai2019simgnn, noah, GREED, GEDGNN}. SimGNN \cite{bai2019simgnn} uses GCN layers to obtain vertex embeddings,
+%and followed 
+which is followed by two paths for training: graph features and vertex features. It uses a neural tensor network and a histogram of vertex inner products to obtain the interaction information between the two graphs and between the vertices of the two graphs, respectively. Noah \cite{noah} follows the A$^*$-beam search algorithm, replacing the heuristic function with the Graph Path Network (GPN). GREED \cite{GREED} embeds all the graphs to the same space rather than in pairs. GED predicted by GREED preserves the triangle inequality and the prediction is in linear time. GEDGNN \cite{GEDGNN} achieves two tasks: value prediction and vertex matching prediction by training two different matrices. Since the exact GED is almost impossible to compute within a finite time when the GED between two graphs is large, we will use machine-learning-based approximate GED computation methods to estimate larger GEDs.
+
+
+
+
+
+
+% There are several lower bounds of GED in the literature. Label multiset filter ($\tt LMF$) is the seminal lower bound of GED. The main idea is using the edit distance of the multisets of node and edge labels of $Q$ and $G$ as the lower bound of $d(Q,G)$. However, $\tt LMF$ is loose. XX et al. \cite{starVLDB09} propose ($\tt Star$). $\tt Star$ is tighter than $\tt LMF$. 
+
+% Zheng et al. \cite{bed} propose the branch edit distance ($\tt BED$).
+
+% Chang et al. \cite{LSaICDE20} propose $\tt LSa$. The key idea is . However, xx. Therefore, Chang et al. \cite{LBMaTKDE22} propose a tighter lower bound $\tt LBMa$.
+
+ 
+
+
+
+
+
+% VLDBJ survey \cite{GEDBoundsVLDBJSurvey}

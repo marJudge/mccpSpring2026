@@ -1,0 +1,602 @@
+\section{Experimental Evaluation}
+\label{sec:exp}
+
+In this section, we present an experimental evaluation to investigate the performance of $\net$. We present the experimental settings in Section~\ref{sec:exp-setting}. We report the overall efficiency and effectiveness, followed by detailed evaluation in Sections~\ref{sec:exp-overall} and~\ref{sec:exp-detail}, respectively.
+
+\begin{table}
+\centering
+%\setlength{\belowcaptionskip}{-0.5ex}
+\vspace{-2.5ex}
+\caption{Statistics of datasets for experiments}
+\resizebox{1.0\linewidth}{!}{
+\begin{tabular}{|l|c|c|c|c|c|}\hline
+Dataset  & $|\mathcal{D}|$ & Avg. $|V|$ & Avg. $|E|$ & \# v\_label & Used in\\\hline
+\hline
+\textsc{$\AIDS$} & 42.7K & 25.6 & 27.5  & 62 & \cite{\eat{LSaICDE20,} LBMaTKDE22, LAN, ghash, xu2025graph, NassGED, cheng2025computing}\\\hline
+\textsc{$\PubChem$} & 22.8K & 48.1 &  50.6  & 10 & \cite{\eat{LSaICDE20,} LBMaTKDE22, LAN, NassGED}\\\hline
+\textsc{Chem1M} & 1M & 24.0 & 25.8 & 94 & -\\\hline
+\textsc{$\SYN$}  & 1M & 14.3 & 20.5 & 1  & \cite{\eat{LSaICDE20,} LBMaTKDE22, LAN}\\\hline
+\end{tabular}
+}
+\label{tab:datastat}
+\end{table}
+
+
+\subsection{Experimental Settings}
+\label{sec:exp-setting}
+\stab
+{\bf Platform.}
+We implemented $\net$ in C++ and Python. We conducted the experimental evaluation on a machine equipped with a dual 64-core AMD EPYC 7742 processor CPU (2.25 GHz) and 2 TB RAM running Ubuntu OS. 
+
+\stab
+{\bf Datasets.} 
+Following previous works \cite{LSaICDE20, LBMaTKDE22, LAN, NassGED}, we evaluated $\net$ using both real-world and synthetic datasets. Specifically, we used two widely adopted real-world datasets, \textbf{$\AIDS$}\footnote{\url{https://cactus.nci.nih.gov/download/nci/AID2DA99.sdz}} and \textbf{$\PubChem$}\footnote{\url{https://pubchem.ncbi.nlm.nih.gov}}\cite{kim2023pubchem}, as well as a large-scale dataset, $\Chemical$, which is also derived from the $\PubChem$ database.
+\noindent
+$\AIDS$ is a set of antiviral compounds, $\PubChem$ and  $\Chemical$ are datasets of chemical compound graphs.
+%while PubChem refers to a commonly used subset of the PubChem database consisting of 22.7K chemical compound graphs, named in accordance with prior studies. 
+\eat{
+%In order to test 
+To further evaluate the scalability of our method on large-scale data, we 
+%additionally introduce 
+also use \textbf{$\Chemical$}, another subset of the same source database, which contains 1M molecular graphs. 
+\noindent
+}To facilitate our scalability tests, we also generated a set of synthetic graphs (denoted as \textbf{SYN}) by using 
+%the tool of 
+GraphGen\footnote{\url{https://www.cse.cuhk.edu.hk/~jcheng/graphgen1.0.zip}}. 
+Table~\ref{tab:datastat} summarizes some statistics of these datasets.
+
+\stab
+{\bf Queries.}
+We randomly selected $100$ graphs from each dataset as query graphs and excluded them from the datasets. We followed \cite{LSaICDE20, LBMaTKDE22, NassGED} to report the average runtimes of all the~queries.
+
+
+
+%\subsection{Baselines}
+\stab
+    {\bf Benchmark methods.} We compared $\net$ with the representative related methods. 
+    While $\ABMao$~\cite{LBMaTKDE22} presents GED verification, the released code of $\ABMao$ contains some code for filtering. To have fair comparisons with the methods without filtering  (\eg $\AppBMao$ and $\GEDHOT$), we apply the same filtering code as in $\ABMao$.
+\begin{itemize}[wide, labelwidth=!, labelindent=0pt]
+\item \underline{$\ABMao$}~\cite{LBMaTKDE22}. $\ABMao$ is the state-of-the-art (SOTA) for \textbf{exact} $\ged$ verification. Thus, it can answer graph similarity search by pairwise comparison of all data graphs and query graphs.
+\eat{
+\footnote{According to $\ABMao$, the $\ged$ computation/verification problem can be transformed into a vertex matching problem that minimizes the edit cost, where the edit cost is the $\ged$.} 
+$\ABMao$ employs i) the well-known heuristic search method called A$^*$ \cite{hart1968formal} to determine the minimal $\ged$; and ii) a lower bound BMao \cite{LBMaTKDE22} for the A$^*$ heuristic to improve both the accuracy and efficiency. 
+}
+
+
+\item \underline{$\AppBMao$}~\cite{xu2025graph}. $\AppBMao$ is a recent method for computing \emph{approximate} $\ged$ between two graphs. It adopts a similar A* search framework to $\ABMao$, but its implementation introduces a limit that terminates the search early, at the cost of accuracy.
+
+\item \underline{$\GEDHOT$}~\cite{cheng2025computing}. $\GEDHOT$ is a recent ensemble method for \emph{approximate} $\ged$ estimation, taking advantage of a supervised model GEDIOT and an unsupervised model $\GEDGW$. 
+
+
+\item \underline{$\GHashing$} \cite{ghash}. $\GHashing$ is the SOTA for \emph{approximate} graph similarity search. It employs graph neural networks to generate graph embeddings and maps them into compact hash codes for efficient candidate generation.
+
+\item \underline{$\LAN$}~\cite{LAN}.
+$\LAN$ is a recent approximate $k$-nearest neighbor (A$k$NN) search method for graph databases based on proximity graphs.
+It proposes a learning-based
+initial node selection and neighbor pruning to reduce $\ged$
+computations in query processing.
+We extend $\LAN$ to support similarity search by progressively increasing
+the search range.
+
+
+\item \underline{$\Nass$} \cite{NassGED}. $\Nass$ is the SOTA index-based solution for \emph{exact} graph similarity search, which also uses the A$^*$ algorithm for the $\ged$ computation. During index construction, $\Nass$ precomputes pairwise distances among the graphs in the dataset within a certain $\ged$ range. During query processing, it leverages the precomputed distances to iteratively reduce the candidate set by triangle inequality.
+
+\item \underline{$\net$}\footnote{%
+During the construction of the upper part $\upperpart$, many graph pairs have large $\ged$, for which computing the exact $\ged$ is time-consuming in practice. 
+We therefore adopt $\GREED$~\cite{GREED} to compute distances when building $\upperpart$, since it is currently the fastest approximate $\ged$ computation method and achieves a small mean absolute error (MAE); the approximation is close to the exact $\ged$ and has a negligible impact on indexing and subsequent search. 
+}. $\net$ is our proposed 
+index.
+\end{itemize}
+
+For presentation simplicity, we refer to \yk{ABCD} the exact methods and \yk{EFG} the approximate methods.
+%We compare our approach with $\LAN$\cite{LAN}, $\GHashing$\cite{ghash}, $\ABMao$\cite{LBMaTKDE22} and Nass\cite{NassGED}. $\LAN$ is the latest method for AKNN search in graph databases based on HNSW, which improves routing efficiency by learning graph features. $\GHashing$ is the latest learning-based approximate pruning method, providing approximate solutions for similarity search in graph databases. $\ABMao$ is the latest method that provides exact answers for similarity search in graph databases. Nass utilizes a pre-computation index to accelerate graph similarity search.
+
+
+\stab
+\noindent\textbf{Parameters.} Unless otherwise specified, the parameters are set as follows. For baseline methods, the exact methods (\ie $\ABMao$ and $\Nass$) use their original default configurations, while the approximate methods ($\AppBMao$, $\GHashing$, and $\LAN$) are chosen to obtain approximately $90\%$ recall at $\tau = 8$ ($\AIDS$/$\PubChem$/$\Chemical$) or $\tau = 4$ ($\SYN$) for fair comparison. The default value of $\alpha$ is $12$ for $\AIDS$, $\PubChem$, and $\Chemical$, and $6$ for $\SYN$, respectively.
+% \begin{itemize}[wide, labelwidth=!, labelindent=0pt]
+% \item $\alpha$. $\alpha$ is the radius of $\lowerpartfull$. The default value is $12$ for AIDS, PubChem, and Chemical1M, and $6$ for SYN, respectively.
+
+% \item $\epsilon_c$. $\epsilon_c$ is the error tolerance parameter for index construction. Since approximate $\ged$ computation methods may introduce inaccuracies, in indexing $\upperpart$, for a node in the $r$-net, we relax the range of child nodes included under each parent node from $1.5r+2\tau$ to $1.5r+2\tau+\epsilon_c$ to index more graphs. We set $\epsilon_c = 2$ according to the standard deviation of $\ged$ computed by the GREED method.
+
+% \item $\epsilon_s$. $\epsilon_s$ is the error tolerance parameter used during the search. Similar to $\epsilon_c$, to mitigate errors introduced by the approximate $\ged$ computation at the search stage, we relax the pruning conditions by $\epsilon_s$ during the $\lowerpartsingleshort$ phase to maintain recall. The default value~is~$1.5$.
+% \end{itemize}
+
+\subsection{Overall Performance}
+\label{sec:exp-overall}
+%\subsubsection{Searching performance}
+
+
+
+\eat{
+\begin{figure}[!t]
+    \captionsetup{width=1\linewidth}
+    \centering          
+    \graphicspath{{plots/overall/}}
+    
+    %==== 第一行：两张图 (AIDS, PubChem) ====
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-aids.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\AIDS$}
+        \label{fig:num-aids} 
+    \end{minipage}         
+    \hfill
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-pub.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\PubChem$}
+        \label{fig:num-pub}
+    \end{minipage}    
+    
+    \vspace{-1\baselineskip}
+
+    %==== 第二行：两张图 (chem1M, syn) ====
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-chem1M.eps}    
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\Chemical$}
+        \label{fig:num-chem1M}
+    \end{minipage}    
+    \hfill
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-syn.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\SYN$}
+        \label{fig:num-syn}
+    \end{minipage}    
+
+    \vspace{-1\baselineskip}
+    
+    \caption{Runtimes of various competitors for $100$ approximate similarity searches on different datasets}
+    \label{fig:overall-efficiency}
+    \vspace{-2ex}
+\end{figure}
+}
+\eat{
+\begin{figure}[!t]
+    \captionsetup{width=1\linewidth}
+    \centering          
+    \graphicspath{{plots/overall/}}
+    
+    %==== 第一行：两张图 (AIDS, PubChem) ====
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-aids-exact.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\AIDS$}
+        \label{fig:num-aids} 
+    \end{minipage}         
+    \hfill
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-pub-exact-16.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\PubChem$}
+        \label{fig:num-pub}
+    \end{minipage}    
+    
+    \vspace{-1\baselineskip}
+
+    %==== 第二行：两张图 (chem1M, syn) ====
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-chem1M-exact.eps}    
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\Chemical$}
+        \label{fig:num-chem1M}
+    \end{minipage}    
+    \hfill
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-syn-exact-16.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\SYN$}
+        \label{fig:num-syn}
+    \end{minipage}    
+
+    \vspace{-1\baselineskip}
+    
+    \caption{Average runtime of $100$ similarity searches (comparison between $\net$ and exact methods)}
+    \label{fig:overall-efficiency}
+    \vspace{-2ex}
+\end{figure}
+
+\begin{figure}[!t]
+    \captionsetup{width=1\linewidth}
+    \centering          
+    \graphicspath{{plots/overall/}}
+    
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-chem1M-exact-16.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\Chemical$}
+        \label{fig:num-aids} 
+    \end{minipage}         
+    \hfill
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{NDC-chem1M-exact-16.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\Chemical$}
+        \label{fig:num-pub}
+    \end{minipage}    
+    
+    \vspace{-1\baselineskip}
+    
+    
+    \caption{(a)Average runtime of $16$ similarity searches (comparison between $\net$(ML) and exact methods). (b)Average NDC of exact $\ged$ of $16$ similarity searches (comparison between $\net$(ML) and exact methods).}
+    \label{fig:overall-efficiency}
+    \vspace{-2ex}
+\end{figure}
+
+\begin{figure}[!t]
+    \captionsetup{width=1\linewidth}
+    \centering          
+    \graphicspath{{plots/overall/}}
+    
+    %==== 第一行：两张图 (AIDS, PubChem) ====
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-aids-ml.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\AIDS$}
+        \label{fig:num-aids} 
+    \end{minipage}         
+    \hfill
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-pub-ml.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\PubChem$}
+        \label{fig:num-pub}
+    \end{minipage}    
+    
+    \vspace{-1\baselineskip}
+
+    %==== 第二行：两张图 (chem1M, syn) ====
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-chem1M-ml.eps}    
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\Chemical$}
+        \label{fig:num-chem1M}
+    \end{minipage}    
+    \hfill
+    \begin{minipage}[t]{0.487\linewidth}
+        \centering                                                         
+        \includegraphics[scale=0.285]{runtime-syn-ml.eps} 
+        \vspace{-1.4\baselineskip}
+        \subcaption{$\SYN$}
+        \label{fig:num-syn}
+    \end{minipage}    
+
+    \vspace{-1\baselineskip}
+    
+    \caption{Average runtime of $100$ similarity searches (comparison between $\net$ and approximate methods)}
+    \label{fig:overall-efficiency}
+    \vspace{-2ex}
+\end{figure}
+}
+
+\textbf{EXP-1. Overall evaluation on efficiency.} We first compare the efficiency of $\net$ with the benchmark methods. Table~\ref{tab:overall_with_tau} presents the overall runtime performance across four benchmark datasets with various threshold values $\tau$. The results demonstrate that $\net$ is the most efficient method when $\tau \ge 6$. 
+
+Across all datasets, while $\net$ is  competitive at small $\tau$s, it is generally the most efficient method as $\tau$ increases. In addition, on $\AIDS$ and $\PubChem$ datasets, $\net$ reduces the runtime by 26.6\%-35.9\% compared to the second-best $\AppBMao$ at $\tau = 12$, and shows even greater improvements (62.7\%-67.9\%) over A$^*$BMao. This is particularly evident in $\Chemical$, where the efficiency improves by 23.1\% at $\tau = 4$ to 56.3\% at $\tau = 10$ when compared to the exact methods. On the $\SYN$ dataset, $\net$ maintains a consistent advantage, achieving 17.6\%-57.1\% reductions in runtimes at high thresholds.
+
+$\net$ continues to be efficient across all datasets when the $\tau$ values are large.
+However, $\Nass$ fails to build indices on the $\AIDS$, $\PubChem$ and $\SYN$ datasets when threshold $\tau$ is large, it cannot build indices on $\Chemical$.
+$\LAN$ and $\GHashing$ often cannot finish within 24 hours for large $\tau$s.
+
+
+
+
+
+\begin{table}[tbp]
+    \centering
+    \footnotesize  
+    \setlength{\tabcolsep}{3pt}  
+    \renewcommand{\arraystretch}{0.9}  
+     \vspace{-3ex}
+    \caption[Runtime comparison with varying $\tau$]{Runtime comparison of benchmarked methods under default settings with varying $\tau$ (seconds)}
+    \label{tab:overall_with_tau}
+    \begin{tabular}{l|l|cccccc}
+        \toprule
+        \textbf{Dataset} & \textbf{Method} & \multicolumn{6}{c}{\textbf{Runtime (s)}} \\
+        \midrule
+        \multirow{7}{*}{\rotatebox{90}{$\AIDS$}} 
+        & & $\tau$=2 & 4 & 6 & 8 & 10 & 12 \\
+        \cmidrule{2-8}
+        & $\net$          & 0.0070 & \underline{0.1041} & \textbf{1.405} & \textbf{17.82} & \textbf{259.9} & \textbf{2291} \\
+        & $\AppBMao$       & \underline{0.0046} & \textbf{0.1019} & \underline{1.752} & \underline{20.03} & \underline{278.2} & \underline{3120} \\
+        & $\Nass$           & \textbf{0.0020} & 0.1487 & 6.865 & 250.0 & CNB & CNB \\
+        & A$^*$BMao         & 0.0048 & 0.1132 & 2.190 & 33.94 & 463.6 & 6140 \\
+        & $\LAN$            & 15.68 & 21.44 & 80.34 & 238.1 & 1051.2 & 13255 \\
+        & $\GHashing$          & 0.0526 & 0.2021 & 4.539 & 41.03 & 847.6 & CNF \\
+        & $\GEDHOT$         & 5.814 & 61.14 & 231.1 & 496.7 & -- & -- \\
+        \midrule
+        \multirow{7}{*}{\rotatebox{90}{$\PubChem$}} 
+        & & $\tau$=2 & 4 & 6 & 8 & 10 & 12 \\
+        \cmidrule{2-8}
+        & $\net$          & \underline{0.0214} & \underline{0.2025} & \textbf{2.445} & \textbf{27.70} & \textbf{323.6} & \textbf{3093} \\
+        & $\AppBMao$       & 0.0238 & 0.2511 & 3.853 & \underline{33.84} & \underline{426.9} & \underline{4822} \\
+        & $\Nass$           & \textbf{0.0037} & \textbf{0.105} & \underline{3.075} & 88.47 & CNB & CNB \\
+        & A$^*$BMao         & 0.0250 & 0.2790 & 4.816 & 60.86 & 711.5 & 9634 \\
+        & $\LAN$            & 12.87 & 35.71 & 92.64 & 243.9 & 1642 & 14105 \\
+        & $\GHashing$          & 0.0766 & 0.2603 & 6.822 & 104.3 & 1027 & CNF \\
+        & $\GEDHOT$         & 1.318 & 13.551 & 63.80 & 165.4 & -- & -- \\
+        \midrule
+        \multirow{7}{*}{\rotatebox{90}{Chem1M}} 
+        & & $\tau$=2 & 4 & 6 & 8 & 10 & -- \\
+        \cmidrule{2-8}
+        & $\net$          & 0.1920 & \textbf{4.018} & \textbf{66.87} & \textbf{813.3} & \textbf{8247} & -- \\
+        & $\AppBMao$       & \textbf{0.1715} & \underline{5.225} & \underline{87.76} & \underline{1038} & \underline{11314} & -- \\
+        & $\Nass$           & CNB & CNB & CNB & CNB & CNB & -- \\
+        & A$^*$BMao         & \underline{0.1805} & 5.805 & 109.6 & 1572 & 18855 & -- \\
+        & $\LAN$            & 103.5 & 488.9 & 2569.1 & CNF & CNF & -- \\
+        & $\GHashing$          & 0.5635 & 10.12 & 284.7 & 2098 & CNF & -- \\
+        & $\GEDHOT$         & 249.3 & 2318 & -- & -- & -- & -- \\
+        \midrule
+        \multirow{7}{*}{\rotatebox{90}{$\SYN$}} 
+        & & $\tau$=1 & 2 & 3 & 4 & 5 & 6 \\
+        \cmidrule{2-8}
+        & $\net$          & \underline{0.8149} & \textbf{7.237} & \textbf{35.15} & \textbf{104.8} & \textbf{455.2} & \textbf{1259} \\
+        & $\AppBMao$       & 0.8201 & \underline{7.305} & \underline{40.90} & \underline{117.4} & \underline{552.3} & \underline{1416} \\
+        & $\Nass$           & \textbf{0.5269} & 19.21 & CNB & CNB & CNB & CNB \\
+        & A$^*$BMao         & 0.8633 & 8.117 & 51.12 & 235.8 & 920.5 & 2933 \\
+        & $\LAN$            & 76.23 & 239.5 & 625.4 & 2884.6 & CNF & CNF \\
+        & $\GHashing$          & 1.237 & 8.95 & 46.24 & 180.4 & 1136 & 3597 \\
+        & $\GEDHOT$         & 849.2 & 4032 & -- & -- & -- & -- \\
+        \bottomrule
+    \end{tabular}
+    \begin{tablenotes}
+        \scriptsize
+        \item Bold: best runtime; Underline: second-best. CNB: Cannot build index; CNF: Cannot finish in 24h.
+    \end{tablenotes}
+\end{table}
+
+
+
+
+
+
+
+
+\begin{figure}[t]
+    \centering
+    %==== 第一行：两张图 ====
+    \begin{subfigure}[t]{0.48\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{plots/overall/QPS-recall-aids.eps}
+        \caption{$\AIDS$ ($\tau=8$)}
+        \label{fig:num-aids}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{plots/overall/QPS-recall-pubchem.eps}
+        \caption{$\PubChem$ ($\tau=8$)}
+        \label{fig:num-pub}
+    \end{subfigure}
+
+    %==== 第二行：两张图 ====
+    \begin{subfigure}[t]{0.48\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{plots/overall/QPS-recall-chemical1m.eps}
+        \caption{$\Chemical$ ($\tau=8$)}
+        \label{fig:num-chem1M}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{plots/overall/QPS-recall-syn.eps}
+        \caption{$\SYN$ ($\tau=4$)}
+        \label{fig:num-syn}
+    \end{subfigure}
+
+    \caption{Comparison of QPS-recall curves}
+    \label{fig:qps_recall}
+\end{figure}
+
+
+\stab
+\textbf{EXP-2. Overall evaluation on effectiveness.}
+We investigate the effectiveness of the methods and present the results in QPS (queries processed per second)--recall plots in Figure~\ref{fig:qps_recall}.
+
+% Figure~\ref{fig:qps_recall} presents the query processing performance across varying recall levels for all methods, with $\tau=8$ for AIDS, PubChem, and Chemical1M, and $\tau=4$ for $\SYN$.
+
+
+The results of the exact methods (A$^*$BMao and $\Nass$) are the points at recall=1.0. $\Nass$ cannot be evaluated on $\Chemical$ and $\SYN$ datasets as the index cannot be built on these two datasets.
+
+For approximate methods, we observe that $\net$ exhibits better QPS across all recall levels compared to other methods. At high recall rates (0.9-1.0), $\net$ achieves 2-10$\times$ higher QPS than $\GHashing$. The performance gap is more evident in the  high-recall region (recall $\geq$ 0.9), where $\net$ maintains QPS values around $10^{-2}$ to $10^{-1}$ while other methods drop significantly. Meanwhile, $\net$ is consistently more efficient than $\AppBMao$ (as reported in Table~\ref{tab:overall_with_tau}, especially at higher recall levels.
+
+\yk{Need to think about more attacks to $\AppBMao$}
+
+Overall, the results demonstrate that $\net$ achieves a good trade-off between efficiency and effectiveness. While exact methods guarantee complete results but at significantly lower QPS (typically $10^{-4}$ to $10^{-3}$), $\net$ provides high recall with relatively high query throughput ($10^{-2}$ to $10^{-1}$ QPS).
+
+
+
+\eat{\subsubsection{Index size}}
+
+
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.1}
+\caption{Index sizes (MB) of different methods on the datasets}
+\label{tab:index_size}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Method} & \textbf{$\AIDS$} & \textbf{$\PubChem$} & \textbf{$\Chemical$} & \textbf{$\SYN$} \\
+\midrule
+Database & 20.6 & 20.8 & 454.7 & 309.6 \\
+\midrule
+$\net$  & 92.1  & 53.5  & 1798.0 & 1348.0 \\
+$\LAN$     & 49.1  & 45.9  & 1099.6 & 768.9  \\
+$\Nass$    & 42.3  & 25.1  & CNB    & CNB    \\
+\bottomrule
+\end{tabular}
+\vspace{-1ex}
+\end{table}
+
+
+
+
+
+\subsection{Detailed Evaluation of $\net$}
+\label{sec:exp-detail}
+In this section, we conduct an in-depth investigation of \(\net\). Specifically, we repor the index sizes and perform experimental analyses on its two stages, optimization techniques, and parameter selections.
+
+\stab
+\noindent\textbf{EXP-3. Index size.}
+Table~\ref{tab:index_size} reports the index sizes of different methods, along with the corresponding database sizes for reference.
+For $\net$, the index sizes range from 53.5~MB on $\PubChem$ to 1798.0~MB on $\Chemical$, which are approximately $2.4\times$–$4.0\times$ the raw database sizes.
+$\LAN$ produces smaller indices across all datasets, while $\Nass$ achieves comparable sizes on small datasets ($\AIDS$ and $\PubChem$) but fails to build indices for $\Chemical$ and $\SYN$ (CNB).
+
+\stab
+\noindent\textbf{EXP-4. Ablation study of $\net$.}
+We conduct ablation experiments to analyze the contributions of the giant-step and small-step stages.
+Specifically, we compare $\net$ with the following three methods:
+\begin{itemize}[wide, labelwidth=!, labelindent=0pt]
+\item \underline{$\Base$}: It is the original $\AppBMao$ method without the giant-step or small-step stages.
+\item \underline{$\BaseGS$}: It uses $\upperpart$ to perform the giant-step stage to narrow down the search range, and then apply $\AppBMao$ to verify the graphs within this range.
+\item \underline{$\BaseSS$}: It performs small-step traversal on all $\lowerpartsinglefull$s without the pruning of the giant-step search.
+\end{itemize}
+
+
+Table~\ref{tab:ablation} presents the runtime comparison across various $\tau$ values on four datasets.
+The results show that both giant-step (GS) and small-step (SS) stages contribute to $\net$'s efficiency.
+Compared with the $\Base$ method (without GS and SS), $\net$ achieves the smallest runtimes in most cases, with runtime reductions of up to 57.5\%, while $\Base$ is slightly faster than others for very small $\tau$ values.
+
+When comparing $\net$ with $\BaseSS$, %which removes the Giant Step stage, 
+$\net$ achieves lower runtimes in most cases, with runtime reductions of up to 31.6\% across different datasets and $\tau$s.
+Similarly, when comparing $\net$ with $\BaseGS$, which removes the small-step stage, the runtime reductions reach up to 50.8\%.
+The giant-step stage is more effective for smaller $\tau$ values as it helps narrow down the search space early, while the small-step stage is increasingly effective with larger $\tau$ values.
+Specifically, as $\tau$ increases, the runtime difference between $\net$ and $\BaseGS$ widens significantly (\eg, up to 33.5\% at $\tau$=12 on $\AIDS$). %demonstrating the growing importance of Small Step for larger thresholds.
+
+
+
+\begin{table}[t]
+    \centering
+    \vspace{-3.5ex}
+    \caption[Ablation study of $\net$]{Ablation study of $\net$ (runtime in seconds)}
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{0.9}
+    \label{tab:ablation}
+    \begin{tabular}{l|l|cccccc}
+        \toprule
+        \textbf{Dataset} & \textbf{Method} & \multicolumn{6}{c}{\textbf{Runtime (s)}} \\
+        \midrule
+        \multirow{4}{*}{$\AIDS$} 
+        & & $\tau$=2 & 4 & 6 & 8 & 10 & 12 \\
+        \cmidrule{2-8}
+        & $\net$        & 0.0070 & \underline{0.1041} & \textbf{1.405} & \textbf{17.82} & \textbf{259.9} & \textbf{2291} \\
+        & $\BaseSS$       & 0.0062 & 0.1062 & \underline{1.445} & \underline{18.05} & \underline{264.2} & \underline{2357} \\
+        & $\BaseGS$       & \underline{0.0059} & 0.1048 & 1.599 & 19.87 & 276.3 & 3059 \\
+        & $\Base$           & \textbf{0.0046} & \textbf{0.1019} & 1.752 & 20.03 & 278.2 & 3120 \\
+        \midrule
+        \multirow{4}{*}{$\PubChem$} 
+        & & $\tau$=2 & 4 & 6 & 8 & 10 & 12 \\
+        \cmidrule{2-8}
+        & $\net$        & \textbf{0.0214} & \textbf{0.2025} & \textbf{2.445} & \textbf{27.70} & \textbf{323.6} & \textbf{3093} \\
+        & $\BaseSS$       & 0.0234 & \underline{0.2398} & \underline{3.217} & \underline{30.11} & \underline{348.4} & \underline{3205} \\
+        & $\BaseGS$       & \underline{0.0221} & 0.2433 & 3.672 & 32.54 & 404.5 & 4664 \\
+        & $\Base$           & 0.0238 & 0.2511 & 3.853 & 33.84 & 426.9 & 4822 \\
+        \midrule
+        \multirow{4}{*}{$\Chemical$} 
+        & & $\tau$=2 & 4 & 6 & 8 & 10 & -- \\
+        \cmidrule{2-8}
+        & $\net$        & \underline{0.1920} & \textbf{4.018} & \textbf{66.87} & \textbf{813.3} & \textbf{8247} & -- \\
+        & $\BaseSS$       & 0.1944 & \underline{4.372} & \underline{72.76} & \underline{825.7} & \underline{8765} & -- \\
+        & $\BaseGS$       & 0.2052 & 4.559 & 80.24 & 986.0 & 10874 & -- \\
+        & $\Base$           & \textbf{0.1715} & 5.225 & 87.76 & 1038 & 11314 & -- \\
+        \midrule
+        \multirow{4}{*}{$\SYN$} 
+        & & $\tau$=1 & 2 & 3 & 4 & 5 & 6 \\
+        \cmidrule{2-8}
+        & $\net$        & \textbf{0.8149} & \textbf{7.237} & \textbf{35.15} & \textbf{104.8} & \textbf{455.2} & \textbf{1259} \\
+        & $\BaseSS$       & 0.8179 & 7.271 & \underline{37.66} & \underline{106.3} & \underline{485.8} & \underline{1311} \\
+        & $\BaseGS$       & \underline{0.8162} & \underline{7.254} & 38.67 & 114.1 & 527.4 & 1380 \\
+        & $\Base$           & 0.8201 & 7.305 & 40.90 & 117.4 & 552.3 & 1416 \\
+        \bottomrule
+    \end{tabular}
+    \begin{tablenotes}
+        \footnotesize
+        \item Bold indicates the best (lowest) runtime; underline indicates the second-best one.
+    \end{tablenotes}
+\end{table}
+
+
+
+
+
+\begin{figure}[!t]
+    \captionsetup{width=1\linewidth}
+    \centering
+    \graphicspath{{plots/overall/}}
+
+    \includegraphics[width=0.6\linewidth]{reuse-speedup.eps}
+    % \vspace{1.2\baselineskip}
+    \caption[Effectiveness of search tree reuse]{
+        Effectiveness of search tree reuse in $\net$, showing 2.25$\times$–3.64$\times$ speedup across four datasets.
+    }
+    \label{fig:reuse_speedup}
+\end{figure}
+
+\stab
+\noindent\textbf{EXP-5. Effectiveness of search tree reuse.} 
+%$\ged$ computations for similar graphs can benefit from reusing search trees, since structurally similar graphs yield overlapping search spaces. 
+%We compare two approaches for computing $\ged$ between a query $q$ and two data graphs $g$ and $g'$ that are close to each other (i.e., $\text{GED}(g, g')$ is small):  
+%(i) \textit{With Reuse}: after computing $\text{GED}(g, q)$, our method reuses the partially constructed search tree by extracting key nodes, refreshing their bounds for $g'$, and continuing the search to compute $\text{GED}(g', q)$;  
+%(ii) \textit{Baseline ($\AppBMao$)}: independently computes each $\ged$ using $\AppBMao$, building the search tree from scratch for every pair.
+ We conduct a study on the effectiveness of search tree reuse presented in Section~\ref{subsec:reuse}. \textit{Baseline} is the method that uses $\AppBMao$ to compute $\ged$ of each pair of graphs from scratch, whereas \textit{With Reuse} is the method that incoporated search tree reuse into $\AppBMao$. Figure~\ref{fig:reuse_speedup} presents the average time per $\ged$ computation across 100 \yk{random} query graphs. \yk{Are the graphs related, in a ball?} Our reuse strategy achieves speedups of 2.25$\times$ to 3.64$\times$ ($\AIDS$: 2.25$\times$, $\PubChem$: 3.64$\times$, Chem1M: 2.32$\times$, $\SYN$: 2.96$\times$), reducing average runtime from 7.37ms to 2.34ms on all datasets. The speedup verifies that the proposed method of search tree reuse is effective.
+%ly exploits structural similarity, with the overhead of tree manipulation being minimal compared to avoiding redundant exploration.
+
+
+
+
+\stab
+\textbf{EXP-6. Effects of $\alpha$.} The parameter $\alpha$ is the threshold between $\upperpart$ and $\lowerpartfull$ in our index $\net$. Fig~\ref{fig:alpha_impact} evaluates the impact of different $\alpha$ values on $\net$'s performance. For $\AIDS$, $\PubChem$, and $\Chemical$, we test $\alpha \in \{3, 6, 9, 12, 15\}$, while for $\SYN$ we use $\alpha \in \{2, 4, 6, 8, 10\}$. We also  verifies that we can use the cost model presented in Section~\ref{subsec:alpha-tradeoff} to determine an optimal $\alpha$ (Figure~\ref{fig:NDC_tau8_real}).
+
+\begin{figure}[htbp]\label{fig:alpha1}
+  \centering
+  
+  \begin{subfigure}[t]{0.48\columnwidth}
+      \centering
+      \includegraphics[width=\linewidth]{plots/overall/alpha-impact-aids.eps}
+      \caption{$\AIDS$}
+      \label{fig:alpha-aids}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.48\columnwidth}
+      \centering
+      \includegraphics[width=\linewidth]{plots/overall/alpha-impact-pubchem.eps}
+      \caption{$\PubChem$}
+      \label{fig:alpha-pubchem}
+  \end{subfigure}
+
+  
+  \begin{subfigure}[t]{0.48\columnwidth}
+      \centering
+      \includegraphics[width=\linewidth]{plots/overall/alpha-impact-chemical1m.eps}
+      \caption{$\Chemical$}
+      \label{fig:alpha-chemical1m}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.48\columnwidth}
+      \centering
+      \includegraphics[width=\linewidth]{plots/overall/alpha-impact-syn.eps}
+      \caption{$\SYN$}
+      \label{fig:alpha-syn}
+  \end{subfigure}
+
+  \caption{Effects of $\alpha$ parameter on runtime performance}
+  \label{fig:alpha_impact}
+\end{figure}

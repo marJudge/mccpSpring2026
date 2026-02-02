@@ -1,0 +1,107 @@
+
+\section{Analysis of the expansion rate of the graph metric space}
+\label{sec:section4}
+In this section, we analyze the KR expansion rate of the graph metric space ${\mathcal U}$. Our key observation is that the KR expansion rate of $\mathcal U$ first increases and then reduces with the growth of the distance.
+
+\begin{lemma}\label{lm:num_neighbor}
+For a graph $G$, the number of graphs $G'$ that satisfy $d(G, G') \leq 1$ is at most $N_l + n_{n_G} \cdot N_l + \frac{n_{n_G}}{2} + \frac{n^2_{n_G}}{2}$, where $n_{n_G}$ denotes the number of nodes in $G$ and $N_l$ denotes the number of distinct labels in the dataset.
+\end{lemma}
+
+\choi{For presentation clarity, the proof is presented in Appendix \ref{apx:proofs}.}
+
+\begin{proof}
+    The set of graphs $G'$ that satisfy $d(G, G') = 1$ is equal to the set of graphs $G'$ that can be reached from $G$ by performing a single edit operation. We can calculate the maximum number of distinct graphs $G'$ obtained by the five types of edit operations separately. The added node operation can result in at most $N_l$ distinct graphs, the deleted node operation can result in at most $n_{n_G}$ distinct graphs, the node relabeling operation can result in at most $n_{n_G} \cdot N_l$ distinct graphs, and the add edge and delete edge operations together can result in at most $\frac{n_{n_G} \cdot (n_{n_G} - 1)}{2}$ distinct graphs. Putting these together, we obtain that a single edit operation can result in at most $N_l + n_{n_G} \cdot N_l + \frac{n_{n_G}}{2} + \frac{n^2_{n_G}}{2}$, where \choi{$n_{n_G}$ distinct graphs $G'$}.
+
+\end{proof}
+
+\begin{lemma}\label{lm:}
+\lv{what is Lemma 4.2?}
+\end{lemma}
+
+
+Let $f_{d}(x)$ denote the distribution of GED and $f_{\bar{d}}(x)$ denote the distribution of the upper bound of GED. $f_d$ and $f_{\bar{d}}$ have the following relationship.
+
+\begin{lemma}\label{lm:area}
+For any integer $b>0$, the area under $f_d$ on the \choi{left} of $b$ (between 0 and $b$) is greater than or equals to that under $f_{\bar{d}}$, {i.e.}, 
+        $\sum_{0}^{b}f_{d}(x)\geq \sum_{0}^{b}f_{\bar{d}}(x)$.
+\end{lemma}
+
+
+
+
+\choi{The proof is presented in Appendix \ref{apx:proofs}.}
+
+\begin{proof}
+    In Fig. \ref{fig:UB_GED_distribution}, the grey dash line represents an arbitrary $h$. We aim to prove that the area under GED distribution before the dash line (denoted by $area_{GED}$) is larger than or equal to the area under UB distribution before the dash line (denoted by $area_{UB}$).
+    
+    First we focus on the GED distribution. A point $(x, y)$ under GED distribution means a pair of graphs of which $GED$ equals to $x$, and $f_{GED}(x)$ means the number of pairs of which $GED$ equals to $a$. This also holds for UB distribution. Note that a pair of graph will generate one point $(x_{GED}, y_{GED})$ under GED distribution and one point $(x_{UB}, y_{UB})$ under UB distribution.
+    
+    For an arbitrary pair of graphs $g_1, g_2$ in the database such that $UB(g_1, g_2) \leq h$, it generates two points $P_{GED}(x_{GED}, y_{GED})$ and $P_{UB}(x_{UB}, y_{UB})$. $P_{UB}$ is on the left side of dash line. Since $GED(g_1, g_2) \leq UB(g_1, g_2)$, $P_{GED}$ is also on the left side of dash line. Therefore, for any point in $area_{UB}$, a corresponding point can be found in $area_{GED}$. Thus, $area_{GED} \geq area_{UB}$.
+\end{proof}
+
+Based on Lemma~\ref{lm:area}, we use the quantile of $\bar{d}$ to analyze the KR expansion rates of $\mathcal U$ at different distance scales. \choi{Give some ideas of the analysis here. We postpone the proof to Appendix.}
+
+\begin{lemma}\label{lm:2part}
+Let $\alpha$ be the $\beta$-quantile of $\bar{d}$, {\it i.e.}, $\sum_{x=0}^{\alpha} f_{\bar{d}}(x) =  1/\beta$. The KR expansion rate of $\mathcal U$ when $d>\alpha$ is $\beta$ and the KR expansion rate of $\mathcal U$ when $d<\alpha$ is $n^\alpha$.
+\end{lemma}
+
+\todo{Proof of Lemma~4.4}
+
+Lemma~\ref{lm:2part} states that $\alpha$ ... In Section~\ref{sec:index}, we propose the hybrid framework to index $\mathcal U$ on different scales.
+
+
+
+% \section{Analysis of the inefficiency of existing indexes in graph databases}
+
+% \subsection{KR expansion rate of graph metric spaces}
+
+% Fig. \ref{fig:GED_distribution} shows the GED distribution of AIDS dataset (under 15 vertices). This is an unimodal distribution. It means that for a graph $p$, with the increase of GED $r$, the number of graphs $q$ such that $GED(q, p)=r$ increases at first then decreases. For a center graph $p$ and radius $r$, the {\em doubling expansion factor} is:
+% \begin{equation}
+%     C_{\delta}(p,r)=\frac{|B(p, 2r)|}{|B(p,r)|}=\frac{\int_{0}^{2r}f(r)dr}{\int_{0}^{r}f(r)dr},
+% \end{equation}
+% where $f(r)$ is the GED distribution function.
+
+% Let $H^*$ be the minimum $r$ such that $\forall r \geq H^*$, $C_{\delta}(p,r)$ is a constant.
+
+% Similarly, the {\em equidistant expansion factor} is:
+% \begin{equation}
+%     C_{\epsilon}(p,r)=\frac{\big|B(p, r+1)\big|}{\big|B(p,r)\big|}=\frac{\int_{0}^{r+1}f(r)dr}{\int_{0}^{r}f(r)dr} \label{eq:GED_eef}
+% \end{equation}
+
+% \begin{lemma}
+%     For a graph $p$ with $n$ vertices, the number of graphs to which $GED=1$ is at most $\lambda n^2$, where $\lambda=\max\big\{|LS_{edge}|, |LS_{vertex}|\big\}$. $LS_{edge}$ and $LS_{vertex}$ are the edge and vertex label set of the database $DB$.
+% \end{lemma}
+
+% \begin{lemma}
+%     $C_{\epsilon}(p,r)=\frac{|B(p, r+1)|}{|B(p,r)|} \leq \lambda n^2$
+% \end{lemma}
+% In conclusion, $C_{\epsilon}(p,r)$ is a constant for all $p, r$, and $C_{\delta}(p,r)$ is a constant $\forall r \geq H^*$.
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=\linewidth]{figures/GED distribution.png}
+%   \caption{This is the GED distribution of part of AIDS dataset: all graphs in AIDS with $\#vertices \leq 15$. GED of each pair of graphs are calculated. The $x$-axis represents the GEDs and the $y$-axis represents the corresponding frequency.}
+%   \label{fig:GED_distribution}
+% \end{figure}
+
+% \subsection{The existence of $H^*$}
+% Since computing GED is time-consuming, it is difficult to know the exact distribution of GED. This section is about to the existence of $H^*$.
+% \begin{lemma}
+% Let the frequency function of GED and UB distribution be $f_{GED}$ and $f_{UB}$. Then,
+%     \begin{equation}
+%         \forall h, \int_{0}^{h}f_{GED}(x)dx \geq \int_{0}^{h}f_{UB}(x)dx
+%     \end{equation}   
+% \end{lemma}
+% \begin{proof}
+%     In Fig. \ref{fig:UB_GED_distribution}, the grey dash line represents an arbitrary $h$. We aim to prove that the area under GED distribution before the dash line (denoted by $area_{GED}$) is larger than or equal to the area under UB distribution before the dash line (denoted by $area_{UB}$).
+    
+%     First we focus on the GED distribution. A point $(x, y)$ under GED distribution means a pair of graphs of which $GED$ equals to $x$, and $f_{GED}(x)$ means the number of pairs of which $GED$ equals to $a$. This also holds for UB distribution. Note that a pair of graph will generate one point $(x_{GED}, y_{GED})$ under GED distribution and one point $(x_{UB}, y_{UB})$ under UB distribution.
+    
+%     For an arbitrary pair of graphs $g_1, g_2$ in the database such that $UB(g_1, g_2) \leq h$, it generates two points $P_{GED}(x_{GED}, y_{GED})$ and $P_{UB}(x_{UB}, y_{UB})$. $P_{UB}$ is on the left side of dash line. Since $GED(g_1, g_2) \leq UB(g_1, g_2)$, $P_{GED}$ is also on the left side of dash line. Therefore, for any point in $area_{UB}$, a corresponding point can be found in $area_{GED}$. Thus, $area_{GED} \geq area_{UB}$.
+% \end{proof}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\linewidth]{figures/GED_UB_distribution.png}
+  \caption{A demonstration of UB and GED distribution of the same dataset. The $x$-axis represents the values of GED and UB and the $y$-axis represents the corresponding frequency.}
+  \label{fig:UB_GED_distribution}
+\end{figure}

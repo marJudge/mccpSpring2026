@@ -1,0 +1,570 @@
+\section{Edit Path Forest: Path-based Index for Graphs Having Small $\ged$s}\label{sec:EPT}
+
+Recall from Figures~\ref{fig:ged_small} and \ref{fig:cover} that when the $\ged$ between graphs is small, the efficiency of doubling-based indexes can be inefficient or sensitive to $r$. 
+In response to this, we specifically propose $\lowerpartfull$ ($\lowerpartshort$), a path-based index for graphs in the candidate balls, identified by $\upperpart$, which have small $\ged$s. This facilitates a search in \emph{small steps} in the $\ged$ subspaces.
+
+The $\lowerpartshort$ is simply a set of $\lowerpartsinglefull$ ($\lowerpartsingleshort$). Each $\lowerpartsingleshort$ has a root that is a center $p$ in the $\alpha$-net $Y_0$ of the index of $\upperpart$. $\lowerpartsingleshort$ indexes the graphs that (i) are covered by the ball $B(p,\alpha)$ {\em and} (ii) $p$ is their nearest center in $Y_0$. Specifically, $\lowerpartsinglefull$ ($\lowerpartsingleshort$) is defined below.
+
+
+
+\begin{definition}\label{def:EPT}
+Given a set of graphs 
+$C = \{G_1, G_2, \dots, G_{m}\}$ that are covered by $B(G_{\mathrm{root}}, \alpha)$ and $G_{\mathrm{root}}$ is the nearest center of $G_i \in C$, 
+a $\lowerpartsinglefull$, denoted as $\mathcal{T}$, is a prefix tree rooted at $G_{\mathrm{root}}$ (which is a graph in $C$) that indexes the graph edit paths (GEPs) from $G_{\mathrm{root}}$ to the graphs in $C$, as follows.
+\begin{itemize}[wide, labelwidth=!, labelindent=0pt]
+    \item Each node $G_i$ in $\mathcal{T}$ is a graph, and each edge represents 
+    the transformation (by applying the edit operation(s)) from the parent graph to the child graph. 
+    A path from $G_{\mathrm{root}}$ to $G_i$ is a sequence of edit operations. 
+    $G_i$ is the result of applying these operations to $G_{\mathrm{root}}$.
+     
+    \item Each node $G_i$ in $\mathcal{T}$ that is a graph in $C$ is marked.
+\end{itemize}
+\end{definition}
+
+
+The construction algorithm of $\lowerpartsingleshort$ is presented in Algorithm~\ref{alg:ept-build}. 
+In Line~\ref{line:ept-geps}, we compute the graph edit paths (GEPs) from the root graph $p$ (also denoted as $G_{\text{root}}$) to the graphs $C = \{G_1, G_2, \dots, G_{m}\}$ in $B(p,\alpha)$. Recall that a GEP is a sequence of edit operations.
+In Line~\ref{line:ept-prefix}, it organizes the GEPs into a prefix tree.
+In Line~\ref{line:ept-compress}, we always apply a compression to the tree: if a node has only one child and the child does not correspond to a data graph, the child is removed, and its parent is directly connected to its grand-child.
+For each ball center in the $\alpha$-net $Y_0$, we apply Algorithm~\ref{alg:ept-build} to obtain its $\lowerpartsingleshort$, and they form $\lowerpartshort$.
+
+
+
+
+
+
+
+%\subsection{Index construction}\label{sec:EPT_construct}
+
+
+\begin{algorithm}[t]
+  \caption{Construction of $\lowerpartsinglefull$}
+  \label{alg:ept-build}
+  \footnotesize
+
+  \SetKwProg{Fn}{Procedure}{}{}
+  \SetKwProg{Func}{Function}{}{}
+  \SetKwFunction{ComputeGEPs}{ComputeGEPs}
+
+  \KwIn{$G_{\mathrm{root}}$: root (center) graph; $C$: data graphs to be indexed}
+  \KwOut{$\mathcal{T}$: constructed $\lowerpartsinglefull$}
+
+  Initialize $\mathcal{T}$ with root $G_{\mathrm{root}}$\;\label{line:ept-init}
+
+  $P \gets$ \ComputeGEPs{$G_{\mathrm{root}}$, $C$}\;\label{line:ept-geps}
+  Build a prefix tree $\mathcal{T}$ from all GEPs in $P$\;\label{line:ept-prefix}
+  Compress $\mathcal{T}$ by removing single-child internal nodes that do not correspond to graphs in $C$\;\label{line:ept-compress}
+  \Return $\mathcal{T}$\;\label{line:ept-return}
+
+  \BlankLine
+  \Func{\ComputeGEPs{$G_{\mathrm{root}}$, $C$}}{
+    \For(){$G_i \in C$}{
+      \label{line:ept-for}
+      $P[G_i] \gets$ the GEP from $G_{\mathrm{root}}$ to $G_i$\;\label{line:ept-onegep}
+    }
+    \Return $P$\;\label{line:ept-returnP}
+  }
+
+\end{algorithm}
+
+
+
+
+
+\eat{
+It constructs $\lowerpartsingleshort$ in three main steps.
+It first computes the graph edit paths (GEPs) from the root graph $G_{\mathrm{root}}$
+to each data graph $G \in C$.
+Then, it builds a prefix tree $\mathcal{T}$ from all GEPs in $P$,
+where GEPs that share common prefixes of edit operations are merged into shared branches.
+Finally, a compression step removes intermediate nodes with only one child (except those representing data graphs in $C$), yielding a smaller tree that satisfies $\mathrm{depth}(G)\le d(G_{\text{root}},G)$
+for every data graph $G\in C$.
+}
+
+\stab
+\noindent{\bf Complexity Analysis.}
+The space and time complexities of $\lowerpartshort$ construction are summarized in Theorems~\ref{thm:ept-space-emax} and \ref{thm:lowerpart-build}.
+
+
+\begin{theorem}[Space Complexity of $\lowerpartshort$]\label{thm:ept-space-emax}
+Let $C_p \subseteq \mathcal{D}$ be the set
+of data graphs of a dataset $\mathcal{D}$ indexed by the $\lowerpartsingleshort$ rooted at $p \in P$, where $P$ is the set of roots of the $\lowerpartsingleshort$s in $\lowerpartshort$ and $\bigcap\limits_{p\in P} C_p = \emptyset$.
+Then, the space of $\lowerpartshort$ is
+\[
+  O\Bigl(
+    \sum_{p\in P} |C_p|\cdot |E(p)|
+    + \sum_{G\in \mathcal{D}} |E(G)|
+  \Bigr).
+\]
+\end{theorem}
+
+For each such root $p$, we can derive the worst-case space
+of the corresponding $\lowerpartsingleshort$ is
+\[
+  O\bigl(
+    |C_p|\cdot |E(p)|
+    + \sum_{G\in C_p} |E(G)|
+  \bigr).
+\]
+
+The first term is to remove all edges from $p$ to an empty graph and the second term is to add all edges of $G$. To sum up the space for all $\lowerpartsingleshort$s
+rooted at $p \in P$ in $\lowerpartshort$, we yield Theorem~\ref{thm:ept-space-emax}.
+
+\eat{
+The $\lowerpartshort$ structure is the union of 
+Summing over all $p\in P$ gives
+\[
+\begin{aligned}
+  \text{Space}(\lowerpartshort)
+  &= O\Bigl(
+      \sum_{p\in P} |C_p|\cdot |E(p)|
+      + \sum_{p\in P} \sum_{G\in C_p} |E(G)|
+    \Bigr) \\
+  &= O\Bigl(
+      \sum_{p\in P} |C_p|\cdot |E(p)|
+      + \sum_{G\in \mathcal{D}} |E(G)|
+    \Bigr),
+\end{aligned}
+\]
+since the sets $C_p$ form a partition of $\mathcal{D}$.
+}
+
+
+\begin{theorem}[$\lowerpartshort$ Construction Time Complexity]\label{thm:lowerpart-build}
+The construction of the \lowerpartshort{} (Algorithm~\ref{alg:ept-build}) takes $O(N)$ graph edit path computations, where $N$ is the number of graphs in the dataset.
+\end{theorem}
+
+
+
+%\begin{proof}
+The efficiency of the construction is determined by the GEP computation in Algorithm~\ref{alg:ept-build}. Algorithm~\ref{alg:ept-build} (Line 2) computes the GEP from the root graph to each graph to be indexed $C$ once, which requires exactly $C$ GEP computations. $O$($\sum_{p \in P} C_p$) is $O(N)$. Hence, constructing $\lowerpartshort$ requires $O(N)$ GEP computations.
+%\end{proof}
+
+\eat{
+\begin{lemma}\label{lem:ept-opt-subpath}
+Given a $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$, for any node $G$ and any descendant $G_d$ of $G$ in the tree, the number of edit operations along the path from $G$ to $G_d$ equals $d(G,G_d)$.
+\end{lemma}
+
+\begin{proof}
+Consider a node $G$ in the $\lowerpartsingleshort$ and a descendant $G_d$ of $G$, and let $\ell$ be the number of edit operations along the path from $G$ to $G_d$.
+By Definition~\ref{def:EPT}, there exists a marked graph $G'\in C$ such that the path from $G_{\mathrm{root}}$ to $G'$ in the $\lowerpartsingleshort$ passes through $G$ and then $G_d$, and this path is a GEP whose length equals $d(G_{\mathrm{root}},G')$.
+The path from $G$ to $G_d$ gives an edit-operation sequence transforming $G$ to $G_d$, so $d(G,G_d)\le \ell$.
+On the other hand, if $d(G,G_d)<\ell$, a shorter edit-operation sequence from $G$ to $G_d$ exists, which can replace the corresponding subpath on the path from $G_{\mathrm{root}}$ to $G'$, yielding a new edit-operation sequence from $G_{\mathrm{root}}$ to $G'$ whose length is smaller than $d(G_{\mathrm{root}},G')$, a contradiction.
+Therefore, $d(G,G_d)=\ell$.
+\end{proof}
+}
+
+
+
+
+
+
+\begin{example}
+    Figure~\ref{fig:above_search_algo} (c) is an example of $\lowerpartsingleshort$. $G_{root}$ is the center of the ball. We remark that \{$G_1$, $G_2$, $G_3$, $G_4$, $G_5$, $G_6$\} are the data graphs.
+    We note that $G_2$ is a data graph in $\mathcal{C}$ but is not a leaf node.
+    $G_9$ is a \emph{compressed node} that represents two edit operations.
+    The $\lowerpartsingleshort$ does not contain all data graphs in the ball, since some of them may be closer to another center and are therefore indexed to another $\lowerpartsingleshort$s.
+\end{example}
+
+
+%\subsection{Connecting $\upperpart$ and EPF}\label{sec:epf-connection}
+
+\stab\noindent {\bf Remarks.}
+There is a subtle technical detail at the boundary of $\upperpart$ and $\lowerpartshort$. We briefly describe how $\upperpart$ is connected to $\lowerpartshort$. As shown in Section~\ref{sec:ND_construction}, during the construction of $\upperpart$, the greedy permutation generates the leaf layer of $\upperpart$ (\ie $Y_1$), as well as an $\alpha$-net $Y_0$.  As in Definition~\ref{def:netdag}), $p^1 \in Y_1$ has an edge to $p^0 \in Y_0$ that satisfies $d(p^0, p^1) \le 3\alpha + 2\tau$. For each $p^0$, we build a $\lowerpartsingleshort$. When the query algorithm (Section~\ref{sec:ND_query}) reaches $p^1$, the  $\lowerpartsingleshort$s of its children are searched further.
+
+
+
+
+
+
+\subsection{Query algorithm}\label{sec:EPT_query}
+In the following, we propose the query processing and three optimizations for $\lowerpartshort$.
+Query processing on $\lowerpartshort$ proceeds as follows.
+Given the selected points $p_i \in Y_0$ and their balls $B(p_i,\alpha)$ identified by the $\upperpart$,
+the search is restricted to the $\lowerpartsingleshort$s rooted at $p_i$.
+For each $\lowerpartsingleshort$, a depth-first search (DFS) is performed to retrieve all database graphs whose distance to the query graph $Q$ is within $\tau$. 
+
+Next, to improve query efficiency, we introduce three optimizations, namely,
+(1) \emph{$\lowerpartsingleshort$ Subtree Pruning};
+(2) \emph{Lower-bound Pruning and its Propagation}; and
+(3) \emph{Search Tree Reuse in $\ged$ Computations}.  
+%These optimizations reduce both the number of $\ged$ computations and the single-pair $\ged$ computation cost during query processing.
+
+
+
+
+
+\subsubsection{$\lowerpartsingleshort$ Subtree Pruning.} 
+To reduce the number of $\ged$ computations, \emph{$\lowerpartsingleshort$ subtree pruning} is proposed to prune the subtrees of an $\lowerpartsingleshort$ that cannot contain answers.
+Let $\bar{d}_G$ denote the maximum $\ged$ from $G$ to any of its descendants.
+The minimum possible distance between any node in the subtree rooted at $G$ and the query $Q$ is $d(G,Q) - \bar{d}_G$.
+By the triangle inequality of $\ged$,  $d(G,Q) \le d(G,G') + d(G',Q)$. 
+By some substitutions and simple arithmetic manipulations, we know if $d(G, Q) - \bar{d}_G>\tau$, the subtree rooted at $G$ can be pruned. This is because for any graph $G'$ that is a descendant of $G$, 
+the distance from $G'$ to $Q$ would be greater than $\tau$.
+
+\subsubsection{Lower-bound Pruning and its Propagation.} 
+
+For an edge $(G_p, G_c)$ of $\lowerpartsingleshort$, once $d(G_p,Q)$ is computed, 
+we define $\lowerbound{d}(G_c,Q)=d(G_p,Q)-d(G_p,G_c)$. Also, $\lowerbound{d}(G_c,Q) \le d(G_c,Q)$.
+%the $d(G_c,Q)$ satisfies $d(G_c,Q) \ge d(G_p,Q)-d(G_p, G_c)$.
+If $\lowerbound{d}(G_c,Q)>\tau$, $d(G_c,Q)$ cannot be smaller than $\tau$ and hence, $G_c$ cannot be an answer. The exact $\ged$ computation between $G_c$ and $Q$ is skipped. Moreover, $\lowerbound{d}(G_c,Q)$ can be {\em propagated} to the children of $G_c$ to skip the exact GED computation {\em recursively}. Suppose $\lowerbound{d}(G_p,Q)$ is available. We set $\lowerbound{d}(G_{c},Q) = \lowerbound{d}(G_p,Q) - d(G_p,G_{c})$, without computing the exact $\ged$ $d(G_p,Q)$. Then, similarly, if $\lowerbound{d}(G_c,Q)>\tau$, $G_c$ cannot be an answer.
+
+% Moreover, $\lowerbound{d}(G_c,Q)$ is {\em propagated} to the children of $G_c$ and used in place of $d(G_c,Q)$, and distance computations may be omitted.
+%Moreover, if $\lowerbound{d}(G_c,Q) > \tau$, the lower bound is propagated to the children of $G_c$ to compute $\lowerbound{d}(G_{cc},Q) = \lowerbound{d}(G_c,Q) - d(G_c,G_{cc})$, without computing the exact $\ged$ $d(G_c,Q)$,where $G_{cc}$ denotes a child of $G_c$.
+
+
+
+
+
+\begin{algorithm}[t]
+  \caption{Query on $\lowerpartsinglefull$}
+  \label{alg:ept-search}
+  \footnotesize
+
+  \KwIn{$\mathcal{T}$: $\lowerpartsinglefull$; $Q$: query graph; $\tau$: threshold}
+  \KwOut{$\mathcal{A}$: set of data graphs within distance $\tau$}
+
+  $\mathcal{A} \gets \emptyset$\;
+  \textnormal{initialize a stack $S$ with ($\mathcal{T}.\mathrm{root}$, 0)}
+
+  \While{$S \neq \emptyset$}{
+    $(G, \lowerbound{d}) \gets$ pop($S$)\;
+    $\bar{d}_G \gets \max\{\,d(G,G_d)\mid G_d \text{ is a descendant of } G\, \text{in } \mathcal{T}\}$\;
+    \label{line:ept-search-upper-bound}
+
+    \If{$\lowerbound{d} - \bar{d}_G > \tau$}{\label{line:ept-search-subtree-lb}
+      \textbf{continue}\tcp*[r]{5.1.1 subtree pruning}\label{line:ept-search-subtree-lb-end}
+    }
+
+    \If{$\lowerbound{d} > \tau$}{\label{line:ept-search-lb-prune}
+      \For{$G_c$ \textnormal{is a child of} $G$}{
+        $\lowerbound{d}_c \gets \lowerbound{d} - d(G,G_c)$
+        \tcp*[r]{5.1.2 lower-bound propagation}
+        \label{line:ept-search-prop-lb}
+        push($(G_c, \lowerbound{d}_c)$, $S$)\;
+      }
+      \textbf{continue}\;
+    }
+
+    $d \gets d(G,Q)$\tcp*[r]{compute exact $\ged$}\label{line:ept-search-exact}
+
+
+    \If{$d - \bar{d}_G > \tau$}{\label{line:ept-search-subtree-exact}
+      \textbf{continue}\tcp*[r]{5.1.1 subtree pruning}\label{line:ept-search-subtree-exact-end}
+    }
+
+    \If{$G$ \textnormal{is a data graph and} $d \le \tau$}{
+      add $G$ to $\mathcal{A}$\;
+    }
+
+    \For{$G_c$ \textnormal{is a child of} $G$}{
+      $\lowerbound{d}_c \gets d - d(G,G_c)$
+      \tcp*[r]{5.1.2 lower-bound propagation}
+      \label{line:ept-search-prop-exact}
+      push($(G_c, \lowerbound{d}_c)$, $S$)\;
+    }
+  }
+  \Return $\mathcal{A}$\;
+\end{algorithm}
+
+
+
+
+
+Algorithm~\ref{alg:ept-search} presents the query procedure on the $\lowerpartsingleshort$.
+It performs a DFS traversal while applying subtree pruning based on both the lower bound and the exact $\ged$ (Lines~\ref{line:ept-search-subtree-lb}–\ref{line:ept-search-subtree-lb-end} and Lines~\ref{line:ept-search-subtree-exact}–\ref{line:ept-search-subtree-exact-end}), lower-bound pruning (Line~\ref{line:ept-search-lb-prune}), and lower-bound propagation (Lines~\ref{line:ept-search-prop-lb} and~\ref{line:ept-search-prop-exact}).
+
+
+
+We remark that during the traversal, if the lower bound on the distance at a node exceeds the threshold, the algorithm skips the exact $\ged$ computation at this node (Line~\ref{line:ept-search-lb-prune}) and propagates the lower bound to its children for further pruning (Line~\ref{line:ept-search-prop-lb}).
+In addition, the exact $\ged$ computation is performed only when the propagated lower bound does not exceed the query threshold (Line~\ref{line:ept-search-exact}), thereby reducing the total number of $\ged$ computations during query processing.
+
+
+
+
+
+
+
+\begin{example}
+Consider the $\lowerpartsingleshort$ shown in Figure~\ref{fig:EPT_overview}.
+In this example, the query threshold is set to $\tau = 2$.
+$G_{\mathrm{root}}$ has $d(G_{\mathrm{root}}, Q)=4$ and $\bar{d}_{G_{\mathrm{root}}}=3$, giving
+$d(G_{\mathrm{root}},Q)-\bar{d}_{G_{\mathrm{root}}}=1\le\tau$, so its subtree remains to be explored.
+% The lower bound of its child $G_7$ is
+% $\lowerbound{d}(G_7,Q)=d(G_{\mathrm{root}},Q)-1=3>\tau$, so the exact distance computation for $G_7$
+% is skipped by lower-bound pruning (Line~\ref{line:ept-search-lb-prune}).
+% However, since
+% $\lowerbound{d}(G_7,Q)-\bar{d}_{G_7}=1<\tau$, the subtree of $G_7$ is not pruned and continues to be searched.
+For the child $G_7$, the lower bound propagated from $G_{\mathrm{root}}$ is $\lowerbound{d}(G_7,Q)=3$.
+Since $\lowerbound{d}(G_7,Q)-\bar{d}_{G_7}=1<\tau$, the subtree of $G_7$ is not pruned and continues to be searched.
+Meanwhile, as $\lowerbound{d}(G_7,Q)>\tau$, the exact distance computation at $G_7$ is skipped by lower-bound pruning (Line~\ref{line:ept-search-lb-prune}).
+For its child $G_2$, the lower bound is propagated as $\lowerbound{d}(G_2,Q)=\lowerbound{d}(G_7,Q)-d(G_7,G_2)=2\le\tau$, which leads to an exact computation of $d(G_2,Q)=6$.
+Since $d(G_2,Q)-\bar{d}_{G_2}=5>\tau$, the subtree rooted at $G_2$ is pruned
+(Line~\ref{line:ept-search-subtree-exact}).
+\end{example}
+
+
+
+
+
+\subsubsection{Search Tree Reuse in $\ged$ Computations}\label{subsec:reuse}
+
+
+
+We first recall that the A$^*$ search algorithm~\cite{inves, LSaICDE20, LBMaTKDE22, xu2025graph} has been widely adopted for computing $\ged$, which formulates $\ged$ computation as a node-matching problem.
+In these methods, A$^*$ organizes (partial) node mappings into a \emph{search tree}, and expands this tree to obtain a full mapping with the minimum edit cost. Each \emph{state} on the search tree corresponds to \emph{a (partial) mapping between the two graphs}.
+
+It should be noted that for two similar graphs $G$ and $G'$ (\ie having small $d(G,G')$) with the same number of nodes, their search trees against the same query graph $Q$ often have large overlaps. 
+In an $\lowerpartsingleshort$, a parent--child pair of indexed graphs typically consists of two similar graphs.
+We focus on the case where such parent--child graphs also have the same number of nodes, and propose a \emph{search tree reuse} optimization that reuses the search tree constructed during the computation of $d(G, Q)$ to accelerate that of $d(G', Q)$.
+\eat{
+This reuse provides two benefits:
+first, constructing the reused search tree serves as a pruning step, which discards a large number of states that have already been identified as incapable of leading to a valid answer;
+second, since the subsequent A$^*$ search resumes only from the frontier of the reused tree, it avoids re-expanding internal states and requires re-evaluation only for frontier states.
+}
+
+To enable reuse, we retain from the search tree of $d(G, Q)$ only the states that are potentially useful for computing $d(G', Q)$.
+We denote (i)~$d(G,Q|s)$ and (ii)$~\lowerbound c(G,Q|s)$ as (i)~the edit distance from $G$ to $Q$, and (ii)~its lower bound of the minimum edit cost, that completes the (partial) mapping of a state $s$. %(It is straightforward that $\lowerbound c(s)$ of a full mapping state equals the exact edit cost.)
+It should be remarked that $\lowerbound c(G,Q|s) \leq \lowerbound c(G,Q|s')$ if $s'$ is a leaf node of $s$ in the search tree.
+After finishing $d(G,Q)$, we construct a \emph{search tree} $S_G$ to-be-reused by keeping every leaf state $s$ of the search tree such that
+$\lowerbound c(G,Q|s) \le \tau + d(G,G')$ (\ie $\lowerbound c(G,Q|s) - d(G, G')\le \tau$), together with all its ancestor states.
+Due to the triangle inequality, given $s$ we have
+$d(G',Q|s) \ge d(G,Q|s) - d(G,G') \ge \lowerbound c(G,Q|s) - d(G,G')$. Hence, if $c(G,Q|s) - d(G,G') > \tau$, then $d(G',Q|s) > \tau$ and the search subtree rooted at $s$ can be pruned. In contrast, resuming the search from only the leaf nodes of $S_G$ does not miss any answers. For presentation simplicity, when the graphs are clear from the context, we simply write $d(s)$ and $\lowerbound c(s)$.
+
+
+%The main idea of the GED computation with reuse can be highlighted as follows. The leaf states of $S_G$ can be intuitively considered as the {\em frontier states} of $S_G$.
+
+%$S_G$ preserves the states whose $\lowerbound c(s)$s indicate that they may lead to an answer. The frontiers serve as the initialization for computing $d(G', Q)$. %When computing $d(G', Q)$, we \emph{resume} the computation of $\lowerbound c(s)$ at the frontier states of $S_G$, which continues to expand the node mapping at $s$, \eg using.
+%The worst-case time complexity for re-evaluation is $O(n^3)$ per state, where $n$ is the number of nodes in the graph.
+%recompute the BMao-based lower bound for each frontier state using its current (partial) mapping, with worst-case time complexity $O(n^3)$ per state, where $n$ is the number of nodes in the graph.
+%The A$^*$ search is then resumed from $S_G$, instead of rebuilding the entire search tree from scratch.
+
+
+
+Algorithm~\ref{alg:astar-reuse} presents the A$^*$-based $\ged$ computation with search tree reuse. Line 1 initializes the minimum edit cost $c_{\min}$ as $\tau$.
+Line~2 is a priority queue to maintain the states that may lead to a full mapping at a cost smaller than $c_{\min}$.
+The algorithm initializes the {\em frontier states} of $S_G$ (Line~\ref{line:reuse-init}).
+The search {\em resumes} from these frontier states by computing their lower bounds $\lowerbound c$, \eg by using~\cite{xu2025graph,LBMaTKDE22} (Line~\ref{line:reuse-eval-leaf}). 
+In Lines~\ref{line:reuse-if-leaf}--\ref{line:reuse-push-leaf}, if $\lowerbound c(s)\le c_{\min}$, the frontier state $s$ is pushed into the priority queue $H$.
+In practice, this helps to reduce the value of $c_{\min}$ faster, and consequently, the states pushed into $H$.
+%
+In each iteration (Lines 8-16), the algorithm pops a state $s$ from $H$ (Line~\ref{line:reuse-pop}) that can lead to smaller cost than $c_{min}$.
+If $s$ corresponds to a full mapping, $c_{\min}$ is updated (Lines~\ref{line:reuse-full}--\ref{line:reuse-update-c}); otherwise, the algorithm expands $s$ and pushes children $s'$s, where $\lowerbound c(s') \le c_{\min}$ (Lines~\ref{line:reuse-for-child}--\ref{line:reuse-push-child}).
+%
+The search terminates once $H$ is empty (Line~\ref{line:reuse-while}), and it returns the $c_{\min}$ found (Line~\ref{line:reuse-return}).
+
+
+
+\begin{algorithm}[t]
+  \caption{$\ged$ Computation with Search Tree Reuse}
+  \label{alg:astar-reuse}
+  \footnotesize
+  
+  % \SetKwFunction{Resume}{\mathrm{App\text{-}BMao\text{-}resume}}
+  \SetKwFunction{Resume}{{App\text{-}BMao\text{-}resume}}
+  
+  \KwIn{$S_G$: a reused search tree from $(Q,G)$; $Q$: query graph; $G'$: data graph; $\tau$: threshold}
+  \KwOut{$d(G',Q)$: the $\ged$ between $G'$ and $Q$}
+
+  $c_{\min} \gets \tau$\ \ \ \ \  $\Delta_{c_{\min}} \gets$ false \tcp*[r]{initialize min. edit cost}
+  \label{line:reuse-init-c}
+  
+  $H \gets$ an empty priority queue, in ascending order of $\lowerbound c(s)$\;\label{line:reuse-initH}
+
+  $L \gets \mathrm{frontiers\ of\ } S_G$\;\label{line:reuse-init}
+  \ForEach{$s \in L$}{\label{line:reuse-init-loop}
+    $\lowerbound c(s) \gets \Resume(s, G', Q)$\tcp*[r]{update lower bound cost at $s$, \eg \cite{xu2025graph,LBMaTKDE22}}\label{line:reuse-eval-leaf}
+    \If(){$\lowerbound c(s) \le c_{\min}$}{\label{line:reuse-if-leaf}
+      push($s$, $H$)\;\label{line:reuse-push-leaf}
+    }
+  }
+
+  
+  \While{$H \neq \emptyset$ \textnormal{and} $\lowerbound c(\mathrm{top}(H)) \le c_{\min}$}{\label{line:reuse-while}
+  %\While{$H \neq \emptyset$}{\label{line:reuse-while}
+    $s \gets$ pop($H$)\;\label{line:reuse-pop}
+    \If(){$s$ \textnormal{corresponds to a full mapping (from $G$ to $G'$)}}{\label{line:reuse-full}
+      $c_{\min} \gets \lowerbound c(s)$ \ \ \ \ $\Delta_{c_{\min}} \gets$ true\tcp*[r]{update min. edit cost}\label{line:reuse-update-c}
+      \textbf{continue}\;
+    }
+    \ForEach{$s' \in \mathrm{child}(s)$}{\label{line:reuse-for-child}
+      $\lowerbound c(s') \gets \Resume(s', G', Q)$\tcp*[r]{update lower bound cost at $s$}\label{line:reuse-eval-child}
+      \If(){$\lowerbound c(s') \le c_{\min}$}{
+        push($s'$, $H$)\;\label{line:reuse-push-child}
+      }
+    }
+  }
+  \textbf{if} $\Delta_{c_{\min}}$ \textbf{then return} $c_{\min}$ \textbf{else} \textbf{return} \texttt{"undefined"} \label{line:reuse-return}
+\end{algorithm}
+
+
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{0.55\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/index_introduction/search-tree-reuse-example-a.png}
+    \vspace{-4.5ex}
+    \caption{}
+    \label{fig:search-tree-reuse-example-a}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.44\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/index_introduction/search-tree-reuse-example-b.png}
+    \vspace{-4.5ex}
+    \caption{}
+    \label{fig:search-tree-reuse-example-b}
+  \end{subfigure}
+
+  \vspace{-3ex}
+  \caption[Example of search tree reuse]{
+An illustration of search tree reuse using the example in Figure~\ref{fig:EPT_overview}.
+Figure (a) shows the search tree constructed for $d(G_9, Q)$ and the search subtree $S_{G_9}$ to-be-reused for computing $d(G_6, Q)$, where $G_6$ is a child of $G_9$ with $d(G_6,G_9)=1$ and the threshold is set to $\tau=2$, and Figure (b) shows how $S_{G_9}$ is reused to compute $d(G_6, Q)$. The state with $\lowerbound c=4$ is pruned because $\lowerbound c > \tau + d(G_6, G_9)$.
+{\it Legend: A box denotes a state $s$; its lower bound $\lowerbound c(s)$ is shown inside the box; 
+A thick box denotes a frontier state; and a dashed box denotes a pruned state.}
+}
+  \label{fig:search-tree-reuse-example}
+  \vspace{-2ex}
+\end{figure}
+
+
+
+
+
+\begin{example}
+Figure~\ref{fig:search-tree-reuse-example} shows an example of search tree reuse.
+We have computed $d(G_9, Q)$ and obtained the search tree $S_{G_9}$, as illustrated in Figure~\ref{fig:search-tree-reuse-example}(a), which is the input to Algorithm~\ref{alg:astar-reuse}. $G'$ is $G_6$, which is a child of $G_9$ with $d(G_6,G_9)=1$, and $\tau=2$. Line 3 computes the frontiers of $S_{G_9}$ (the thick boxes). We note that $s_9$, having $\lowerbound c$=4, is not included in $S_{G_9}$ because $\lowerbound c > \tau + d(G_6, G_9) = 3$.
+
+Figure~\ref{fig:search-tree-reuse-example}(b) shows how $S_{G_9}$ is used to compute $d(G_6, Q)$.
+In Lines~4-5, the search resumes computing $\lowerbound c$ at each frontier state. The updated $\lowerbound c$s are shown in red in Figure~\ref{fig:search-tree-reuse-example}(b). In Line 6, $s_6$ is pruned because $\lowerbound c$($s_6$) = 4 $>$ 3. $s_4, s_5,$ and $s_8$ will be further checked (Lines 6-7).
+The $\lowerbound c$s of $s_4$ and $s_5$ are smaller than $c_{min}$ (Line 8), and $s_4$ and $s_5$ correspond to a full mapping from $G_6$ to $G_9$ (Lines 10-11), the minimum edit cost is updated to 2. Also, this indicates that $G_6$ is an answer within the threshold $\tau$. The search continues to check other states (Line 12). In Line 8, since $\lowerbound c$($s_8$) = 3 $>$ $c_{min}$ = 2, $s_8$ is not examined further.
+
+\eat{
+using $S_{G_9}$ for the computation of $d(G_6, Q)$, the search resumes from the frontier states (Lines~\ref{line:reuse-init}–\ref{line:reuse-push-leaf}), while internal states are not revisited.
+As shown in Figure~\ref{fig:search-tree-reuse-example}(b), resuming the search from the frontier states leads to a full mapping with $\lowerbound c(s)=2$, which updates the current minimum cost $c_{\min}$ (Line~\ref{line:reuse-update-c}), 
+}
+\end{example}
+
+
+
+
+
+
+
+
+\section{Cost Model for $\net$ construction}
+\label{subsec:alpha-tradeoff}
+
+The efficiency bottleneck of graph similarity search in
+$\net$ is $\ged$ computation during the search. $\upperpart$ and $\lowerpartfull$ of $\net$ minimize the number of $\ged$ computations (or simply the \emph{number of distance computations} $\mathrm{NDC}$) in different ways. In this section, we propose a cost model to analyze the optimal value for the parameter $\alpha$ to minimize the $\mathrm{NDC}$.
+
+\eat{
+During query processing, the total NDC is the sum of those incurred in $\upperpart$ and $\lowerpartfull$.
+The contributions of these two parts to the total $\mathrm{NDC}$ depend on the parameter $\alpha$ selected for the construction of $\net$.}
+
+The $\mathrm{NDC}$ of $\upperpart$ can be estimated as follows.
+Consider a query $(Q, \tau)$ and examine the worst-case $\mathrm{NDC}$, in which the traversal of $\upperpart$ always selects the node with the largest number of children at each layer and computes the distances between all its children and $Q$.
+In this case, the $\mathrm{NDC}$ incurred in $\upperpart$ is
+$\sum_{i=1}^{\phi} \fanout_{\max}(i)$,
+where $\fanout_{\max}(i)$ denotes the maximum number of children among all nodes at layer~$i$ of $\upperpart$.
+
+The query processing continues at $\lowerpartfull$ after $\upperpart$ identifies few balls $B(p_j^0, \alpha)$ centered at points $p_j^0$ near the query graph~$Q$ at the leaf layer, where these balls satisfy $d(p_j^0, Q) \le \alpha + \tau$.
+Hence, the number of such balls in the worst case is $\fanout_{\max}(1)$, Therefore, the $\mathrm{NDC}$ incurred in $\lowerpartfull$ is bounded by
+$\fanout_{\max}(1) \times |B(p, \alpha)|,$
+where $|B(p, \alpha)|$ denotes the number of data graphs covered by a ball of radius~$\alpha$ centered at~$p$.
+
+
+%Figure~\ref{fig:cover} shows that $\max_p \lambda(p,r)$ is large at small $\ged$s but decreases significantly at larger $\ged$s. This distance-dependent behavior of doubling constant motivates us to exploit the doubling property at larger $\ged$s when designing an index to accelerate graph similarity search.
+
+\eat{
+From the overview in Section~\ref{sec:preliminaries}, our indexing framework $\net$ consists of two parts: $\upperpart$ and $\lowerpartfull$. 
+During the query process, the pivot traverses the $\upperpart$ from the top layer to the leaf layer, 
+and at each level we must look up the next child among $\mathrm{Cover}(r,2r+2\tau)$ nodes (see Section~\ref{sec:ND} for details), 
+incurring $\mathrm{Cover}(r,2r+2\tau)$ distance computations per level, 
+until we reach the layer at $\alpha$. 
+Since the leaf layer of $\upperpart$ is an $\alpha$-net, the top layer is a $(\alpha \cdot 2^{\phi} + 2\tau)$-net and the total $\mathrm{NDC}$ in the $\upperpart$ is $\sum_{i=0}^{\phi-1} \mathrm{Cover}\bigl(\alpha \cdot 2^i,\; \alpha \cdot 2^{i+1} + 2\tau\bigr)$, where $\phi$ is chosen so that $B(\alpha \cdot 2^{\phi} + 2\tau)$ covers all graphs in the database.
+Once we reach this stage, the candidate set is constrained within $B(2\alpha + \tau)$, 
+on which the $\lowerpartshort$ refines the solution. 
+Hence, the $\mathrm{NDC}$ in the lower part is $\lvert B(2\alpha + \tau)\rvert$. 
+}
+
+%According to Figure~\ref{fig:cover} and \ref{fig:Br},
+
+From the above discussions, $\mathrm{NDC}$ of $\net$ depends on $\alpha$. 
+On the one hand, as $\alpha$ decreases, the $\mathrm{NDC}$ of $\upperpart$ increases dramatically; on the other hand, the $\mathrm{NDC}$ of $\lowerpartshort$ decreases with $\alpha$.
+We combine these two factors into a cost model (Equation~\eqref{eq:exact_NDC}), 
+aiming to find an optimal $\alpha$ that achieves an overall minimum $\mathrm{NDC}$.
+
+
+\begin{equation}
+\begin{aligned}
+    \mathrm{NDC}(\alpha)
+    &= 
+    \sum_{i=0}^{\phi-1}
+    \mathrm{Cover}(\alpha\cdot 2^i,\, \alpha\cdot 2^{i+1} + 2\tau)
+    \;+\;
+    \lvert B(2\alpha + \tau)\rvert
+    \label{eq:exact_NDC}
+    \\
+    &\approx
+    \sum_{i=0}^{\phi-1}
+    \tfrac{
+      \lvert B(\alpha\cdot2^{i+1} + 2\tau)\rvert
+    }{
+      \lvert B(\alpha\cdot2^{i+1})\rvert
+    }
+    \,
+    \mathrm{Cover}(\alpha\cdot 2^i, \alpha\cdot 2^{i+1})
+    +
+    \lvert B(2\alpha + \tau)\rvert,
+\end{aligned}
+\end{equation}
+
+
+\begin{figure}[t]
+  \centering
+
+  \begin{subfigure}{0.32\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/overall/ball_size_r1_to_50.png}
+    \vspace{-5ex}
+    \caption{}
+    \label{fig:Br}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.32\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/overall/ndc_estimation_multi_tau.png}
+    \vspace{-5ex}
+    \caption{}
+    \label{fig:NDC_AIDS}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.32\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/overall/ndc_with_real_data_tau8.png}
+    \vspace{-5ex}
+    \caption{}
+    \label{fig:NDC_tau8_real}
+  \end{subfigure}
+
+  \vspace{-3ex}
+  \caption[$B(r)$ and $NDC(\alpha)$]{
+    Illustrations of $|B(r)|$ and the estimated $\mathrm{NDC}(\alpha)$ under different $\alpha$ values on the AIDS dataset,
+    including the estimated curve under $\tau=8$ and measured $\mathrm{NDC}$ at selected $\alpha$.
+  }
+  \label{fig:Br_NDC}
+  \vspace{1ex}
+\end{figure}
+
+
+
+
+\begin{example}
+Based on Equation~\eqref{eq:exact_NDC}, Figures~\ref{fig:cover} and \ref{fig:Br}, we plotted Figure~\ref{fig:NDC_AIDS} to illustrate how the $\mathrm{NDC}$ varies with $\alpha$ under different $\tau$ values. 
+The results show that when $\tau=2$, the minimum $\mathrm{NDC}$ occurs at $\alpha=4$, while for larger thresholds ($\tau=4$--$10$), the optimal $\alpha$ lies between $9$ and $12$. 
+In particular, both $\tau=8$ and $\tau=10$ reach their minima of $\alpha$ at around 12. 
+Therefore, in our experiments, we set $\alpha=12$ for the AIDS data set.
+\end{example}
+

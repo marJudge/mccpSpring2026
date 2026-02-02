@@ -1,0 +1,51 @@
+\section{Analysis of $\ged$ Space}\label{sec:analysis}
+
+
+We start our investigation with an analysis of the $\ged$ space.
+In particular, we examine the $\ged$ space as a doubling space in Section~\ref{sec:analysis:space}, and analyze its doubling constant in Section~\ref{sec:analysis:scale}. These lead us to design the two-stage indexing framework.
+
+
+
+\subsection{$\ged$ space as a doubling space}\label{sec:analysis:space}
+
+In this subsection, we show that the metric space induced by $\ged$ is a doubling space under the assumption that the number of vertices and distinct labels in a graph are bounded.  
+
+\begin{lemma}\label{lemma:finite-doubling}
+Given the set $\mathcal X$ of graphs with at most $n$ vertices and at most $\rho$ distinct labels, where $n$ and $\rho$ are constants, the metric space $(\mathcal X, \ged)$ induced by the graph edit distance is a doubling space.
+\end{lemma}
+
+With $n$ and $\rho$ fixed, the number of possible graphs is finite; let $M$ denote this number. 
+For any ball $B(p,2r)$ in $(\mathcal X,\ged)$, it can be covered by at most $|B(p,2r)|$ balls of radius $r$, each centered at a graph in $B(p,2r)$.  
+Since the number of graphs in $B(p,2r)$ never exceeds $M$, the doubling constant is at most $M$.  
+Therefore, $(\mathcal X,\ged)$ is a doubling space.
+
+
+
+
+\subsection{Doubling constant of $\ged$ space}
+\label{sec:analysis:scale}
+Since existing doubling-based indexes~\cite{navnet,NetTree} have query complexities of $O(\lambda^{O(1)} \log N)$ (where $\lambda$ is the doubling constant and $N$ is the dataset size), their efficiency highly depends on the value of $\lambda$, as $\lambda$ is closely related to the fanout of each node in the index structure. 
+Although Section~\ref{sec:analysis:space} shows that the doubling constant of the $\ged$ space is finite, because of bounded vertex and label sizes, we observe that $\lambda$ is often small in practice, which enables efficient doubling-based indexes.
+
+We follow an estimation procedure proposed in Net-tree~\cite{NetTree} to estimate the doubling constant of the $\ged$ space. 
+Due to the high computational cost of the exact $\ged$ calculation, we use the GREED~\cite{GREED} model to approximate $\ged$.
+Specifically, we construct a Net-tree 
+and record, for each integer radius $r$, the maximum number of radius-$r$ balls required to cover any $2r$-ball, denoted as $\max_p \lambda(p,r)$. 
+The doubling constant is the peak value of the $\max_p \lambda(p,r)$ curve, which is equal to $\max_{p,r} \lambda(p,r)$ (Figure~\ref{fig:cover}). In addition, we observe a sharp peak and a long tail in Figure~\ref{fig:cover}.
+
+\begin{figure}[t]
+  \centering
+  \graphicspath{{plots/overall/}}
+  \includegraphics[width=0.45\linewidth]{plots/overall/cover_count_r1_to_50.png}
+  % \vspace{-1.5\baselineskip}
+  \caption[Illustrations of (i ) $\max_p \lambda(p,r)$]{Illustration of $\max_p \lambda(p,r)$ is small when $r$ is large (the bright area) and (ii) $\max_p \lambda(p,r)$ is sensitive to $r$ when $r$ is small (the dark area).}
+  \label{fig:cover}
+  \vspace{1ex}
+\end{figure}
+
+
+
+
+
+
+

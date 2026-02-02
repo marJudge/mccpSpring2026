@@ -1,0 +1,63 @@
+\section{Introduction}
+
+Graphs have been widely used in a lot of emerging applications, including bioinformatics, chemi-informatics, software engineering, and computer vision. Nearest neighbor (NN) search is a fundamental query in graph databases \cite{}. Graph edit distance (GED) is one of the most widely used distance measure in NN search \cite{}. However, exact NN search in a large database is too time consuming due to the NP-hardness of GED computation. Therefore, approximate NN (ANN) search becomes promising as it can significantly reduce the time cost with a slight reduce of accuracy.  
+
+% Proximity graph (PG) is the state of the art index for ANN search. .... Most existing PGs focus on the Euclidean space. However, the space of graphs is not an Euclidean space. The space and time complexity of existing PGs do not hold in graph space. 
+
+The space $\mathcal U$ = $(M, d)$ is a metric space, where $M$ is the set of graphs and $d$ is GED. Proximity graph (PG) is the state-of-the-art index for ANN search in metric spaces. The key idea of PG is 
+
+
+Existing PGs fall into two extremes. At one extreme, the PGs are designed for the ANN search in the general metric space, where $\tt HNSW$ \cite{hnsw} is the latest work. $\tt HNSW$  empirically has poly-log search time of the database size $N$. However, the search accuracy of $\tt HNSW$ has no guarantee. At the other extreme, the PGs are designed for the ANN search in the Euclidean space. $\tt MRNG$ \cite{nsg}, $\tau$-$\tt MG$ \cite{} are the latest works. $\tt MRNG$ and $\tau$-$\tt MG$ can be adapted to the general metric space while assuring to find the exact NN of $Q$ if $Q\in {\mathcal D}$ and $d(Q, NN)<\tau$, respectively. However, the search time complexities of $\tt MRNG$ and $\tau$-$\tt MG$ are $O(N)$ in the general metric space. 
+
+
+In this paper, we study a practical setting, which falls between the two extremes. It is motivated by the observation that 
+
+
+
+
+The works in the first category study ANN search in the general metric space. $\tt MRNG$ \cite{nsg}, $\tau$-$\tt MG$ \cite{}, and $\tt HNSW$ \cite{hnsw} are the latest works in this category. $\tt MRNG$ and $\tau$-$\tt MG$ guarantee to find the exact NN of $Q$ if $Q\in {\mathcal D}$ and $d(Q, NN)<\tau$, respectively. However, the search time complexities of $\tt MRNG$ and $\tau$-$\tt MG$ are $O(N)$ in the general metric space, where $N$ is database size. $\tt HNSW$  empirically has poly-log search time of $N$. However, the search accuracy of $\tt HNSW$ has no guarantee. The works in the second category study ANN search in the metric space with bounded doubling dimension. $\tt CoverTree$ \cite{} is the latest index in this category. $\tt CoverTree$ guarantees that the ANN search takes $O(c^{10}\log N)$ to find a 2-opt answer, where $c$ is the doubling factor of the metric space. The doubling factor of a metric space is the number of ball of radius $r$ to cover a ball of radius $2r$ for any value of $r$.
+
+
+We prove that if the distribution of graphs is normal, the doubling factor will be stable with the growth of $n$.
+
+
+
+
+We observe that the doubling factor of the space {\em U} of real-world graphs is $n^\alpha$, where $n$ is the largest graph size and $\alpha$ is a small constant. Therefore, the time complexity of ANN search of $\tt CoverTree$ is $O(n^{10\alpha}\log N)$. 
+
+In this paper, we propose a new index, namely \ourPG. The time complexity of ANN search of \ourPG is reduced to $O(n^{6\alpha}\log N)$ to find a 2-opt answer. The main idea is 
+
+
+
+For GED computation, $A^*$ search is the widely-accepted method. A lower bound of GED is used to guide the $A^*$ search. The tightness of the lower bound is critical for the performance of $A^*$ search. $\tt BED$ \cite{} is currently the  tightest lower bound with polynomial time complexity. In this paper, we propose a new lower bound of GED, namely $\tt uBED$, and prove that $\tt uBED$ is tighter than $\tt BED$ and the time complexity of $\tt uBED$ is the same as $\tt BED$.
+
+
+For optimization, xxx.
+
+
+\begin{table}
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}\hline
+Method  & index time & index size & query time & guarantee \\\hline
+\hline
+$\tt HNSW$ & $O(n)$ & $O(n)$ & $O(n)$ & None\\\hline
+$\tt MRNG$ & $O(N^2)$ & $O(N^2)$ & $O(N)$ & Exact$^*$\\\hline
+$\tt CoverTree$ & $O(c^{10} N\log N)$ & $O(c^{10} N\log N)$ & $O(c^{10} \log N)$ & 2-opt\\\hline\hline
+\ourPG & $O(c^{6} N\log N)$ & $O(c^{6} N\log N)$ &  $O(c^{6} \log N)$ & 2-opt\\\hline
+\end{tabular}
+\caption{Summary on related work ($c$ denotes the doubling dimension of the space, $N$ denotes database size, $^*$ means $Q\in {D}$}
+\label{tab:sumRW}
+\end{table}
+
+\noindent
+{\bf Contributions.} The contributions of this paper are as follows.
+
+\begin{itemize}
+\item We find
+\end{itemize}
+
+% When recall is 0.95 and 0.98, our method is about 2.7x to 47x and 2.6x to 25x faster than existing methods on well-known real-world datasets, respectively.
+
+\noindent
+{\bf Organizations.} The rest of this paper is organized as follows. Section~\ref{sec-related} discusses the related work. The preliminaries are presented in Section~\ref{sec-back}. Section~\ref{sec-pathLen} presents the analysis of the inefficiency of existing PGs. Section~\ref{sec-tauMG} presents $\tau MNG$. 
+$\tau MNG${} is presented in Section~\ref{sec-tauMNG}. The experimental evaluation is presented in Section~\ref{sec-expt}. Section~\ref{sec-conc} concludes this paper. For presentation clarity, we put the detailed proofs in Section~\ref{appendix}.

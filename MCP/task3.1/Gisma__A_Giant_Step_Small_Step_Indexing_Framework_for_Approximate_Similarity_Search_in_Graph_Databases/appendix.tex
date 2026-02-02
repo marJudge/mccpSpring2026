@@ -1,0 +1,1217 @@
+\section{appendix}\label{sec:appendix}
+
+
+
+
+
+\begin{lemma}[Packing bound for $2^k r$-balls]\label{lm:packing-2kr}
+Given a metric space $(\mathcal{X},d)$ with expansion constant $c$ (Def.~\ref{def:expansion_constant}) and an $r$-separated set $S_r\subseteq\mathcal{X}$, 
+for any point $p\in\mathcal{X}$ and any integer $k\ge 0$, 
+the number of points of $S_r$ contained in the ball $B(p,\,2^k r)$ is at most $c^{\,k+3}$.
+\end{lemma}
+
+
+\begin{proof}
+Fix $p\in \mathcal{X}$ and let $S := S_{r} \cap B(p, 2^k r)$.
+Since $S_r$ is an $r$-separated set, any two points of $S$ are at least $r$ apart; 
+hence the balls $\{B(p', r/2): p'\in S\}$ are pairwise disjoint.
+Moreover, for any $p'\in S$,
+\[
+B(p', r/2) \subseteq B\bigl(p,\, 2^k r + r/2 \bigr) \subseteq B\bigl(p,\, 2^{k+1}r \bigr),
+\]
+so
+\begin{equation}
+    \sum_{p'\in S} |B(p', r/2)| \;\le\; \bigl|B\bigl(p, 2^{k+1}r\bigr)\bigr|.
+    \label{eq:sum-2kr}
+\end{equation}
+
+Let $p^* \in \arg\min_{p'\in S} |B(p', r/2)|$. 
+Since $d(p,p^*)\le 2^k r$, 
+for any $y\in B\bigl(p, 2^{k+1}r\bigr)$,
+\[
+d(y, p^*) \le d(y,p) + d(p,p^*) \le 2^{k+1}r + 2^k r < 2^{k+2}r,
+\]
+and hence
+\[
+B\bigl(p, 2^{k+1}r\bigr) \subset B\bigl(p^*, 2^{k+2}r\bigr).
+\]
+By the expansion inequality in Def.~\ref{def:expansion_constant}, iterated \(\boldsymbol{k{+}3}\) times 
+at the same center $p^*$ (from radius $r/2$ up to $2^{k+2}r$),
+\begin{equation}
+    \bigl|B\bigl(p, 2^{k+1}r\bigr)\bigr|
+    \;\le\;
+    \bigl|B\bigl(p^*, 2^{k+2}r\bigr)\bigr|
+    \;\le\;
+    \boldsymbol{c^{\,k+3}}\,\bigl|B(p^*, r/2)\bigr|.
+    \label{eq:scale-2kr}
+\end{equation}
+Combining \eqref{eq:sum-2kr} and \eqref{eq:scale-2kr}, and using the minimality of $p^*$, we obtain
+\[
+|S|\cdot |B(p^*, r/2)| \;\le\; \sum_{p'\in S} |B(p', r/2)| 
+\;\le\; \boldsymbol{c^{\,k+3}}\,|B(p^*, r/2)|,
+\]
+so $|S|\le \boldsymbol{c^{\,k+3}}$, as claimed.
+\end{proof}
+
+
+
+
+
+
+\begin{lemma}[\cite{Gottlieb2014efficient}]\label{point_count}
+Let $(X,d)$ be a metric space with doubling constant $\lambda$. 
+Suppose $S \subset X$ is finite, with minimum inter-point distance at least $r>0$ 
+and diameter at most $\mathrm{diam}>0$. 
+Then
+\[
+  |S|
+  \;\;\le\;\;
+  \lambda^{\,\log_2\!\Bigl(\tfrac{2\,\mathrm{diam}}{r}\Bigr)}.
+\]
+\end{lemma}
+
+
+\begin{corollary}[Number of $r$-net points in a ball]\label{coro:net-points-ball}
+Given an $r$-net $Y$ in a metric space $(X,d)$ with doubling constant $\lambda$, 
+for any ball $B$ of radius at most $R$, 
+the number of points of $Y$ contained in $B$ is at most 
+\[
+  \lambda^{\,\log_2\!\Bigl(\tfrac{4R}{r}\Bigr)}.
+\]
+\end{corollary}
+
+\begin{proof}[Proof of Corollary~\ref{coro:net-points-ball}]
+Let $Y' = Y \,\cap\, B$. Because $Y'$ is contained in a ball of radius $R$, 
+the diameter of $Y'$ is at most $2R$. 
+Meanwhile, $Y$ being an $r$-net implies any two distinct points in $Y'$ 
+are at least $r$ apart. 
+Hence $Y'$ meets the conditions of Lemma~\ref{point_count} 
+with minimum inter-point distance $r$ and diameter at most $2R$. 
+Applying Lemma~\ref{point_count} yields
+\[
+  |Y'|
+  \;=\;
+  |\,Y \,\cap\, B|
+  \;\;\le\;\;
+  \lambda^{\,\log_2\!\Bigl(\tfrac{2(2R)}{r}\Bigr)}
+  \;=\;
+  \lambda^{\,\log_2\!\Bigl(\tfrac{4R}{r}\Bigr)},
+\]
+as claimed.
+\end{proof}
+
+\begin{corollary}[Explicit bound on number of children]\label{coro:bounded-children}
+In an $\upperpart$ index (Definition~\ref{def:netdag}) with doubling constant $\lambda$, 
+the number of children of any node $p_j^i$ is at most
+\[
+  \lambda^{\,\log_2\!\Bigl(12 + \tfrac{8\,\tau}{\alpha\,2^i}\Bigr)}.
+\]
+\end{corollary}
+\begin{proof}[Proof of Corollary~\ref{coro:bounded-children}]
+From Definition~\ref{def:netdag}, 
+each child $p_{x}^{i}$ of $p_j^{i+1}$ satisfies
+\[
+  d\bigl(p_j^{i+1},\;p_{x}^{i}\bigr) \le 3\,\alpha\,2^i + 2\,\tau.
+\]
+Hence all children of $p_j^{i+1}$ lie in the ball 
+\[
+  B\Bigl(p_j^{i+1},\,3\,\alpha\,2^i + 2\,\tau\Bigr).
+\]
+Since $Y_i$ is an $(\alpha\,2^i)$-net, 
+the minimal distance between any two distinct nodes in $Y_i$ is at least $\alpha\,2^i$.  
+Applying Corollary~\ref{coro:net-points-ball} with 
+$R = 3\,\alpha\,2^i + 2\,\tau$ and $r = \alpha\,2^i$ gives
+\[
+  \lambda^{\,\log_2\!\Bigl(\tfrac{4\,(3\,\alpha\,2^i + 2\,\tau)}{\alpha\,2^i}\Bigr)}
+  = \lambda^{\,\log_2\!\Bigl(12 + \tfrac{8\,\tau}{\alpha\,2^i}\Bigr)}.
+\]
+\end{proof}
+
+\begin{corollary}
+\label{coro:uniform-bounded-children}
+Under the assumptions of Corollary~\ref{coro:bounded-children} with $0\le\tau\le\alpha$, the number of children of any node in $\upperpart$ is at most
+\[
+\lambda_{\alpha}^{\log_2(20)}.
+\]
+\end{corollary}
+
+\begin{proof}
+From Corollary~\ref{coro:bounded-children}, the number of children of a node $p_j^{i+1}$ is bounded by $\lambda^{\log_2\bigl(12+\tfrac{8\tau}{\alpha2^i}\bigr)}$. Since $0\le\tau\le\alpha$ and children always lie in a layer $Y_i$ with $i\ge0$, we have $12+\frac{8\tau}{\alpha2^i}\le12+\frac{8\alpha}{\alpha2^i}\le20$. Replacing the doubling constant by $\lambda_\alpha$ for the relevant scale yields the claimed bound.
+\end{proof}
+
+
+
+
+\begin{corollary}[Explicit bound on number of parents]\label{coro:bounded-parents}
+In an $\upperpart$ index (Definition~\ref{def:netdag}) with doubling constant $\lambda$, 
+the number of parents of any node $p_x^i$ is at most
+\[
+  \lambda^{\,\log_2\!\Bigl(6 + \tfrac{4\,\tau}{\alpha\,2^i}\Bigr)}.
+\]
+\end{corollary}
+\begin{proof}[Proof of Corollary~\ref{coro:bounded-parents}]
+A node $p_x^{\,i}$ in layer $Y_i$ can only have parents in layer $Y_{i+1}$ 
+that satisfy 
+\[
+  d\bigl(p_x^{\,i},\;p_j^{\,i+1}\bigr) \le 3\,\alpha\,2^i + 2\,\tau.
+\]
+Hence all possible parents lie in 
+\[
+  B\bigl(p_x^{\,i},\,3\,\alpha\,2^i + 2\,\tau\bigr)\,\cap\,Y_{i+1}.
+\]
+Since $Y_{i+1}$ is an $(\alpha\,2^{\,i+1})$-net, 
+any two distinct points there are at least $\alpha\,2^{\,i+1}$ apart.  
+Applying Corollary~\ref{coro:net-points-ball} with 
+$R = 3\,\alpha\,2^i + 2\,\tau$ and $r = \alpha\,2^{\,i+1}$ gives
+\[
+  \lambda^{\,\log_2\!\Bigl(\tfrac{4\,(3\,\alpha\,2^i + 2\,\tau)}{\alpha\,2^{i+1}}\Bigr)}
+  = \lambda^{\,\log_2\!\Bigl(6 + \tfrac{4\,\tau}{\alpha\,2^i}\Bigr)}.
+\]
+\end{proof}
+
+\begin{corollary}[Bound on the number of $\lowerpartsingleshort$s to traverse]\label{coro:num-epts}
+Consider a graph similarity search query $(Q,\tau)$ in $\net$, where each $\lowerpartsingleshort$ is built for a ball $B(p,\alpha)$ of radius $\alpha$ centered at a leaf pivot $p$ (thus the set of $\lowerpartsingleshort$ roots forms an $\alpha$-net).
+Then the number of $\lowerpartsingleshort$s that may contain answers (hence need to be traversed) is at most
+\[
+\lambda^{\,\log_2\!\Bigl(\tfrac{4(\alpha+\tau)}{\alpha}\Bigr)}.
+\]
+\end{corollary}
+
+\begin{proof}
+Fix a query $(Q,\tau)$.
+By construction, an $\lowerpartsingleshort$ rooted at $p$ indexes the database graphs inside $B(p,\alpha)$.
+If this $\lowerpartsingleshort$ contains at least one answer, then there exists a graph $g$ with $d(g,Q)\le\tau$ and $d(g,p)\le\alpha$.
+By the triangle inequality,
+\[
+d(Q,p)\ \le\ d(Q,g)+d(g,p)\ \le\ \tau+\alpha\ =\ \alpha+\tau.
+\]
+Hence, any $\lowerpartsingleshort$ that contains an answer must have its root within the ball $B(Q,\alpha+\tau)$.
+
+At the leaf layer, the roots of $\lowerpartsingleshort$s form an $\alpha$-net; in particular, they are $\alpha$-separated.
+Therefore, the set of candidate roots
+\(
+Y' \;=\; \{\,p:\ d(Q,p)\le \alpha+\tau\,\}
+\)
+is an $\alpha$-separated subset contained in a ball of radius $R=\alpha+\tau$.
+Applying Corollary~\ref{coro:net-points-ball} with $r=\alpha$ and $R=\alpha+\tau$ yields
+\[
+|Y'|
+\ \le\
+\lambda^{\,\log_2\!\Bigl(\tfrac{4R}{r}\Bigr)}
+\ =\
+\lambda^{\,\log_2\!\Bigl(\tfrac{4(\alpha+\tau)}{\alpha}\Bigr)}.
+\]
+Hence at most $\lambda^{\log_2\!\bigl(\frac{4(\alpha+\tau)}{\alpha}\bigr)}$ $\lowerpartsingleshort$s need to be traversed.
+\end{proof}
+
+
+
+
+
+\begin{lemma}
+\label{lemma:pair-edge-bound}
+In an $\upperpart$ index, for any pair of database graphs $(p_j, p_k)$, 
+the inter-layer edge $(p_j^{i+1}, p_k^{i})$ can appear at most 
+$\lfloor \log_{2}(4\tau/\alpha + 3) \rfloor+1$ times in different layers~$i$.
+\end{lemma}
+\begin{proof}[Proof of Lemma~\ref{lemma:pair-edge-bound}] \label{appendix:pair-edge-bound}
+Each $p_j^i$ corresponds to the same database point $p_j$ in layer~$i$ (and likewise for $p_k$). 
+Since the metric $d$ is defined on the underlying database space and is independent of layers, 
+we have $d(p_j^{i_1},p_k^{i_2}) = d(p_j,p_k)$ for all $i_1,i_2,j,k$. 
+Note that $Y_i$ is an $(\alpha \cdot 2^i)$-net, so any two distinct nodes in $Y_i$ must be separated by more than $\alpha \cdot 2^i$, i.e.,
+\[
+  d(p_j^{i}, p_k^{i}) > \alpha \cdot 2^i.
+\]
+
+By Definition~\ref{def:netdag}, if $(p_j^{i+1},p_k^{i})$ is an edge, then
+\[
+  d(p_j^{i+1},p_k^{i}) \le 3 \cdot \alpha \cdot 2^i + 2\tau.
+\]
+Hence, for a fixed pair $(p_j,p_k)$, whenever $(p_j^{i+1},p_k^{i})$ is present, we must have
+\[
+  \alpha \cdot 2^i < d(p_j,p_k) \le 3 \cdot \alpha \cdot 2^i + 2\tau.
+\]
+Let $i_{\min}$ be the minimum integer $i$ satisfying the above inequality, 
+and let $i_{\max} = i_{\min} + m$ be the maximum such $i$. 
+Then $d(p_j,p_k)$ lies in both intervals
+\[
+  (\alpha \cdot 2^{i_{\min}},\; 3 \cdot \alpha \cdot 2^{i_{\min}} + 2\tau]
+  \quad\text{and}\quad
+  (\alpha \cdot 2^{i_{\min}+m},\; 3 \cdot \alpha \cdot 2^{i_{\min}+m} + 2\tau].
+\]
+Thus,
+\[
+  \alpha \cdot 2^{i_{\min}+m} < 3 \cdot \alpha \cdot 2^{i_{\min}} + 2\tau.
+\]
+Dividing by $\alpha \cdot 2^{i_{\min}}$ gives
+\[
+  2^m < 4\,\tfrac{\tau}{\alpha} + 3,
+\]
+so
+\[
+  m < \log_{2}(4\tau/\alpha + 3).
+\]
+Since $m = i_{\max} - i_{\min}$, the number of integer indices from $i_{\min}$ to $i_{\max}$ is $m+1$.  
+Therefore, $(p_j^{i+1},p_k^{i})$ can appear as an inter-layer edge at most 
+$\lfloor\log_{2}(4\tau/\alpha + 3)\rfloor + 1$ times, as desired.
+\end{proof}
+
+
+\begin{lemma}
+\label{lemma:upperpart-space}
+The space complexity of $\upperpart$ is $O(N)$, where $N$ is the size of the database $\mathcal{D}$.
+\end{lemma}
+\begin{proof}[Proof of Lemma~\ref{lemma:upperpart-space}] \label{appendix:upperpart-space}
+By Definition~\ref{def:netdag}, $Y_i \subseteq Y_{i-1}$ (for $i=1,\ldots,\phi$). Therefore, if $p_j^{i}$ has exactly one child, that child must be $p_j^{i-1}$ (the same database node). 
+Thus, similarly to \cite{navnet}, we only focus on the nodes in our index that have at least two children, because any node with exactly one child can be represented implicitly (i.e., it does not contribute to the total space usage in a non-trivial way).  
+We first show that the number of nodes with at least two children is $O(N)$, and then argue that each node has at most a constant number of children. From these two properties, it follows that the total space usage is $O(N)$.
+
+\medskip
+\noindent\textbf{Step 1: Bounding the number of nodes with at least two children.}  
+We prepare a mark set for every node in $\upperpart$: for each node $p_j^i$, let $M_j^i$ denote its corresponding mark set. The database nodes $p_x$ are added to these mark sets according to the following rule (a single $p_x$ can be added to multiple mark sets).  
+Suppose $p_x \in Y_{i_x}$ but $p_x \notin Y_{i_x+1}$. Then, for every inter-layer edge $(p_j^{\,i'+1},\,p_x^{\,i'})$ in the $m+1$ layers below $i_x$ (i.e., $i_x - m \,\le\, i' \,\le\, i_x$) where $p_x$ is the child node, we add $p_x$ as a mark to the mark set $M_j^{\,i'+1}$.  
+Here $m = \lfloor\log_{2}(4\,(\tau/\alpha) + 3)\rfloor$.
+
+We now show that for every $i \ge 1, j\ge 0$, the mark set $M_j^i$ is non-empty (i.e., $|M_j^i|\ge 1$). Suppose, for contradiction, that there exists $(i_0,j_0)$ with $|M_{j_0}^{\,i_0}|=0$. By construction, there is an inter-layer edge $(p_{j_0}^{\,i_0},\,p_{x_0}^{\,i_0-1})$, which implies
+\[
+  d\bigl(p_{j_0}^{\,i_0},\,p_{x_0}^{\,i_0-1}\bigr) \;\le\; 3\alpha\cdot 2^{\,i_0} + 2\,\tau.
+\]
+Let $i_{x_0}$ be such that $p_{x_0}\in Y_{\,i_{x_0}}$ but $p_{x_0}\notin Y_{\,i_{x_0}+1}$. Since $p_{x_0}^{\,i_0-1}$ was not added to $M_{j_0}^{\,i_0}$, it follows that $i_{x_0} - i_0 > m$. Meanwhile, for each $i' = i_0,\ldots,i_{x_0}$ we have
+\[
+  d\bigl(p_{j_0}^{\,i'},\,p_{x_0}^{\,i'-1}\bigr) = d\bigl(p_{j_0}^{\,i_0},\,p_{x_0}^{\,i_0-1}\bigr) \le 3\alpha\cdot 2^{\,i_0} + 2\tau \;\le\; 3\alpha \cdot 2^{\,i_{x_0}} + 2\tau,
+\]
+so all inter-layer edges $\bigl(p_{j_0}^{\,i'},\,p_{x_0}^{\,i'-1}\bigr)$ exist for $i_0 \le i' \le i_{x_0}$. The number of such edges is $i_{x_0} - i_0 + 1 > m+1$, which contradicts Lemma~\ref{lemma:pair-edge-bound} (that bounds the number of inter-layer edges for a fixed pair of nodes). Thus $|M_{j_0}^{\,i_0}|\ge 1$.
+
+\medskip
+\noindent\textbf{Step 2: Bounding how many times each database node appears in mark sets.}  
+Each database node $p_x$ can only be added to mark sets in at most $m+1$ consecutive layers below its own layer $i_x$, and $m+1$ is a constant. It remains to argue that within a single layer, $p_x$ can be added only a constant number of times.  
+When $p_x$ is in $Y_i$, its parents in $Y_{i+1}$ are nodes $p_j^{\,i+1}$ with
+\[
+  d\bigl(p_j^{\,i+1},\,p_x^{\,i}\bigr) \;\le\; 3\alpha\cdot 2^i + 2\,\tau.
+\]
+Thus $p_j^{\,i+1}$ lies in the ball $B(p_x, 3\alpha\cdot2^i + 2\tau) \cap Y_{i+1}$. By Corollary~\ref{coro:bounded-parents}, the number of such parents is bounded by a constant. Hence $p_x$ joins at most $O(1)$ mark sets per layer, and therefore $O(1)$ mark sets in total.
+
+\medskip
+\noindent\textbf{Conclusion.}  
+Summing over all $p_x$, the total number of marks is $O(N)$. Since each mark set is non-empty, the number of nodes with at least two children is also $O(N)$. Together with the $O(N)$ leaves (the $\alpha$-net nodes), the total number of nodes is $O(N)$. By Corollary~\ref{coro:bounded-children}, each node has only a constant number of children. Thus the total space of $\upperpart$ is $O(N)$, as claimed.
+\end{proof}
+
+
+\begin{lemma}[Coverage Property]
+\label{appendix:coverage}
+In a $\upperpart$ structure, for any node $p_j^{i+1} \in Y_{i+1}$, let $\text{children}(p_j^{i+1})$ denote the set of nodes $p_k^i \in Y_i$ such that $(p_j^{i+1}, p_k^i) \in E$ (i.e., $d(p_j^{i+1}, p_k^i) \leq 3\alpha \cdot 2^i + 2\tau$). Then any point $x \in \mathcal{D}$ within the ball $B(p_j^{i+1}, \alpha \cdot 2^{i+1} + 2\tau)$ is covered by at least one ball $B(p_k^i, \alpha \cdot 2^i)$ where $p_k^i \in \text{children}(p_j^{i+1})$.
+\end{lemma}
+\begin{proof}[Proof of Lemma~\ref{appendix:coverage}]
+Let $x \in \mathcal{D}$ be any point in $B(p_j^{i+1}, \alpha \cdot 2^{i+1} + 2\tau)$, so $d(p_j^{i+1}, x) \leq \alpha \cdot 2^{i+1} + 2\tau$.
+
+Since $Y_i$ is an $(\alpha \cdot 2^i)$-net of $\mathcal{D}$, there exists some $p_k^i \in Y_i$ such that $d(p_k^i, x) \leq \alpha \cdot 2^i$. We need to show that this $p_k^i$ is a child of $p_j^{i+1}$.
+
+By the triangle inequality:
+\[
+d(p_j^{i+1}, p_k^i) \leq d(p_j^{i+1}, x) + d(x, p_k^i) \leq (\alpha \cdot 2^{i+1} + 2\tau) + \alpha \cdot 2^i.
+\]
+
+Since $\alpha \cdot 2^{i+1} = 2\alpha \cdot 2^i$, we have:
+\[
+d(p_j^{i+1}, p_k^i) \leq 2\alpha \cdot 2^i + 2\tau + \alpha \cdot 2^i = 3\alpha \cdot 2^i + 2\tau.
+\]
+
+This satisfies the edge condition in Definition~\ref{def:netdag}, so $(p_j^{i+1}, p_k^i) \in E$, meaning $p_k^i \in \text{children}(p_j^{i+1})$. Since $d(p_k^i, x) \leq \alpha \cdot 2^i$, we have $x \in B(p_k^i, \alpha \cdot 2^i)$, completing the proof.
+\end{proof}
+
+
+\begin{lemma}[Correctness of $\upperpart$ Search]
+\label{lemma:netdag-search-correctness}
+Given a $\upperpart$ structure $H = (Y_0, Y_1, \ldots, Y_\phi, E)$ and a similarity search query $(Q, \tau')$ with $\tau' \leq \tau$, if there exists a database graph $g \in \mathcal{D}$ such that $d(g, Q) \leq \tau'$, then Algorithm~\ref{alg:searchND} guarantees that at each layer $i$ (from $\phi-1$ down to $0$), there exists at least one child $p^i_j$ of the current pivot $p^{i+1}$ satisfying
+\[
+d(p^i_j, Q) \leq \alpha \cdot 2^i + \tau'.
+\]
+Thus the search path will never terminate prematurely, and the algorithm reaches the base layer $Y_0$ to identify the appropriate $\lowerpartsingleshort$ roots containing the result.
+\end{lemma}
+\begin{proof}[Proof of Lemma~\ref{lemma:netdag-search-correctness}]
+Assume there exists an answer graph $g \in \mathcal{D}$ with $d(g, Q) \leq \tau'$. By definition, all such answers lie within the ball $B(Q, \tau')$. 
+
+We first introduce the notion of \emph{ball contact}: two balls $B(p_1, r_1)$ and $B(p_2, r_2)$ are said to be in contact if $d(p_1, p_2) \leq r_1 + r_2$. Note that contact does not necessarily imply the existence of a common point in their intersection, as the contact region may be empty in the discrete metric space.
+
+At the top layer $Y_\phi$, since $Y_\phi$ is an $(\alpha \cdot 2^\phi)$-net covering $\mathcal{D}$, the answer $g$ must be covered by some ball $B(p_0^\phi, \alpha \cdot 2^\phi)$ where $p_0^\phi$ is our initial pivot. This implies that $B(Q, \tau')$ and $B(p_0^\phi, \alpha \cdot 2^\phi)$ are in contact, as they both contain $g$.
+
+Now we proceed inductively. Suppose at layer $i+1$, our current pivot $p_j^{i+1}$ satisfies that $B(p_j^{i+1}, \alpha \cdot 2^{i+1})$ is in contact with $B(Q, \tau')$. We claim that the expanded ball $B(p_j^{i+1}, \alpha \cdot 2^{i+1} + 2\tau)$ completely covers $B(Q, \tau')$. This follows because for any point $x \in B(Q, \tau')$:
+\[
+d(p_j^{i+1}, x) \leq d(p_j^{i+1}, Q) + d(Q, x) \leq (\alpha \cdot 2^{i+1} + \tau') + \tau' \leq \alpha \cdot 2^{i+1} + 2\tau.
+\]
+
+As illustrated in Figure~\ref{fig:ball_contact}, when the ball $B(p_j^{i+1}, \alpha \cdot 2^{i+1})$ centered at the current pivot is in contact with the query ball $B(Q, \tau')$, the expanded ball $B(p_j^{i+1}, \alpha \cdot 2^{i+1} + 2\tau)$ completely covers the query ball. This geometric relationship is crucial for ensuring that at least one child node at the next layer will satisfy the distance constraint.
+
+By Lemma~\ref{lemma:coverage}, the points within $B(p_j^{i+1}, \alpha \cdot 2^{i+1} + 2\tau)$ are completely covered by the union of balls $\bigcup_{p_k^i \in \text{children}(p_j^{i+1})} B(p_k^i, \alpha \cdot 2^i)$, where the children are those nodes $p_k^i \in Y_i$ connected to $p_j^{i+1}$ via edges in $E$ (satisfying $d(p_j^{i+1}, p_k^i) \leq 3\alpha \cdot 2^i + 2\tau$ as per Definition~\ref{def:netdag}).
+
+Since the answer $g \in B(p_j^{i+1}, \alpha \cdot 2^{i+1} + 2\tau)$, there must exist at least one child $p_k^i$ such that $g \in B(p_k^i, \alpha \cdot 2^i)$. This ball $B(p_k^i, \alpha \cdot 2^i)$ is therefore in contact with $B(Q, \tau')$, which implies:
+\[
+d(p_k^i, Q) \leq \alpha \cdot 2^i + \tau'.
+\]
+
+This satisfies the distance constraint required by Algorithm~\ref{alg:searchND} at layer $i$. By induction from layer $\phi-1$ down to layer $0$, the algorithm will always find a valid child at each layer, ensuring it reaches the base layer where the answer can be retrieved. Therefore, when an answer exists within distance $\tau'$ from $Q$, the search process is guaranteed to find a qualifying child at every layer and continue the search without premature termination.
+\end{proof}
+
+
+\begin{theorem}[Search Complexity of $\upperpart$]
+\label{thm:netdag-search}
+Given a $\upperpart$ structure with doubling constant $\lambda$ and $\phi$ layers, Algorithm~\ref{alg:searchND} completes in $O(\lambda^{\log_2{20}} \cdot \phi)$ distance computations (NDCs).
+\end{theorem}
+\begin{proof}[Proof of Theorem~\ref{thm:netdag-search}]
+The algorithm traverses from layer $Y_\phi$ down to layer $Y_0$, maintaining a single pivot at each layer. 
+At each layer $i$ (for $i = \phi-1$ down to $0$), we examine all children of the current pivot $p^{i+1}$ to find one satisfying 
+\[
+d(p^i_j, Q) \le \alpha \cdot 2^i + \tau'.
+\]
+By Corollary~\ref{coro:bounded-children}, any node has at most 
+\[
+\lambda^{\log_2\!\Bigl(12 + \tfrac{8\tau}{\alpha \cdot 2^i}\Bigr)} \;\le\; \lambda^{\log_2{20}}
+\]
+children.  
+
+At the base layer $Y_0$, we examine the friends of pivot $p^0$. 
+By Corollary~\ref{coro:net-points-ball}, since the friends structure contains nodes within distance $4\alpha$, there are at most $\lambda^{\log_2{16}}$ such nodes.  
+
+Therefore, the algorithm performs at most $\lambda^{\log_2{20}}$ distance computations per layer across $\phi$ layers, plus $\lambda^{\log_2{16}}$ at the base layer.  
+This yields a total of 
+\[
+O(\lambda^{\log_2{20}} \cdot \phi)
+\]
+distance computations.  
+
+Finally, note that $\phi = O(\log_2(\Delta/\alpha))$, where $\Delta$ is the dataset diameter (the maximum pairwise distance between graphs). 
+\end{proof}
+
+
+
+\begin{lemma}[Edge-edit Bound Between Two Graphs]\label{lm:edge-edit-bound}
+Given two graphs $G_1$ and $G_2$, the graph edit path (GEP) from $G_1$ to $G_2$
+contains at most $|E(G_1)| + |E(G_2)|$ operations.
+\end{lemma}
+
+\begin{proof}
+By the definition of GEP in Section~\ref{subsec:preliminaries}, a GEP is the
+shortest edit sequence transforming $G_1$ into $G_2$.
+There exists an explicit edit sequence that deletes all edges of $G_1$ and then
+inserts all edges of $G_2$, which performs exactly $|E(G_1)| + |E(G_2)|$ operations.
+Since a GEP cannot use more operations than this explicit construction, the claim follows.
+\end{proof}
+
+
+
+
+
+
+\begin{lemma}[Size of Non-database Nodes in $\lowerpartsingleshort$]\label{lm:ept-middle-size}
+Given an $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$ and a data graph 
+set $C$, let $G \in C$ and let $g$ be a non-database node that is an 
+intermediate graph produced by the GEP from $G_{\mathrm{root}}$ to $G$.
+Then
+\[
+  |E(g)| \le |E(G_{\mathrm{root}})| + |E(G)|.
+\]
+\end{lemma}
+
+\begin{proof}
+Since $g$ appears as an intermediate graph on the GEP from $G_{\mathrm{root}}$ 
+to $G$, transforming $G_{\mathrm{root}}$ into $g$ requires at least 
+$|E(g)| - |E(G_{\mathrm{root}})|$ edge insertions, and transforming $g$ into $G$ 
+requires at least $|E(g)| - |E(G)|$ edge deletions.
+Thus the GEP performs at least
+\[
+  (|E(g)| - |E(G_{\mathrm{root}})|)
+  +
+  (|E(g)| - |E(G)|)
+  =
+  2|E(g)| - |E(G_{\mathrm{root}})| - |E(G)|.
+\]
+
+By Lemma~\ref{lm:edge-edit-bound}, the GEP from $G_{\mathrm{root}}$ to $G$ 
+performs at most $|E(G_{\mathrm{root}})| + |E(G)|$ operations.
+If $|E(g)|$ exceeded this amount, the above lower bound would contradict 
+Lemma~\ref{lm:edge-edit-bound}.
+Therefore
+\[
+  |E(g)| \le |E(G_{\mathrm{root}})| + |E(G)|.
+\]
+\end{proof}
+
+
+
+
+
+\begin{lemma}[Vertex Count of Non-database Nodes in $\lowerpartsingleshort$]\label{lm:ept-middle-vertex}
+Given an $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$ and a data graph 
+set $C$, let $G \in C$ and let $g$ be a non-database node that is an 
+intermediate graph produced by the GEP from $G_{\mathrm{root}}$ to $G$.
+Then
+\[
+  |V(g)| \le \max\{|V(G_{\mathrm{root}})|,\; |V(G)|\}.
+\]
+\end{lemma}
+
+\begin{proof}
+As shown in~\cite{LSaICDE20}, a GEP between two graphs cannot contain both 
+vertex insertion and vertex deletion operations.
+Hence, along the GEP from $G_{\mathrm{root}}$ to $G$, the vertex count changes 
+monotonically.
+Therefore every intermediate graph on this GEP, including $g$, satisfies
+\[
+  |V(g)| \le \max\{|V(G_{\mathrm{root}})|,\; |V(G)|\}.
+\]
+\end{proof}
+
+
+
+
+
+
+\begin{lemma}[$\lowerpartshort$ Node Count]\label{lm:lowerpart-size}
+The total number of nodes in $\lowerpartshort$ is $O(N)$, where $N$ is the number of graphs in the database.
+\end{lemma}
+
+\begin{proof}
+The total number of nodes in $\lowerpartshort$ equals the sum of the nodes across all its $\lowerpartsingleshort$s. 
+Consider the $i$-th $\lowerpartsingleshort$ that covers $N_i$ database graphs, where $\sum_i N_i = N$.
+Let $m_i$ denote the number of leaf nodes in this tree; since every leaf corresponds to a database graph assigned to this tree, we have $m_i \le N_i$.
+According to Definition~\ref{def:EPT}, any non-database node must have at least two children.
+In a rooted tree where every non-database internal node has out-degree at least~2, the number of such non-database nodes is bounded by the number of leaves, hence at most $m_i$.
+Therefore, the total number of nodes in the $i$-th tree is at most $N_i + m_i \le 2N_i$.
+Summing over all trees in $\lowerpartshort$ gives $\sum_i O(N_i) = O(\sum_i N_i) = O(N)$, as claimed.
+\end{proof}
+
+
+\begin{lemma}[Number of Nodes in a Subtree]\label{lm:ept-subtree-balance}
+Given an $\lowerpartsingleshort$ with data graph set $C$, consider any node $u$ 
+and the subtree $\mathcal{T}_u$ rooted at $u$.
+Let $D_u$ be the set of nodes in $\mathcal{T}_u$ whose graphs are in $C$
+(data nodes), and let $I_u$ be the set of non-database internal nodes. Then
+\[
+  |D_u| \;\ge\; |I_u|.
+\]
+\end{lemma}
+
+
+\begin{proof}
+Consider an arbitrary node $u$ and its subtree $\mathcal{T}_u$.
+By Definition~\ref{def:EPT} and the compression rule, every non-database node 
+in $\mathcal{T}_u$ has out-degree at least~2, and every leaf in $\mathcal{T}_u$
+represents a data graph; let $L_u$ denote the set of leaves in $\mathcal{T}_u$.
+Hence $L_u \subseteq D_u$.
+
+Similar to Lemma~\ref{lm:lowerpart-size}, the number of non-database internal 
+nodes in $\mathcal{T}_u$ is at most the number of leaves:
+\[
+  |I_u| \;\le\; |L_u|.
+\]
+Since $L_u \subseteq D_u$, we obtain $|L_u| \le |D_u|$, and thus
+\[
+  |I_u| \;\le\; |L_u| \;\le\; |D_u|.
+\]
+This proves the claim.
+\end{proof}
+
+\begin{lemma}[Assignment of Data Nodes to Non-database Nodes]\label{lm:ept-matching}
+Given an $\lowerpartsingleshort$ with data graph set $C$, let $I$ be the set of 
+non-database nodes. Then there exists an injective mapping
+\[
+  \pi : I \to C
+\]
+such that $\pi(g)$ lies in the subtree rooted at $g$ for every $g \in I$.
+\end{lemma}
+
+\begin{proof}
+\textbf{Construction.}
+Process all non-database nodes in $I$ in order of decreasing depth (from deepest
+to shallowest). When processing a non-database node $g$, choose any data node in 
+its subtree $\mathcal{T}_g$ that has not been assigned before, and assign it to 
+$g$; that is, set $\pi(g)$ to be such an unused data node in $\mathcal{T}_g$.
+
+\medskip\noindent
+\textbf{Correctness.}
+We show that this procedure never fails to find an unused data node for any 
+non-database node $g$.
+
+Let $C_g$ and $I_g$ be the sets of data nodes and non-database nodes in 
+$\mathcal{T}_g$, respectively.
+By Lemma~\ref{lm:ept-subtree-balance}, we have $|C_g| \ge |I_g|$.
+
+When $g$ is being processed, all previously processed non-database nodes in 
+$\mathcal{T}_g$ are descendants of $g$, so at most $|I_g| - 1$ of them 
+have already been assigned data nodes in $C_g$.
+Since $|C_g| \ge |I_g|$, at least one unused data node remains in $C_g$, so the 
+procedure can assign $\pi(g)$ successfully.
+
+Because each data node is used at most once and an unused data node is always 
+available, the resulting mapping $\pi$ is injective and satisfies 
+$\pi(g) \in C_g$ for all $g \in I$.
+\end{proof}
+
+
+\begin{lemma}[Total Edge Count of Non-database Nodes in $\lowerpartsingleshort$]\label{lm:ept-middle-total-edge}
+Given an $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$ with data graph
+set $C$, let $I$ be the set of non-database nodes in this $\lowerpartsingleshort$.
+Then
+\[
+  \sum_{g \in I} |E(g)|
+  \;\le\;
+  |C|\cdot |E(G_{\mathrm{root}})| 
+  \;+\;
+  \sum_{G\in C} |E(G)|.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $I$ be the set of non-database nodes in this $\lowerpartsingleshort$.
+By Lemma~\ref{lm:ept-matching}, there exists an injective mapping
+\[
+  \pi : I \to C
+\]
+such that for every $g \in I$, the data node $\pi(g)$ lies in the subtree
+rooted at $g$.
+
+Consider an arbitrary $g \in I$.
+Since $\pi(g)$ lies in the subtree rooted at $g$, the path from
+$G_{\mathrm{root}}$ to $\pi(g)$ in $\lowerpartsingleshort$ passes through $g$.
+Thus $g$ is an intermediate graph on the GEP from $G_{\mathrm{root}}$ to
+$\pi(g)$.
+By Lemma~\ref{lm:ept-middle-size}, we have
+\[
+  |E(g)| \;\le\; |E(G_{\mathrm{root}})| + |E(\pi(g))|.
+\]
+
+Summing the above inequality over all $g \in I$ gives
+\[
+\begin{aligned}
+  \sum_{g \in I} |E(g)|
+  &\;\le\;
+  \sum_{g \in I} \bigl(|E(G_{\mathrm{root}})| + |E(\pi(g))|\bigr) \\[2pt]
+  &\;=\;
+  |I|\cdot |E(G_{\mathrm{root}})|
+  \;+\;
+  \sum_{g \in I} |E(\pi(g))|.
+\end{aligned}
+\]
+
+
+Since $\pi$ is injective and $\pi(I) \subseteq C$, we have $|I| \le |C|$ and
+\[
+  \sum_{g \in I} |E(\pi(g))|
+  \;\le\;
+  \sum_{G \in C} |E(G)|.
+\]
+Therefore,
+\[
+  \sum_{g \in I} |E(g)|
+  \;\le\;
+  |C|\cdot |E(G_{\mathrm{root}})|
+  \;+\;
+  \sum_{G \in C} |E(G)|,
+\]
+which proves the lemma.
+\end{proof}
+
+
+
+\begin{lemma}[Total Vertex Count of Non-database Nodes in $\lowerpartsingleshort$]\label{lm:ept-middle-total-vertex}
+Given an $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$ with data graph
+set $C$, let $I$ be the set of non-database nodes in this $\lowerpartsingleshort$.
+Then
+\[
+  \sum_{g \in I} |V(g)|
+  \;\le\;
+  |C|\cdot |V(G_{\mathrm{root}})|
+  \;+\;
+  \sum_{G\in C} |V(G)|.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $I$ be the set of non-database nodes in this $\lowerpartsingleshort$.
+By Lemma~\ref{lm:ept-matching}, there exists an injective mapping
+\[
+  \pi : I \to C
+\]
+such that for every $g \in I$, the data node $\pi(g)$ lies in the subtree
+rooted at $g$.
+
+Consider an arbitrary $g \in I$.
+Since $\pi(g)$ lies in the subtree rooted at $g$, the path from
+$G_{\mathrm{root}}$ to $\pi(g)$ in $\lowerpartsingleshort$ passes through $g$.
+Thus $g$ is an intermediate graph on the GEP from $G_{\mathrm{root}}$ to
+$\pi(g)$.
+By Lemma~\ref{lm:ept-middle-vertex}, we have
+\[
+  |V(g)|
+  \;\le\;
+  \max\{|V(G_{\mathrm{root}})|,\; |V(\pi(g))|\}
+  \;\le\;
+  |V(G_{\mathrm{root}})| + |V(\pi(g))|.
+\]
+
+Summing the above inequality over all $g\in I$ gives
+\[
+\begin{aligned}
+  \sum_{g\in I} |V(g)|
+  &\;\le\;
+  \sum_{g\in I} \bigl(|V(G_{\mathrm{root}})| + |V(\pi(g))|\bigr) \\[2pt]
+  &\;=\;
+  |I|\cdot |V(G_{\mathrm{root}})|
+  \;+\;
+  \sum_{g\in I} |V(\pi(g))|.
+\end{aligned}
+\]
+
+
+Since $\pi$ is injective and $\pi(I) \subseteq C$, we have $|I| \le |C|$ and
+\[
+  \sum_{g\in I} |V(\pi(g))|
+  \;\le\;
+  \sum_{G\in C} |V(G)|.
+\]
+Therefore,
+\[
+  \sum_{g\in I} |V(g)|
+  \;\le\;
+  |C|\cdot |V(G_{\mathrm{root}})|
+  \;+\;
+  \sum_{G\in C} |V(G)|,
+\]
+which proves the lemma.
+\end{proof}
+
+\begin{corollary}[Total Size of Non-database Graphs in $\lowerpartsingleshort$]\label{coro:ept-middle-total-size}
+Given an $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$ with data graph
+set $C$, let $I$ be the set of non-database nodes in this $\lowerpartsingleshort$.
+Then the total size of all non-database graphs satisfies
+\[
+  \sum_{g\in I} \bigl(|V(g)| + |E(g)|\bigr)
+  = O\bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \bigr).
+\]
+\end{corollary}
+
+\begin{proof}
+By Lemma~\ref{lm:ept-middle-total-edge},
+\[
+  \sum_{g\in I} |E(g)|
+  \;\le\;
+  |C|\cdot |E(G_{\mathrm{root}})|
+  + \sum_{G\in C} |E(G)|.
+\]
+By Lemma~\ref{lm:ept-middle-vertex} and the fact that
+$|V(g)| = O(|E(g)|)$ for every intermediate graph $g$,
+\[
+  \sum_{g\in I} |V(g)|
+  = O\Bigl(\sum_{g\in I} |E(g)|\Bigr).
+\]
+Therefore,
+\[
+  \sum_{g\in I} (|V(g)| + |E(g)|)
+  = O\Bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \Bigr).
+\]
+\end{proof}
+
+
+\begin{corollary}[Total Size of All Graphs in $\lowerpartsingleshort$]\label{coro:ept-total-size}
+Given an $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$ with data graph
+set $C$, let $I$ be the set of non-database nodes in this $\lowerpartsingleshort$.
+Then the total size of all graphs in $\lowerpartsingleshort$ is
+\[
+  O\bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \bigr).
+\]
+\end{corollary}
+
+\begin{proof}
+The total size of all graphs in $\lowerpartsingleshort$ is
+\[
+  \sum_{g\in I} \bigl(|V(g)| + |E(g)|\bigr)
+  + \sum_{G\in C} \bigl(|V(G)| + |E(G)|\bigr).
+\]
+By Corollary~\ref{coro:ept-middle-total-size},
+\[
+  \sum_{g\in I} \bigl(|V(g)| + |E(g)|\bigr)
+  = O\bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \bigr).
+\]
+Moreover, for each data graph $G\in C$ we have $|V(G)| = O(|E(G)|)$, and thus
+\[
+  \sum_{G\in C} \bigl(|V(G)| + |E(G)|\bigr)
+  = O\Bigl(\sum_{G\in C} |E(G)|\Bigr).
+\]
+Combining the two bounds completes the proof.
+
+\end{proof}
+
+\begin{lemma}[Total Number of Edit Operations on Edges in $\lowerpartsingleshort$]\label{lm:ept-edge-seq}
+Given an $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$ with data graph
+set $C$, let $\mathcal{E}$ be the set of edges in this $\lowerpartsingleshort$.
+For each edge $e \in \mathcal{E}$, let $\mathrm{op}(e)$ denote the number of
+edit operations represented by $e$.
+Then the total number of edit operations represented by all edges in
+$\lowerpartsingleshort$ satisfies
+\[
+  \sum_{e\in\mathcal{E}} \mathrm{op}(e)
+  = O\bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \bigr).
+\]
+\end{lemma}
+
+\begin{proof}
+For each data graph $G \in C$, the path from $G_{\mathrm{root}}$ to $G$ in
+$\lowerpartsingleshort$ represents a graph edit path (GEP) by
+Definition~\ref{def:EPT}.
+Let $\mathrm{ops}(G)$ be the total number of edit operations represented by
+the edges on this path.
+
+To upper-bound $\mathrm{ops}(G)$, consider the explicit edit sequence that
+transforms $G_{\mathrm{root}}$ into $G$ by deleting all vertices and edges of
+$G_{\mathrm{root}}$ and then inserting all vertices and edges of $G$.
+This explicit construction requires
+\[
+  |V(G_{\mathrm{root}})| + |E(G_{\mathrm{root}})| 
+  + |V(G)| + |E(G)|
+  = O\!\left(|E(G_{\mathrm{root}})| + |E(G)|\right),
+\]
+where the equality follows from expressing graph size in terms of the number of edges.
+Since a GEP cannot be longer than this explicit sequence, we obtain
+\[
+  \mathrm{ops}(G)
+  = O\!\left(|E(G_{\mathrm{root}})| + |E(G)|\right).
+\]
+
+
+Each edge $e\in\mathcal{E}$ lies on the root-to-leaf path of at least one
+data graph.
+Assign $\mathrm{op}(e)$ to one such data graph $G_e \in C$.
+Each edit operation is therefore charged exactly once, and for every
+$G\in C$ the total charge is at most $\mathrm{ops}(G)$.
+Hence
+\[
+\begin{aligned}
+  \sum_{e\in\mathcal{E}} \mathrm{op}(e)
+  &\;\le\;
+  \sum_{G\in C} \mathrm{ops}(G) \\[2pt]
+  &\;=\;
+  O\!\bigl(\sum_{G\in C} \bigl(|E(G_{\mathrm{root}})| + |E(G)|\bigr)\bigr) \\[2pt]
+  &\;=\;
+  O\!\bigl(
+      |C|\cdot |E(G_{\mathrm{root}})|
+      + \sum_{G\in C} |E(G)|
+    \bigr).
+\end{aligned}
+\]
+
+
+which proves the lemma.
+\end{proof}
+
+
+\begin{corollary}[Space Complexity of $\lowerpartsingleshort$]\label{coro:ept-space}
+Given an $\lowerpartsingleshort$ rooted at $G_{\mathrm{root}}$ with data graph
+set $C$, let $I$ be the set of non-database nodes and $\mathcal{E}$ be the set
+of edges in this $\lowerpartsingleshort$.
+Then the total space of $\lowerpartsingleshort$, including all graphs stored at
+nodes and all edit-operation sequences represented by its edges, is
+\[
+  O\bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \bigr).
+\]
+\end{corollary}
+
+\begin{proof}
+By Corollary~\ref{coro:ept-total-size}, the total size of all graphs stored at
+the nodes in $\lowerpartsingleshort$ is
+\[
+  O\bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \bigr),
+\]
+and by Lemma~\ref{lm:ept-edge-seq}, the total number of edit operations
+represented by all edges in $\lowerpartsingleshort$ is also
+\[
+  O\bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \bigr).
+\]
+Therefore, the total space of $\lowerpartsingleshort$ is
+\[
+  O\bigl(
+    |C|\cdot |E(G_{\mathrm{root}})|
+    + \sum_{G\in C} |E(G)|
+  \bigr).
+\]
+\end{proof}
+
+
+\begin{algorithm}[t]
+  \caption{$\upperpart$ Construction Algorithm}
+  \label{alg:netdag-build}
+  \footnotesize
+
+  \KwIn{$\mathcal{D}$: database points; $\alpha>0$; $0 \le \tau \le \alpha$.}
+  \KwOut{Layers $Y_0,\ldots,Y_\phi$; edge set $E$ (within $\upperpart$) and $E'$ (between $Y_1$ and $Y_0$).}
+
+  \BlankLine
+  $E \gets \emptyset$\;
+  $E' \gets \emptyset$\;
+
+  choose any $p_1 \in \mathcal{D}$ as the first center\;
+  mark $p_1$ as selected\;
+
+  $\delta(p_1) \gets 0$\;
+
+  $H \gets$ empty max-heap with key = $\delta(x)$\;
+
+  \ForEach{$x \in \mathcal{D}$ \emph{with} $x \neq p_1$}{
+    $\delta(x) \gets d(x,p_1)$\;
+    $\mathrm{Center}(x) \gets p_1$\;
+    insert $x$ into $\mathrm{ServedBy}(p_1)$\;
+    push($x$, $H$)\;
+  }
+
+  $k \gets 1$\;
+  $r \gets +\infty$\;
+
+  \BlankLine
+  \While{$r > \alpha$}{
+
+    % -------- pick center ----------
+    $u \gets$ pop($H$); $k \gets k+1$; $p_k \gets u$; $r \gets \delta(u)$\; \label{line:pick-center}
+
+    mark $p_k$ as selected\;
+
+    % -------- initialise phi -----------
+    \If{$k = 2$}{
+      $\phi \gets \left\lceil \log_2(r/\alpha) \right\rceil$\;
+      $Y_\phi \gets \{p_1\}$\; \label{line:top-layer}
+      $j \gets \phi-1$\;
+    }
+
+    % -------- layer creation ----------
+    \If{$k \ge 2$ \emph{and} $j \ge 1$ \emph{and} $r \le \alpha\cdot 2^j$}{
+      $i_{\min} \gets \max\!\Bigl(1,\ \left\lceil \log_2(r/\alpha) \right\rceil\Bigr)$\;
+
+      \For(){$i = j$ \emph{to} $i_{\min}$}{ \label{line:layer-start}
+        $Y_i \gets \{p_1,\ldots,p_{k-1}\}$\;  % materialize Y_i
+
+        % -------- connecting layers ----------
+        \ForEach{$q \in Y_{i+1}$}{
+          \ForEach{$p_\ell \in \mathrm{Friends}(q)$ \emph{with} $p_\ell \in Y_i$}{
+            \If{$d(p_\ell,q) \le 3\alpha\cdot 2^i + 2\tau$}{
+              add $(q,p_\ell)$ to $E$\; \label{line:add-edge}
+            }
+          }
+        }
+      } \label{line:layer-end}
+
+      $j \gets i_{\min}-1$\;
+    }
+
+    \BlankLine
+    % -------- update friends + served -----------
+    update all affected $\mathrm{Friends}(\cdot)$ and $\mathrm{ServedBy}(\cdot)$
+    using Algorithm~\ref{alg:update-friends}\; \label{line:update-friends-call}
+
+  }
+
+  \BlankLine
+  $Y_0 \gets \{p_1,\ldots,p_{k-1}\}$\;
+
+  % -------- connect Y1 to Y0 (for $\lowerpart$) ----------
+  \ForEach{$q \in Y_1$}{
+    \ForEach{$p_\ell \in \mathrm{Friends}(q)$ \emph{with} $p_\ell \in Y_0$}{
+      \If{$d(p_\ell,q) \le 3\alpha + 2\tau$}{
+        add $(q,p_\ell)$ to $E'$\;
+      }
+    }
+  }
+
+  \BlankLine
+  \Return $(Y_0,\ldots,Y_\phi,E,E')$\;
+\end{algorithm}
+
+
+
+
+
+
+
+\begin{algorithm}[t]
+  \caption{Procedure for updating the global $\mathrm{Friends}(\cdot)$ and $\mathrm{ServedBy}(\cdot)$}
+  \label{alg:update-friends}
+  \footnotesize
+
+  \KwIn{new center $p_k$ with radius $r$}
+
+  let $c_k'$ be the center that served $p_k$ two phases earlier\; \label{line:ck-def}
+
+  % -------- find new friends ----------
+  \ForEach{$y \in \mathrm{Friends}(c_k')$}{ \label{line:scan-candidates}
+    \If{$d(p_k,y) \le 4r$}{
+      add $y$ to $\mathrm{Friends}(p_k)$\;
+      add $p_k$ to $\mathrm{Friends}(y)$\;
+    }
+  }
+
+  % -------- reassign served points ----------
+  \ForEach{$y \in \mathrm{Friends}(p_k)$}{ \label{line:scan-friends}
+    \ForEach{$x \in \mathrm{ServedBy}(y)$ \emph{with} $x$ \emph{not selected}}{
+      $d_{\mathrm{new}} \gets d(x,p_k)$\;
+      \If{$d_{\mathrm{new}} < \delta(x)$}{
+        remove $x$ from $\mathrm{ServedBy}(\mathrm{Center}(x))$\;
+        $\mathrm{Center}(x) \gets p_k$\;
+        insert $x$ into $\mathrm{ServedBy}(p_k)$\;
+        $\delta(x) \gets d_{\mathrm{new}}$\;
+        update $H$ with the new $\delta(x)$\; \label{line:update-H}
+      }
+    }
+  }
+
+\end{algorithm}
+
+
+
+\subsection{Detailed construction of $\upperpart$}
+\label{app:ND_construction_detail}
+
+The construction of $\upperpart$ is based on the incremental greedy permutation construction
+framework of Har-Peled and Mendel~\cite{NetTree}, from which we adopt two
+important per-center structures:  
+(i) the set $\mathrm{Friends}(\cdot)$ (the \emph{friends list}), which stores for
+each center the nearby centers that may serve as its parent candidates; and  
+(ii) the set $\mathrm{ServedBy}(\cdot)$, which stores for each center the points
+that are currently \emph{served} by it (i.e., for which this center is the
+nearest one).  
+These two structures enable efficient nearest-center maintenance and layer
+construction throughout the greedy permutation construction process.
+
+\begin{itemize}[leftmargin=*]
+
+\item \textbf{Initialization.}
+An arbitrary point $p_1$ is chosen as the first center.  
+For every other point $x\in\mathcal{D}$, the algorithm computes
+$\delta(x)=d(x,p_1)$, where $\delta(x)$ always denotes the distance from $x$ to
+its \emph{current} nearest selected center.  
+Each such point records its assigned center in $\mathrm{Center}(x)$, is inserted
+into $\mathrm{ServedBy}(p_1)$, and is pushed into the max-heap $H$ keyed by
+$\delta(\cdot)$.  
+This prepares the greedy selection of farthest-first centers.
+
+\item \textbf{Selecting new centers and determining the number of layers.}
+In every iteration, the algorithm extracts from $H$ the farthest unselected
+point (Line~\ref{line:pick-center}), which becomes the next center $p_k$.  
+$r_k=\delta(p_k)$ is exactly its distance to the nearest earlier
+center.  
+When $k=2$, this value determines the number of layers:
+\[
+\phi = \left\lceil \log_2(r_2/\alpha) \right\rceil,
+\]
+and the top layer is initialized as $Y_\phi=\{p_1\}$
+(Line~\ref{line:top-layer}), which is a $(\alpha \cdot 2^{\phi})$-net.
+
+\item \textbf{Creating layers.}
+Since the radii satisfy $r_1\ge r_2\ge \cdots$, whenever
+$r_k \le \alpha\cdot 2^j$ for the first time, the layer $Y_j$ should be created.  
+If $r_k$ crosses multiple thresholds at once, all layers from $j$ down to
+\[
+i_{\min} = \max\!\bigl(1,\ \lceil\log_2(r_k/\alpha)\rceil\bigr)
+\]
+are created in sequence in
+Lines~\ref{line:layer-start}--\ref{line:layer-end}.  
+Each layer $Y_i$ is simply the prefix $\{p_1,\ldots,p_{k-1}\}$, which is an
+$r_k$-net due to the property of greedy permutations.
+
+\item \textbf{Assigning parent--child edges.}
+For each newly created layer $Y_i$, the algorithm examines every
+$q\in Y_{i+1}$.  
+Its potential parents are restricted to $\mathrm{Friends}(q)\cap Y_i$, which reduces the search space.  
+For each such $p_\ell$ that satisfies
+\[
+d(p_\ell,q)\le 3\alpha\cdot 2^i + 2\tau,
+\]
+an edge $(q,p_\ell)$ is added (Line~\ref{line:add-edge}).  
+
+\item \textbf{Updating friends lists and served points.}
+Line~\ref{line:update-friends-call} of Algorithm~\ref{alg:netdag-build}
+invokes Algorithm~\ref{alg:update-friends}.  
+This update procedure follows the friends-list maintenance strategy of
+Har-Peled and Mendel’s net-tree construction~\cite{NetTree}.
+Record the center that served $p_k$ two phases earlier as $c_k'$
+(Line~\ref{line:ck-def}).  
+Its friends list $\mathrm{Friends}(c_k')$ provides the complete set of candidate
+centers that may be inserted into $\mathrm{Friends}(p_k)$
+(Line~\ref{line:scan-candidates}).
+For each candidate $y$, if $d(p_k,y)\le 4r$, the pair is inserted symmetrically into each other's friends list.
+Algorithm~\ref{alg:update-friends} then examines all served points in
+$\mathrm{ServedBy}(y)$ for every $y\in\mathrm{Friends}(p_k)$
+(Lines~\ref{line:scan-friends}--\ref{line:update-H}).  
+Whenever a point $x$ satisfies $d(x,p_k)<\delta(x)$, the algorithm updates
+$\delta(x)$, reassigns $x$ to $\mathrm{ServedBy}(p_k)$, and updates $H$
+accordingly.  
+To control the size of each friends list, they are lazily trimmed whenever the algorithm scans a friends list: any center whose distance to the current center exceeds the admissible $8r_k$ range is removed during the scan.
+
+
+
+\item \textbf{Connection to $\lowerpartfull$.}
+When the first index $t$ with $r_t \le \alpha$ is reached, the prefix
+$\{p_1,\ldots,p_{t-1}\}$ becomes the $\alpha$-net $Y_0$.  
+Although $Y_0$ is not part of the $\upperpart$, it is generated by the
+same greedy-permutation process.  The leaf layer of $\upperpart$ is $Y_1$, while
+$Y_0$ serves as the root set of the small-step index $\lowerpartfull$.  
+Edges between $Y_1$ and $Y_0$ are created using the same rule
+$d(p,q)\le 3\alpha + 2\tau$ as between the upper layers, ensuring that query
+processing can proceed seamlessly from the large-step index $\upperpart$ into $\lowerpartfull$.
+
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Full Proofs}
+\label{appendix:full-proofs}
+
+\subsection{Proof of Theorem~\ref{theorem:upperpart-construction}}
+\label{appendix:proof-upperpart-construction}
+
+\begin{proof}
+Section~3.1 of~\cite{NetTree} shows that the number of distance
+computations conducted during the greedy-permutation construction is
+$O(\lambda^{O(1)} N s)$, where $s$ is the number of \emph{phases}.  
+The radius sequence $r_1 \ge r_2 \ge \cdots$ is non-increasing, and a
+\emph{phase} is the maximal interval of consecutive iterations in which
+the greedy radius $r_k$ stays within $(r/2,r]$ for some value~$r$.
+Within any such \emph{phase}, each point is scanned only
+$\lambda^{O(1)}$ times (Section~3.1 in~\cite{NetTree}), because the
+doubling property bounds the size of every \emph{friends list} and hence
+the number of times a point recomputes its distance to the newly selected
+center.  
+Summed over all \emph{phases}, the total number of distance computations
+is therefore $O(\lambda^{O(1)} N s)$.
+
+In our setting, the greedy radii decrease from $\alpha \cdot 2^\phi$ to
+$\alpha$, and the radius changes by at most a factor of two between
+consecutive layers.  
+Hence the construction encounters exactly $\phi+1$ distinct radii,
+which correspond directly to the $\phi+1$ layers of $\upperpart$.  
+Substituting $s=\phi+1$ gives
+\[
+  O(\lambda^{O(1)} N s)
+  = O(\lambda^{O(1)} N \phi).
+\]
+
+Finally, all radii used in our construction satisfy $r\ge\alpha$, so all
+packing and covering arguments in~\cite{NetTree} remain valid when the
+global doubling constant~$\lambda$ is replaced by the restricted doubling
+constant
+$\lambda_\alpha := \max_{p\in\mathcal X,\, r\ge\alpha} \lambda(p,r)$.
+Thus the total number of distance computations becomes
+$O(\lambda_\alpha^{O(1)} N \phi)$, proving
+Theorem~\ref{theorem:upperpart-construction}.
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\stab
+\textbf{EXP-7. Scalability.} We evaluate the scalability of different methods on the SYN dataset with $\tau=4$, varying the database size from 10K to 1M graphs. Figure~\ref{fig:scalability} illustrates the runtime performance as the database scales up.
+
+$\net$ demonstrates scalability with near-linear growth in runtime. As the database size increases by 100$\times$ from 10K to 1M graphs, the runtime increases proportionally, confirming the scalability of our approach. At the 1M scale, $\net$ completes the similarity search queries within 104.8 seconds under default settings, while maintaining consistent performance throughout the entire range. These results validate that our two-phase indexing strategy effectively manages the computational complexity even as the database grows to million-scale graphs, showing $\net$ can handle million-scale datasets in practice.
+
+\begin{table*}[htbp]
+          \centering
+          \footnotesize
+          \setlength{\tabcolsep}{3pt}
+          \renewcommand{\arraystretch}{0.9}
+          \vspace{-3ex}
+          \caption[Runtime comparison of GED-based methods with varying $\tau$]{Runtime comparison of GEDGW, GEDIOT, GEDHOT, GHash, and LAN under default settings with varying $\tau$. Format: seconds per query
+    (Recall\%/Precision\%).}
+          \label{tab:ged_methods_with_tau}
+          \begin{tabular}{l|l|cccccc}
+              \toprule
+              \textbf{Dataset} & \textbf{Method} & \multicolumn{6}{c}{\textbf{Seconds per Query (Recall\%/Precision\%)}} \\
+              \midrule
+              \multirow{5}{*}{AIDS}
+              & & $\tau$=2 & 4 & 6 & 8 & 10 & 12 \\
+              \cmidrule{2-8}
+              & GEDGW   & 0.48 (18.9/100) & 5.22 (19.8/100) & 35.6 (14.7/100) & 82.0 (12.3/100) & 133 (12.1/100) & 196 (14.0/100) \\
+              & GEDIOT  & 0.15 (2.8/60.0) & 1.55 (26.2/32.4) & 9.80 (31.3/15.5) & 26.3 (40.1/17.3) & 45.1 (49.3/26.3) & 65.9 (55.1/37.5) \\
+              & GEDHOT  & 0.63 (21.7/92.0) & 6.77 (41.7/43.3) & 45.4 (40.4/19.1) & 108 (46.0/19.4) & 179 (53.2/27.8) & 261 (58.4/38.9) \\
+              & GHash   & 0.39 (78.8/100) & 0.56 (70.6/100) & 4.26 (64.0/100) & 48.7 (56.3/100) & 402 (48.6/100) & 1885 (41.9/98.9) \\
+              & LAN     & 37.4 (76.4/100) & 37.0 (38.2/99.1) & 37.4 (12.6/100) & 38.0 (4.0/99.6) & 38.1 (1.6/100) & 39.1 (0.7/100) \\
+              \midrule
+              \multirow{5}{*}{PubChem}
+              & & $\tau$=2 & 4 & 6 & 8 & 10 & 12 \\
+              \cmidrule{2-8}
+              & GEDGW   & 0.34 (0.7/100) & 2.02 (2.4/100) & 17.4 (2.2/100) & 44.5 (2.1/100) & 83.6 (2.0/100) & 128 (2.1/98.3) \\
+              & GEDIOT  & 0.06 (13.9/23.3) & 0.43 (67.1/22.2) & 3.25 (85.1/7.6) & 10.7 (86.1/4.3) & 22.9 (83.9/3.0) & 36.3 (77.3/2.6) \\
+              & GEDHOT  & 0.41 (14.6/24.1) & 2.45 (68.3/22.5) & 20.6 (85.1/7.6) & 55.2 (86.1/4.3) & 106 (84.0/3.0) & 164 (77.4/2.6) \\
+              & GHash   & 0.25 (96.4/100) & 0.56 (94.2/100) & 4.98 (92.5/100) & 68.6 (80.5/100) & 821 (81.9/99.6) & 5585 (75.3/98.6) \\
+              & LAN     & 168 (81.9/100) & 170 (64.6/100) & 170 (55.6/100) & 168 (40.0/100) & 169 (27.1/98.9) & 171 (16.3/99.8) \\
+              \midrule
+              \multirow{5}{*}{Chemical1M}
+              & & $\tau$=2 & 4 & 6 & 8 & 10 & - \\
+              \cmidrule{2-8}
+              & GEDGW   & 23.5 (16.2/100) & 222 (14.2/100) & 762 (9.2/100) & 1548 (8.8/100) & 2393 (10.6/100) & - \\
+              & GEDIOT  & 7.09 (13.4/39.7) & 67.8 (37.8/6.2) & 232 (46.0/5.2) & 475 (58.1/9.9) & 739 (66.7/18.3) & - \\
+              & GEDHOT  & 30.6 (28.3/58.1) & 290 (42.7/7.0) & 993 (49.7/5.7) & 2023 (61.0/10.4) & 3132 (69.3/18.9) & - \\
+              & GHash   & 7.80 (61.8/100) & 13.0 (54.9/100) & 127 (49.9/100) & 5837 (42.1/100) & - & - \\
+              & LAN     & 8.8 (36.1/100) & 9.0 (6.3/100) & 9.0 (1.0/100) & 9.8 (0.2/100) & 11.3 (0.1/100) & 13.6 (0.1/98.5) \\
+              \midrule
+              \multirow{5}{*}{SYN}
+              & & $\tau$=1 & 2 & 3 & 4 & 5 & 6 \\
+              \cmidrule{2-8}
+              & GEDGW   & 50.8 (43.1/100) & 248 (38.5/100) & 1283 (32.2/100) & 2474 (25.7/100) & 3852 (19.0/100) & 5190 (13.8/100) \\
+              & GEDIOT  & 18.4 (0.0/0.0) & 90.2 (0.4/91.5) & 480 (2.4/64.8) & 957 (9.0/58.1) & 1486 (14.0/44.7) & 2003 (19.5/41.5) \\
+              & GEDHOT  & 69.2 (43.1/100) & 338 (38.7/99.9) & 1763 (33.2/96.2) & 3397 (26.5/93.1) & 5289 (21.3/89.9) & 7119 (19.7/87.5) \\
+              & GHash   & 434 (100/100) & 1654 (98.5/100) & 7152 (97.2/100) & 35141 (99.9/100) & 87296 (99.6/100) & 250898 (98.7/100) \\
+              & LAN     & 12.7 (3.4/100) & 12.7 (0.6/100) & 12.5 (0.2/100) & 12.6 (0.1/100) & 12.7 (0.0/100) & 12.8 (0.0/100) \\
+              \bottomrule
+          \end{tabular}
+    \end{table*}

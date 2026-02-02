@@ -1,0 +1,238 @@
+\section{Introduction}
+% Graphs have been widely used in a lot of emerging applications, including bioinformatics, chemi-informatics, software engineering, and computer vision. Nearest neighbor (NN) search is a fundamental query in graph databases \cite{}. Graph edit distance (GED) is one of the most widely used distance measures in NN search \cite{bai2019simgnn, noah, ghash, LAN, inves, nass, LSaICDE20, LBMaTKDE22}. However, exact NN search in a large database is too time consuming due to the NP-hardness of GED computation. Therefore, approximate NN (ANN) search becomes a promising alternative as it can significantly reduce the time cost with a slight reduce of accuracy.  
+
+Similarity search in graph databases is to search for data graphs that are similar to a given query graph. It is a fundamental query with
+%in graph databases and has 
+a wide range of applications, including bioinformatics, chemi-informatics, software engineering, and computer vision \cite{MCP, ChemExample, parsk, LigandGED, naderi2016graph, zhuTKDE20, GEDdynamicEmb, DFGED, ghash, SoftworeExample, SEGOS}. 
+For example, %researchers
+biologists might want to find the molecules in a compound database having a similar molecular structure as that of
+%similar to
+a given drug molecule, where the structures of compounds can be considered as graphs. 
+The
+\emph{graph edit distance} (GED) has been a widely used 
+similarity metric
+%distance measures 
+in graph similarity search \cite{bai2019simgnn, noah, ghash, LAN, inves, NassGED, LSaICDE20, LBMaTKDE22}. However, due to the NP-hardness of the computation of (exact) GED, similarity search on a large graph database is computationally expensive. Hence, approximate similarity search has been proposed for practical graph similarity search. In this paper, we propose a new indexing scheme for approximate similarity search in graph databases.
+ %focus on 
+%\lyu{consider} graph databases \lyu{consisted} of small \lyu{and} medium-sized graphs \cite{aids, pubchem}.
+
+
+
+
+\begin{figure}[t]
+%\captionsetup{width=1.1\linewidth}
+\begin{subfigure}{4cm}
+% \vspace{0.5ex}
+%\hspace{-3ex}
+		\includegraphics[width=4.2cm]{figures/ged_dist/ged_dict_15node_lineplot_40.png}\hfill
+		\vspace{-3.5ex}
+		\caption{Distribution of GEDs between graphs in AIDS having a number of vertices not larger than~$15$}
+		\vspace{-2ex}
+\end{subfigure}
+\hspace{1ex}
+\begin{subfigure}{3.8cm}
+\vspace{0ex}
+%\hspace{-3ex}
+		\includegraphics[width=4.2cm]{figures/ged_dist/all_ged_lineplot_200.png}\hfill
+		\vspace{-3.5ex}
+		\caption{Distribution of approximate GEDs between graphs in AIDs by using GREED~\cite{GREED}}
+		\vspace{-2ex}
+\end{subfigure}
+\caption{Distributions of the graph edit distances (GEDs) between graphs in the AIDS dataset under different settings}
+
+\label{histo}
+\vspace{-2ex}
+\end{figure}
+
+
+%\lv{start here}
+
+There have been works on applying similarity search/approximate $k$-nearest neighbor ($\aknn$) search in metric spaces ${\mathcal U}({\mathcal G}, d)$ to graph similarity search, as GED is a metric \cite{serratosa2019graph}. 
+Existing methods can be described with two extremes of the assumptions on the {\em expansion rate}, which are illustrated with the horizontal dimension of Figure~\ref{fig:dimsetting}, \choi{where the expansion rate $c$ of XXX is defined as ...} of the spaces. 
+\choi{At one extreme, the expansion rate can be bounded by a constant.} A doubling space \cite{KL2004navigating} states that a ball $B(p, 2r)$ can be covered by $C_{KL}$ balls with radius $r$, where the expansion rate $C_{KL}$ is a {\em constant} and a ball $B(p, r)$ denotes all the points $p'$ such that $d(p, p') \leq r$ 
+(\eg~all the points $p'$ in the ball of center $p$ and radius $r$). By exploiting the fact that the expansion rate is constant, the AKNN method uses a hierarchical structure in this space. $\tt NavNet$ \cite{navnet} and $\tt CoverTree$ \cite{CoverTree} and their variants \cite{compressedCoverTree, gu2022parallel, elkin2023new} are the latest methods that requires this assumption. Their search time complexity is $O$($lg$($n$)), where $n$ is the number of objects in the database. However, the expansion rate may not be bounded by a constant in practice. 
+
+At the other extreme, the methods assume that the expansion rate is not bounded. These do not utilize the \choi{expansion properties} of the space. In particular, $\tt HNSW$ \cite{hnsw}, $\tt MRNG$ \cite{nsg}, and $\tau$-$\tt MG$ \cite{tauMG} are the latest works of AKNN search. However, the search accuracy and search time complexity of $\tt HNSW$ has no guarantee. Although $\tt MRNG$ and $\tau$-$\tt MG$ find the exact NN $R$ of $Q$ when $d(Q,R)=0$ and $d(Q,R)<\tau$, respectively, the NDCs of $\tt MRNG$ and $\tau$-$\tt MG$ are $O(N)$ time in metric spaces. 
+
+There has been another assumption $(\rho, C_{KR})$-expansion \cite{KR2002}. Specifically, a space ${\mathcal U}$ has $(\rho, C_{KR})$-expansion \cite{KR2002} means that $|B(p, r)|\geq \rho$ $\implies$ $|B(p, 2r)|\leq C_{KR}|B(p, r)|$ for any point $p \in {\mathcal U}$, $r>0$ and $C_{KR}$ is a constant, where a ball $B(p, r)$ denotes all the points $p'$ such that $d(p, p') \leq r$ (e.g. all the points $p'$ in the ball of center $p$ and radius $r$), and $|B(\cdot)|$ means the number of points in the ball. 
+
+%\lv{from [start here] to here: Can you conclude high-level ideas why we study the following practical setting? Actually, there should be a flow for paragraphs 2-8 in Section 1 to introduce why and how we study the problem.}
+
+
+In this paper, we study the approximate graph similarity search with the GED metric in a practical setting between the two extremes: {\it the expansion rate $c$ is a monotonically increasing function of $n$}, where $n$ is the size of the largest graph in $\mathcal G$. It is motivated by our observation of real-world datasets. As shown in Figure~\ref{histo}(a), GED follows an unimodal distribution. Let $\alpha$ be the GED value at the peak. We can observe that when $d>\alpha$, $c=0.5$; when $d<\alpha$, $c=O(n^{2\alpha})$. From Figure~\ref{histo}(b), we can observe that $\alpha$ is stable with the growth of $n$, {\it i.e.}, $\alpha$ can be regarded as a constant. 
+
+
+\eat{
+\begin{figure}[t]
+\centering
+\includegraphics[scale=0.35]{figures/dimsetting}
+\caption{A comparison of \yk{$c=O(\alpha log_2n)?$} ($N$ is the number of objects in the database.)}
+\vspace{-1ex}
+\label{fig:dimsetting}
+\vspace{-2ex}
+\end{figure}
+}
+
+
+
+
+% Existing PGs supporting ANN search in metric spaces assume that only the triangle inequality property is available. $\tt HNSW$ \cite{hnsw}, $\tt MRNG$ \cite{nsg} and $\tau$-$\tt MG$ \cite{tauMG} are the latest works. Let $N$ denote the database size. The number of distance computations (NDC) of the ANN search using $\tt HNSW$ is empirically polylogarithm of $N$. However, the search accuracy of $\tt HNSW$ has no guarantee. $\tt MRNG$ and $\tau$-$\tt MG$ assure to find the exact NN $R$ of $Q$ when $d(Q,R)=0$ and $d(Q,R)<\tau$, respectively. However, the NDCs of $\tt MRNG$ and $\tau$-$\tt MG$ are $O(N)$. 
+
+
+% Existing PGs fall into two extremes. At one extreme, the PGs are designed for the ANN search in the general metric space, where $\tt HNSW$ \cite{hnsw},  is the latest work. Although $\tt HNSW$  empirically has polylogarithm search time of the database size $N$, the search accuracy of $\tt HNSW$ has no guarantee. At the other extreme, the PGs are designed for the ANN search in the Euclidean space, where $\tt MRNG$ \cite{nsg} and $\tau$-$\tt MG$ \cite{tauMG} are the latest works. Although $\tt MRNG$ and $\tau$-$\tt MG$ can be adapted to the general metric space while assuring to find the exact NN of $Q$ if $d(Q,R)=0$ and $d(Q,R)<\tau$, respectively, the search time complexities of $\tt MRNG$ and $\tau$-$\tt MG$ are $O(N)$. 
+
+
+% In this paper, we study a practical setting, where the metric space has a bounded doubing dimension. It is motivated by our observation on real-world graphs that the distribution of the upper bound of GED first increases and then decreases with the growth of the largest graph size $n$, and the value $\alpha$ of the upper bound of GED for achieving the peak of the distribution is stable after $n$ is large enough. Figure~\ref{} illustrates the phenomenon for the AIDS dataset. Considering the number of graphs within GED 1 from a graph is $O(n^2)$, it is derivable that  the doubling dimension of the metric space formed by $\mathcal D$ and GED is $O(\log_2 n^{2\alpha})$. $\tt CoverTree$ \cite{CoverTree} is the latest method for ANN search in the metric space with bounded doubling dimension and assures to find the exact NN. However, $\tt CoverTree$ suffers from a high time complexity $O(n^{24\alpha}\log N)$ in graph databases.
+
+
+
+
+
+% Let $X$ and $Y$ be the random variables of graph size and GED of any two graphs, respectively. $Y$ quadratically depends on $X$, as the GED of two graph is the square of the size of the larger graph in the worst case. $Pr(Y=x^2)\leq Pr(X=x)Pr(X=x) + Pr(X=x)$. If $X$ is normal distributed, $Y$ has the same trend with $X$.
+
+
+% In this paper, we propose two novel PGs to address the limitation of $\tt CoverTree$. First, we propose a basic method \basic{}. The main idea of \basic{} is that 
+
+
+% Then, we propose an advanced method \adv{}. The main idea of \adv{} is that 
+
+While a related work $\CoverTree$ and this paper are both positioned in between the two extremes mentioned earlier,
+we start by analyzing the reason for the inefficiency of $\CoverTree$. It is due to the {\it geometric} logic of $\CoverTree$, which searches for balls of radius $r$ in balls of radius $2r$. In the GED space, when $r$ is relatively large, $c$ remains a fairly small constant. However, as $r$ decreases to a smaller value, $c$’s value increases sharply, which in turn increases the branching factor in $\CoverTree$ search. This reduces the search efficiency of  $\CoverTree$ and thus suggests that as $r$ is small for the GED space, there is a need to revisit the design of the index.
+
+
+
+
+
+In this paper, we propose a new index, called $\net$. $\net$ comprises two parts. When $d \geq \alpha$, we utilize the doubling property of the GED space to build a hierarchical index $\upperpart$. In this index, each layer is an $r$-net (mentioned in Definition \ref{def:rnet}). The value of $r$ from top to bottom is $2^{l-1}\alpha, 2^{l-2}\alpha, \ldots, 2\alpha, \alpha$, totaling $l$ layers. Every point $p$ in this $r$-net is the center of a ball $B(p, r + 2\tau_q)$, where $\tau_q$ is the similarity search range. During the search, our method theoretically ensures that all results lie within $B(p, r + 2\tau_q)$. As $r$ decreases along the layers, the final candidate range narrows accordingly. For $d < \alpha$, we build an index called $\lowerpartfull$ ($\lowerpartshort$) for each point in the $\alpha$-net (i.e., the last layer of $\upperpart$). An $\lowerpartshort$ is a tree formed by the point in the $\alpha$-net as the root and its nearby points. Based on the range determined by the search in $\upperpart$, we identify which $\lowerpartshort$ indices may contain the answer, and then perform a fine-grained search with several pruning operations in these $\lowerpartshort$.
+
+
+
+
+
+% The main idea is that we construct a hierarchy of $r$-nets for $r=1,2,4,8,...,n$. The nodes in the $r_i$-net have directed edges to the nodes in the $r_{i-1}$-net.  
+% $\tt NetDag$ assures to find the exact NN in $O(n^{12\alpha}\log N + n^{6\tau})$ time when $d(Q, R)<\tau$. Morevoer, when $d(Q,R)<\infty$, $\tt NetDag$ can find the 2-opt result in  $O(n^{12\alpha}\log N)$ time. 
+
+
+
+
+
+% \begin{table*}
+% \centering
+% \begin{tabular}{|l|c|c|c|c|c|c|}\hline
+% Method  & $Q$'s setting & index time & index size & query time & guarantee \\\hline
+% \hline
+% $\tt HNSW$ & any $Q$ & $O(N^2)$ & $O(N\log N)$ & $O(N)$ & None\\\hline
+% $\tt MRNG$ & $d(Q, R)=0$ & $O(N^2)$ & $O(N^2)$ & $O(N)$ & Exact\\\hline
+% $\tau$-$\tt MG$ & $d(Q, R)<\tau$ & $O(N^2)$ & $O(N^2)$ & $O(N)$ & Exact\\\hline
+% $\tt CoverTree$ & any $Q$ & $O(c^6 N\log N)$ & $O(N)$ & $O(c^{12} \log N)$ & Exact\\\hline\hline
+% $\tt NetDag$ & $d(Q, R)<\tau$ & $O(c^6 N\log N)$ & $O(c^6 N \log N)$ &  $O(c^{6} \log N + n^{6\tau})$ & Exact\\\hline
+% $\tt NetDag$ & any $Q$ & $O(c^6 N\log N)$ & $O(c^6 N \log N)$ &  $O(c^{6} \log N)$ & 2-opt\\\hline
+% \end{tabular}
+% \caption{Summary on related work ($c$ denotes the doubling constant of the space, $N$ denotes the size of the database, $n$ denotes the size of the largest graph in the database)}
+% \label{tab:sumRW}
+% \end{table*}
+
+
+
+% \begin{table*}
+% \centering
+% \begin{tabular}{|l|c|c|c|c|c|c|}\hline
+% Method  & $Q$'s setting & Index time & Index size & Query time & Guarantee \\\hline
+% \hline
+% $\tt HNSW$ \cite{hnsw} & any $Q$ & $O(N polylog(N))^*$ & $O(N polylog(N))^*$ & $O(polylog(N))^*$ & None\\\hline
+% $\tt MRNG$ \cite{nsg} & $d(Q, R)=0$ & $O(N^2)$ & $O(N^2)$ & $O(N)$ & Exact\\\hline
+% $\tau$-$\tt MG$ \cite{tauMG} & $d(Q, R)<\tau$ & $O(N^2)$ & $O(N^2)$ & $O(N)$ & Exact\\\hline
+% $\tt CoverTree$ \cite{CoverTree} & any $Q$ & $O(c^{6} N\log N)$ & $O(N)$ & $O(c^{12} \log N)$ & Exact\\\hline\hline
+% $\tt NetDag$ & $d(Q, R)<\tau$ & $O(c^{6} N\log N)$ & $O(c^{6} N \log N)$ &  $O(c^{6} \log N + n^{6\tau})$ & Exact\\\hline
+% $\tt NetDag$ & any $Q$ & $O(c^{6} N\log N)$ & $O(c^{6} N \log N)$ &  $O(c^{6} \log N)$ & 2-opt\\\hline
+% \end{tabular}
+% \caption{Summary on related work ($c$ denotes the doubling constant of the metric space, $N$ denotes the size of the database $\mathcal D$, $n$ denotes the size of the largest graph in $\mathcal D$, $\alpha$ and $\tau$ are constants, $R$ is the exact NN of $Q$ in $\mathcal D$, $^*$ means empirical analysis without rigorous proof)}
+% \label{tab:sumRW}
+% \end{table*}
+
+
+% \begin{table*}
+% \centering
+% \begin{tabular}{|l|c|c|c|c|c|c|}\hline
+% Method  & $Q$'s setting & Index time & Index size & Query time & Guarantee \\\hline
+% \hline
+% $\tt HNSW$ \cite{hnsw} & any $Q$ & $O(N polylog(N))^*$ & $O(N polylog(N))^*$ & $O(polylog(N))^*$ & None\\\hline
+% $\tt MRNG$ \cite{nsg} & $d(Q, R)=0$ & $O(N^2)$ & $O(N^2)$ & $O(N)$ & Exact\\\hline
+% $\tau$-$\tt MG$ \cite{tauMG} & $d(Q, R)<\tau$ & $O(N^2)$ & $O(N^2)$ & $O(N)$ & Exact\\\hline
+% $\tt CoverTree$ \cite{CoverTree} & any $Q$ & $O(n^{12\alpha} N\log N)$ & $O(N)$ & $O(n^{24\alpha} \log N)$ & Exact\\\hline\hline
+% $\tt NetDag$ & $d(Q, R)<\tau$ & $O(n^{12\alpha} N\log N)$ & $O(n^{12\alpha} N \log N)$ &  $O(n^{12\alpha} \log N + n^{6\tau})$ & Exact\\\hline
+% $\tt NetDag$ & any $Q$ & $O(n^{12\alpha} N\log N)$ & $O(n^{12\alpha} N \log N)$ &  $O(n^{12\alpha} \log N)$ & 2-opt\\\hline
+% \end{tabular}
+% \caption{Summary on related work ($N$ denotes the size of the database $\mathcal D$, $n$ denotes the size of the largest graph in $\mathcal D$, $\alpha$ and $\tau$ are constants, $R$ is the exact NN of $Q$ in $\mathcal D$, $^*$ means empirical analysis without rigorous proof)}
+% \label{tab:sumRW}
+% \end{table*}
+
+
+
+%\noindent
+\stab
+{\bf Contributions.} The contributions of this paper are as follows.
+
+\begin{itemize}[leftmargin=\parindent]
+\item \lyu{We study the problem of approximate similarity search in graph databases.} \lv{We evaluate the GED space and observe that ......try to summarize the observation.} We observe that in the GED space, when the distance between graphs is relatively large, the space exhibits a doubling property with a small expansion rate. However, as the distance becomes smaller, the expansion rate grows dramatically. Leveraging this characteristic, we design corresponding indexing and search methods for the graph approximate similarity search.
+
+\item We propose the hierarchical structure $\upperpart$, which utilizes the properties of a doubling space to accelerate \lv{how? elaborate a little} the coarse localization of queries.
+
+\item We propose $\lowerpartfull$, which, based on the coarse localization by $\upperpart$, conducts a fine-grained search by exploiting the intrinsic properties of GED.
+\item \lv{We conduct experimental evaluation on ...}
+\end{itemize}
+
+
+% When recall is 0.95 and 0.98, our method is about 2.7x to 47x and 2.6x to 25x faster than existing methods on well-known real-world datasets, respectively.
+
+%\noindent
+\stab
+{\bf Organizations.} 
+The rest of this paper is organized as follows. Section 2 discusses the related work. Section 3 introduces the preliminaries and problem statement. Section 4 gives an analysis of GED space. Section 5 and 6 introduce the two parts of our index. Updates of the index is presented in Section 7. Section 8 presents optimizations. Section 9 presents the experiments. Section 10 concludes the paper.
+
+\begin{table*}[htbp]
+\centering
+\begin{threeparttable}
+\caption{A Summary of some characteristics of index-based similarity search methods}
+\begin{tabular}{|l|c|c|c|}
+\hline
+Methods & Query time complexity & Index size & Construction time complexity \\
+\hline\hline
+\textsc{NSW}
+& $O(\log N)^*$ 
+& $O(N)$ 
+& $O(N\log N)^*$  \\
+\hline
+\textsc{HNSW}
+& $O(\log N)^*$ 
+& $O(N)$ 
+& $O(N\log N)^*$  \\
+\hline
+\textsc{Cover Tree} 
+& $O(c^{12}\log N)$ 
+& $O(c^6 N)$ 
+& $O(c^6 N\log N)$ \\
+\hline
+\textsc{Net-tree} 
+& $O(\lambda^{O(1)}\log N)$ 
+& $O(\lambda^{O(1)} N)$ 
+& $O(\lambda^{O(1)} N\log N)$ \\
+\hline
+Layer $1$ of $\net$: $\upperpart$ 
+& $C_G^6 \cdot \log_2 \phi$ 
+& $N \cdot C_G^6 \cdot \log_2 \phi$ 
+& $N \cdot C_G^6 \cdot \log_2 \phi$  \\
+\hline
+Layer $2$ of $\net$: $\lowerpartfull$ 
+& $\sum_{i\leq \alpha}\binom{m}{i}\cdot C_A^{2\tau + 1}$ 
+& $O(\alpha \cdot N)$ 
+& $O(N)$  \\
+\hline
+\end{tabular}
+\begin{tablenotes}
+\item[*] means without guarantee.
+\end{tablenotes}
+\label{tab:complexity}
+\end{threeparttable}
+\end{table*}
+

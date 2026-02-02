@@ -1,0 +1,285 @@
+\section{Preliminaries and Problem Statement}
+\label{sec:preliminaries}
+In this section, we introduce the preliminaries of approximate similarity search in graph databases. Then, we present some background and an overview of 
+%our solution 
+our indexing framework $\net$. 
+For clarity, we summarize the frequently used notations in Table~\ref{symbols}.
+
+
+
+
+\subsection{Preliminaries}
+\label{subsec:preliminaries}
+We study a database of undirected graphs with vertex labels but without edge labels, following prior work~\cite{LAN,ghash,cheng2025computing,GEDGNN}. This setting is compatible with existing graph similarity search methods that incorporate edge labels~\cite{LBMaTKDE22,NassGED,xu2025graph}.
+
+\stab
+\noindent
+\textbf{Graph.}
+A graph is denoted by $G = (V, E, \ell)$, where $V$ and $E$ are the sets of vertices and undirected edges of $G$, respectively.
+The mapping $\ell: V \to L$ is a function that maps a vertex in $V$ to a label.
+For clarity, we use $V(G)$ and $E(G)$ to denote the vertex set and edge set of a graph $G$, respectively.
+
+
+\stab
+\noindent
+\textbf{Graph edit path and distance~\cite{ghash, noah, LAN, GEDGNN, cheng2025computing}}.
+We consider five edit operations on graphs, including vertex insertion, vertex deletion, vertex relabeling, edge insertion, and edge deletion. Given two graphs $G$ and $G'$, a \emph{graph edit path} (GEP) from $G$ to $G'$ is the \emph{shortest} sequence of edit operations on $G$ that transforms $G$ into $G'$; and the \emph{graph edit distance} (GED) between $G$ and $G'$, denoted by $d(G,G')$, is the length of the GEP from $G$ to $G'$.
+
+
+\begin{example}
+\noindent
+Figure~\ref{fig:combined_rnet_editpath}(b) shows a graph edit path from $G$ to $G'$ with the sequence $[O_1,O_2,O_3]$ of operations, where 
+(i) $O_1$ is the vertex insertion of vertex $v_5$ with label $S$; 
+(ii) $O_2$ is the edge insertion of edge $(v_1, v_5)$; 
+(iii) $O_3$ is vertex relabeling that changes $v_4$'s label from $C$ to $N$. 
+As $[O_1,O_2,O_3]$ has the minimum length of $3$, the graph edit distance between $G$ and $G'$ is $d(G,G')$ $=$ $3$.
+\end{example}
+
+
+
+% \lyu{According to~\cite{serratosa2019graph}, GED can be considered as a metric.}\lv{Yikai:what is the purpose of this sentence?}
+
+\noindent
+Computing the exact $\ged$ is NP-hard~\cite{starVLDB09}, which makes graph similarity search computationally costly on large databases. 
+Therefore, in this paper, we propose an 
+index-based \emph{approximate graph similarity search} solution
+%\lyu{indexing framework for \emph{approximate graph similarity search}}
+to efficiently tackle this problem.
+
+
+\stab
+\noindent
+\textbf{Problem statement.} 
+Given a graph database $\mathcal{D} = \{G_1, \ldots, G_n\}$, a query graph $Q$ and a threshold $\tau$, 
+an \emph{approximate graph similarity search} problem is to retrieve graphs $G$ in $\mathcal{D}$ such that $d(G, Q)$ ($\ged$ between $G$ and $Q$) is at most $\tau$. This paper aims to provide an efficient solution with a high recall.
+
+
+
+\subsection{Background of $\net$}
+
+To present $\net$, we list several fundamental concepts in metric spaces, including 
+the doubling constant~\cite{navnet}, the expansion constant~\cite{KR2002,CoverTree}, 
+doubling spaces~\cite{navnet}, and $r$-nets~\cite{navnet,NetTree}.
+We first recall the definition of a ball  
+in a metric space. A ball $B(p,r)$ is the set of all points whose distance to the center $p$ does not exceed the radius $r$, and we use $|B(p,r)|$ to denote the number of points covered by $B(p,r)$.
+
+
+
+
+\begin{definition}[\emph{Doubling constant}~\cite{navnet}]
+\label{def:doubling_constant}
+Given a metric space $(\mathcal X,d)$, the \emph{doubling constant} $\lambda$ is 
+the smallest number such that every ball $B(p,2r)$ can be covered by at most 
+$\lambda$ balls of radius $r$, for any $p\in\mathcal X$ and $r>0$:
+\[
+\lambda = \max_{p\in\mathcal X,\, r>0} \lambda(p,r),\;
+\text{where }\lambda(p,r)=\min\{k: B(p,2r)\subseteq \cup_{i=1}^k B(p_i,r)\}.
+\]
+For a given threshold of a radius $\alpha>0$, $\lambda$ of $\alpha$ is defined as:
+\[
+\lambda_{\alpha}:= \max_{p\in\mathcal X,\, r\ge \alpha} \lambda(p,r).
+\]
+\end{definition}
+
+
+
+
+\begin{definition}[\emph{Expansion constant}~\cite{KR2002,CoverTree}]
+\label{def:expansion_constant}
+Given a metric space $(\mathcal{X},d)$, the \emph{expansion constant} $c$ is the smallest value $c \ge 2$ such that
+\[
+  |B(p,2r)| \le c \cdot |B(p,r)| \quad \text{for all } p \in \mathcal{X},\; r>0.
+\]
+It can also be stated below:
+\[
+  c = \max_{p\in\mathcal X,\, r>0} c(p,r),
+  \quad \text{where } c(p,r)=\frac{|B(p,2r)|}{|B(p,r)|}.
+\]
+For a given threshold of a radius $\alpha>0$, $c$ of $\alpha$ is defined as:
+\[
+c_{\alpha} := \max_{p\in\mathcal X,\, r\ge \alpha} c(p,r).
+\]
+\end{definition}
+
+
+
+\begin{definition}[\emph{Doubling space}~\cite{navnet, NetTree}]
+\label{def:doubling_space}
+A metric space $(\mathcal{X}, d)$ is \emph{doubling} if its doubling constant $\lambda$ is finite.
+\end{definition}
+
+\begin{example}[Computing $\lambda(p,r)$ and $c(p,r)$]
+\label{ex:doubling}
+In Figure~\ref{fig:r-net}, for $p_4$ and radius $r>0$, $B(p_4,2r)$ can be covered by six radius-$r$ balls, so $\lambda(p_4,r)=6$.
+Moreover, $|B(p_4,r)|=4$ and $|B(p_4,2r)|=15$. Hence, $c(p_4,r)=15/4=3.75$.
+Taking the maximum over all $p$ and $r$, we yield the doubling constant $\lambda$ and expansion constant $c$.
+\end{example}
+
+
+
+
+\noindent
+\begin{definition}
+\label{def:r-net}
+(\emph{$r$-net}~\cite{navnet})
+Given a metric space $(\mathcal{X}, d)$, where $\mathcal X$ is a set of points and $d$ is the distance measure, an \emph{$r$-net} $Y \subseteq \mathcal{X}$ is a subset of $\mathcal{X}$ that satisfies the following:
+\begin{itemize}[wide, labelwidth=!, labelindent=0pt]
+  \item For $p_i,p_j \in Y$, $p_i \neq p_j$ $\Rightarrow$ $d(p_i,p_j) \ge r$; and
+  \item $\mathcal{X} = \bigcup_{p \in Y} B(p,r)$, where $B(p,r)=\{p'\in \mathcal{X} \mid d(p, p') \le r\}$.
+\end{itemize}
+
+$r$ denotes the radius of an $r$-net. 
+Intuitively, the first condition ensures that the points in $Y$ are \emph{$r$-separated}~\cite{NetTree}, 
+meaning that their pairwise distances are at least $r$, 
+and the second condition ensures that the collection of $r$-balls $\{B(p,r)\mid p\in Y\}$ covers the entire space $\mathcal{X}$.
+\end{definition}
+
+
+
+\begin{example}
+Figure~\ref{fig:r-net} shows the space $\mathcal{X}$, where each node is a data point in $\mathcal{X}$.
+$Y=\{p_1, p_2, \ldots, p_6\}$ forms an $r$-net of $\mathcal{X}$.
+The balls of radius $r$ centered at $p_i$ for $i \in \{1,\ldots,6\}$ together cover all points, and the centers satisfy $d(p_i,p_j) > r$ for any $i \ne j$.
+\end{example}
+
+Net-tree~\cite{NetTree} presents an iterative procedure to construct a $r$-net. We briefly summarize its relevant background here.
+
+\noindent
+\begin{definition}
+\label{def:greedy-permutation}
+(\emph{Greedy permutation}~\cite{NetTree})
+Given a metric space $(\mathcal{X}, d)$, an ordering of centers
+$\langle p_1, p_2, \ldots, p_N \rangle$,
+where $N = |\mathcal{X}|$, is a \emph{greedy permutation} of 
+$\mathcal{X}$ if for every $k \ge 2$,
+\[
+    p_k = \arg\max_{p\in\mathcal X} \min_{1\le i<k} d(p, p_i).
+\]
+%Each $p_k$ is referred to as a \emph{center}.
+\end{definition}
+
+
+%The sequence $r_1 \ge r_2 \ge \cdots \ge r_N$ is non-increasing.  
+
+
+
+Net-tree~\cite{NetTree} generates a greedy permutation by generating the centers iteratively together with their distances $\{r_k\}$ to the nearest previously chosen center. For each $k$, 
+the distance from $p_k$ to its nearest earlier center, $r_k$, is defined as $\min\limits_{1 \le i < k} d(p_k, p_i)$. Also, each center $p_i$ maintains a {\em friends list} that 
+contains all centers whose distance to $p_i$ is at most 
+$\min\{8 r_k, 4 r_i\}$ at the $k$th iteration, which will be used to compute the permutation.
+Importantly, the prefix $\langle p_1,\ldots,p_k\rangle$, when casted into a set 
+$\{p_1,\ldots,p_k\}$, forms a $r_k$-net of $\mathcal{X}$ 
+(Definition~\ref{def:r-net}).
+An $r$-net is obtained at the end of the iterative procedure.
+
+
+
+
+\begin{table}[t]
+\renewcommand{\arraystretch}{1.2}
+\footnotesize  
+    \setlength{\tabcolsep}{3pt}  
+    \vspace{-3.5ex}
+\caption{Frequently used notations}
+\centering
+\begin{tabularx}{\columnwidth}{|c|X|}
+\hline
+\textbf{Notation} & \textbf{Description}\\ 
+\hline\hline
+$\mathcal{D}$ & A database containing multiple small (data) graphs\\
+\hline
+$Q$; $G$ & A query graph $Q$; a (data) graph $G$ in $\mathcal{D}$\\
+\hline
+$(Q,\tau)$ & A similarity search query with range $\tau$\\
+\hline
+$V(G)$; $E(G)$ & The vertex set and edge set of a graph $G$, respectively\\
+\hline
+$(\mathcal X, d)$ & A metric space where $\mathcal X$ is a set of points (graphs) and $d$ is the distance measure \emph{(in this paper, $d$ is the graph edit distance)}\\
+\hline
+$d(G, G')$ & The distance $d(\cdot,\cdot)$ evaluated between two graphs $G, G'$, which is \emph{the graph edit distance ($\ged$) in our scenario}\\
+\hline
+$B(p,r)$ & The (closed) ball centered at $p$ with radius $r$, 
+i.e., the set of all points within distance $r$ from $p$: 
+$\{\, p' \in \mathcal{X} \mid d(p,p') \le r \}$\\
+\hline
+$|B(\cdot,\cdot)|$ & The number of points (graphs) within a ball $B(\cdot,\cdot)$\\
+\hline
+$r$-ball & Any ball $B(p,r)$ of radius $r$, where the specific center $p$ is not specified\\
+\hline
+$\ell(v)$ & The label of vertex $v$ in a data graph $G$\\
+\hline
+$N$ & The number of data graphs in the database\\
+\hline
+$\tau$ & The threshold parameter for similarity queries\\
+\hline
+$\epsilon$ & The error tolerance of the approximate GED method\\
+\hline
+
+$\lambda(p,r)$ & The minimum number of balls of radius $r$ to cover $B(p,2r)$ for a given $p$ and $r$\\
+\hline
+$c(p,r)$ & The ratio $|B(p,2r)|/|B(p,r)|$ for a given $p$ and $r$ \\
+\hline
+
+$\lambda$ & A doubling constant (ball-cover-based) \\
+\hline
+$c$ & An expansion constant (node-count-based) \\
+\hline
+$p_j^i$ & The representative of database point $p_j$ in layer $Y_i$ of $\upperpart$\\
+\hline
+\end{tabularx}
+\label{symbols}
+\end{table}
+
+
+
+
+
+\begin{figure*}[tb]
+    \captionsetup{width=1\linewidth}
+    \centering
+    
+    \begin{subfigure}[t]{0.43\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/index_introduction/overview.png}
+        \caption{Overview of $\net$}
+        \label{fig:overview}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.29\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/index_introduction/ND_overview.png}
+        \caption{An example of $\upperpart$}
+        \label{fig:ND_overview}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.26\textwidth}
+        \centering
+        % \includegraphics[width=\linewidth]{figures/index_introduction/EPT_overview.png}
+        \includegraphics[width=0.8\linewidth]{figures/index_introduction/subtree-prune-example.png}
+        \caption{An example of $\lowerpartsinglefull$}
+        \label{fig:EPT_overview}
+    \end{subfigure}
+    \vspace{-2ex}
+    \caption[Overview of $\net$]{Overview of $\net$ -- Stage 1: $\upperpart$ (Section~\ref{sec:ND}); and Stage 2: $\lowerpartfull$ (Section~\ref{sec:EPT}). Both indices depend on the threshold $\alpha$, which serves both as the radius of the $r$-net at $\upperpart$’s leaf layer and as the radius of the balls indexed by $\lowerpartsingleshort$s. $\upperpart$ operates at larger $\ged$s, while $\lowerpartfull$ handles smaller $\ged$s.}
+    \label{fig:above_search_algo}
+    \vspace{-5ex}
+\end{figure*}
+
+
+\subsection{$\net$ Overview}
+
+Figure~\ref{fig:overview} provides an overview of our proposed two-stage indexing framework $\net$.
+In particular, 
+the first stage of $\net$, namely $\upperpart$, consists of multiple layers of $r$-nets, where the radius of the $r$-net in a parent layer is twice that of its child layer. Between consecutive layers, an {\em index node (a ball center)} in the parent layer may have edges to nodes in the child layer that fall within a certain range (see Section~\ref{sec:ND} for details), forming a directed acyclic graph (DAG).
+The leaf layer of $\upperpart$ is an $\alpha$-net $Y_{\alpha}$.
+The union of balls centered at the points in $Y_{\alpha}$ with radius $\alpha$ covers the entire graph database. In the second stage, an $\lowerpartfull$ consists of a set of $\lowerpartsinglefull$s ($\lowerpartsingleshort$s). An $\lowerpartsingleshort$ is a tree rooted at $p$, where $p$ is in $Y_{\alpha}$. $\lowerpartsingleshort$ indexes the graph edit paths between the graphs in $B(p, \alpha)$ and $p$.
+%We remark that a graph may be covered by multiple balls, and it is simply assigned to the one whose center is closest.
+
+During query processing, we traverse from the top layer of $\upperpart$ to its leaf layer. 
+In each layer, we determine a node whose children satisfy a specific condition such that their balls collectively cover $B(Q,\tau)$ (see Section~\ref{sec:ND_query} for details). This enables the traversal to proceed to one of the children in the lower layer. 
+When the traversal reaches the leaf layer, we directly determine which balls jointly cover all answers. 
+Next, we identify the $\lowerpartsingleshort$s of the balls, which cover the answer candidates, and perform a depth-first search on each of them. 
+To further improve efficiency, three optimizations are proposed for the search for $\lowerpartshort$.
+
+It should be noted that the parameter $\alpha$ indicates the boundary between $\upperpart$ and $\lowerpartfull$. 
+In Section~\ref{subsec:alpha-tradeoff}, we propose a cost model to determine an optimal $\alpha$ for a graph database.

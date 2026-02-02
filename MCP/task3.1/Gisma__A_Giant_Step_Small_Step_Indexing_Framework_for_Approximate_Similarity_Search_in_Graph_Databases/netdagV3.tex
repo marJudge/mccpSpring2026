@@ -1,0 +1,329 @@
+\section{Ball hierarchy}
+
+In this section, we first propose a novel geometric-radius ball cover (GBC) to index the space with constant KR expansion rate. Second, we propose a novel arithmetic-radius ball cover (ABC) to index the space with polynomial KR expansion rate. Third, we integrate GBC and ABC to index the graph metric space. 
+
+
+
+\subsection{Geometric-radius ball hierarchy}
+
+\begin{definition}
+Given a metric space $(X,d)$, a database $D\subset X$, and a constant $\tau$, for a radius $r$, a geometric-radius ball-cover layer (GBL) is a bipartite graph $H = (U\cup V, E)$, where 
+\begin{itemize}
+\item $U$ is a $r$-net of $D$;
+\item $V$ is a $r/2$-net of $D$;
+\item a node $u$ in $U$ has an edge to each node $v$ in $V$ if $d(u,v)\leq 1.5H_i.r+2\tau$;
+\end{itemize}
+\end{definition}
+
+\begin{lemma}
+Given a GBL $H=(U\cup V, E)$ with radius $r$, a query point $Q$, and a constant $\tau$, if $d(Q,\overline{R})\leq \tau$ and the ball $B(Q,\tau)$ has intersection with a ball $B(p, r)$ for a node $u\in U$, then $u$ has a child $v$ in $V$ such that $B(v,r/2+2\tau)$ contains the NN $\overline{R}$ of $Q$.
+\end{lemma}
+
+
+\subsection{Arithmetic-radius ball hierarchy}
+
+% \begin{definition}
+% Given a metric space $(X,d)$, a database $D\subset X$, and a constant $\tau$, for a radius $r$, an arithmetic-radius ball-cover layer (ABL) is a bipartite graph $H = (U\cup V, E)$, where 
+% \begin{itemize}
+% \item $U$ is a set of points of $X$ s.t. $\{B(u,r)|u\in U\}$ covers $D$;
+% \item $V$ is a set of points of $X$ s.t. $\{B(v,r-1)|v\in V\}$ covers $D$;
+% \item a node $u$ in $U$ has a child $v$ for each point $v$ located at the shell of $B(u, 2\tau+1)$.
+% \end{itemize}
+% \end{definition}
+
+\begin{definition}
+Given a metric space $(X,d)$, a database $D\subset X$, and a constant $\tau$, for a radius $r$, an arithmetic-radius ball partition layer (ABPL) is a bipartite graph $H = (U\cup V, E)$, where 
+\begin{itemize}
+\item $U$ is a set of points of $X$ s.t. $\{B(u,r)|u\in U\}$ covers $D$;
+\item for each $u$ in $U$, $u$'s neighbors in $V$ are the points located at the shell of $B(u, 2\tau+1)$.
+\end{itemize}
+\end{definition}
+
+\begin{lemma}
+Given an ABL $H=(U\cup V, E)$, a query point $Q$, and a constant $\tau$, if $d(Q,\overline{R})<\tau$ and the ball $B(Q,\tau)$ has intersection with $B(u,r+2\tau)$ for some point $u$ in $U$, then $u$ has a child $v$ in $V$ s.t. $B(u,r-1+2\tau)$ contains the NN $\overline{R}$ of $Q$.
+\end{lemma}
+
+
+
+
+
+\subsection{Hybrid ball hierarchy}
+
+
+\begin{definition}
+Given a metric space $(X,d)$, a database $D\subset X$, and two constants $\alpha$ and $\tau$, a NetDag is a $L$-layered graph $H = (H_1\cup H_2\cup ...\cup H_{L}, E)$, where the $i$-th layer $H_i$ is associated with a radius $H_i.r$ and for the $i$-th layer $H_i$,
+\begin{itemize}
+\item the layers $H_1,H_2,...,H_{\alpha}$ are ABLs;
+\item the layers $H_{\alpha},H_{\alpha+1},...,H_L$ are GBLs;
+\item $H_i.r = 2^{i-\alpha}\alpha$ for $i\geq \alpha$; and 
+\item $H_i.r = i$ for $i\leq \alpha$.
+\end{itemize}
+\end{definition}
+
+
+
+\begin{lemma}
+Given an NetDag $H$, suppose $u$ is a node at the $i$-th layer and $u.children$ is the set of children of $u$, $B(u,H_i+2\tau)$ is covered by the balls $\{B(v,H_{i-1}.r)|v\in u.children\}$.
+\end{lemma}
+
+
+
+% \begin{definition}
+% Given a metric space $(X,d)$ and a constant $\tau$, a geometric net directed acyclic graph (GNDAG) is a layered graph $H_0$, where
+% \begin{itemize}
+% \item The set of nodes at the $i$-th layer is a $2^i$-net of $X$;
+% \item A node $u$ at the $i$-th layer has an edge to each node $v$ at the $i-1$-th layer if $d(u,v)<1.5\times 2^i+2\tau$.
+% \end{itemize}
+% \end{definition}
+
+
+
+% \begin{definition}
+% Given a metric space $(X,d)$ and a constant $\tau$, an arithmetic ball directed acyclic graph (ABDAG) is a layered graph $H_1$, where
+% \begin{itemize}
+% \item A node at the $i$-th layer is a ball with radius $i$;
+% \item A ball $B(p, i)$ has an edge to a ball $B(q, i-1)$ for any $q$ located at the shell of $B(p, 2\tau)$.
+% \end{itemize}
+% \end{definition}
+
+
+
+% \begin{definition}
+% Given a metric space $(X,d)$, a constant $\tau$, and a parameter $\alpha$, a hybrid dag index (HDI) $\mathcal H$ is a layered graph.
+% \begin{itemize}
+%     \item $\mathcal H$ totally has $\alpha$ + $\log \Delta$ layers;
+%     \item The layers from the $(\log\Delta)$-th layer to the $(\log\alpha)$-th layer are an GNDAG; and
+%     \item The layers from the $(\log\alpha)$-th layer to the $1$-st layer are an ABDAG.
+% \end{itemize}
+% \end{definition}
+
+
+
+\subsection{Index construction}
+
+
+The construction algorithm of NetDag is presented in Figure~\ref{alg:natdagbuild}. In a nutshell, we first construct the layers on or above $\alpha$ (Lines~2-23) and then construct the layers under $\alpha$ (Lines~24-37). 
+
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{$\tt const\_NetDag$}
+\begin{algorithmic}[1]
+    \Statex \hspace{-3.5ex} {\bf Input: } a metric space $(X,d)$, database $\mathcal D$, parameters $\alpha$ and $\tau$
+    \Statex \hspace{-3.5ex} {\bf Output: } the NetDag $H$
+    \State initialize an empty NetDag $H$
+    \vspace{0.5ex}
+    \Statex \hspace{-3.5ex}  // construct the layers on or above $\alpha$
+    \State initialize a max-heap $M$, $r_0=\infty$, $i=0$, a list $Y_{r_0}=[]$
+    \State randomly select a point $p_0$ in $X$ and $Y_{r_0}.append(p_0)$
+    \State $p_0.cluster = X\backslash Y_{r_0}$  
+    \State $\overline{p_0} = \arg\max_{q\in p_0.cluster} d(q, p_0)$
+    \State $M.insert((p_0, \overline{p_0}, d(p_0, \overline{p_0})))$ \Comment{$M$ is ordered by $d$}
+    \State $r' = r_0$
+    \State $\Phi_{p_0} = d(p_0, \overline{p_0})$
+    \For {$t$ in $[\lfloor\log_2(\Phi_{p_0}/\alpha)\rfloor,..., 2,1,0]$}
+    \State $r=2^t\alpha$, $l = t+\alpha$
+    \State $Y_r$ = $\tt net\_build\_step$$(X, d, Y_{r'}, r, M, r')$
+    \State $H_l = Y_r$, $H_l.r$ = $r$, set $H_l$ as the $l$-th layer of $H$
+    \If {$H$ has more than 1 layer} 
+    \For {each point $p$ in $H_{l+1}$} 
+    \For {each point $q$ in $H_l.friends(p)$}  \Comment{$p$ must be in $H_l$}
+    \If {$q\in B(p,1.5\times H_{l}.r+2\tau)$}
+    \State add an edge $(p,q)$ into $H$
+    \EndIf
+    \EndFor 
+    \EndFor
+    \EndIf
+    \State $r' = r$
+    \EndFor
+    \vspace{0.5ex}
+    \Statex \hspace{-3.5ex}  // construct the layers below $\alpha$
+    \State $i$ = $\alpha-1$
+    \State $\mathcal B$ = $\{B(p, \alpha)| p\in H_\alpha\}$
+    \While {$i\geq 1$}
+    \State set an empty $H_i$ as the $i$-th layer of $H$
+    \For {each $B(p, r)$ in $\mathcal B$}
+    \For {each $q$ on the shell of $B(p, 2\tau+1)$}
+    \State add $B(q, r-1)$ to $H_i$
+    \State maintain $B(q,r-1+2\tau)$ and $B(q,2\tau+1)$ for $q$
+    \State add edge $(p,q)$ into $H$
+    \EndFor
+    \EndFor
+    \State $i++$
+    \State $\mathcal B$ = $\{B(p,i)|p\in H_i\}$
+    \EndWhile
+    \State {\bf return} $H$
+\end{algorithmic} \label{alg:natdagbuild}
+\end{algorithm}
+
+
+
+
+% \begin{algorithm}[t]
+% \footnotesize
+% \caption{$\tt const\_below\_layer\_\alpha$}
+% \begin{algorithmic}[1]
+%     \Statex \hspace{-3.5ex} {\bf Input: } a metric space $(X,d)$, parameters $\alpha$ and $\tau$, $H_0$
+%     \Statex \hspace{-3.5ex} {\bf Output: } $H_1$
+%     \State $i$ = the number of levels of $H_0$
+%     \State $\mathcal B$ = all balls $B(p,r)$ at the $(i-1)$-th level of $H_0$
+%     \While {the radius of the ball in $\mathcal B$ is larger than 1}
+%     \For {each $B(p, r)$ in $\mathcal B$}
+%     \For {each $q\in$ the shell of $B(p, 2\tau+1)$}
+%     \State add $B(q, r-1)$ to $H_1[i]$
+%     \State maintain $B(q,r-1+2\tau)$ and $B(q,2\tau+1)$ for $q$
+%     \State add edge $(p,q)$ into $H_1$
+%     \EndFor
+%     \EndFor
+%     \State $i++$
+%     \State $\mathcal B$ = all balls $B(p,r)$ at the $(i-1)$-th level of $H_1$
+%     \EndWhile
+%     \State {\bf return} $H_1$
+% \end{algorithmic} \label{alg:build_under}
+% \end{algorithm}
+
+
+
+
+% \begin{algorithm}[t]
+% \footnotesize
+% \caption{ construction below $\alpha$}
+% \begin{algorithmic}[1]
+%     \Statex \hspace{-3.5ex} {\bf Input: } database $DB$, the upper part of  of $DB$: $ND_{upper}$ 
+%     \Statex \hspace{-3.5ex} {\bf Output: } the lower part of  of $DB$: $ND_{lower}$
+%     \State $H \leftarrow H^*$
+%     \While{$H\ge 1$}
+%         \State $H_{next} \leftarrow H-1$
+%         \For {each center $c_H \in$ the $H$-th layer}
+%             \State $CoverList \leftarrow Cover(c_H)$ \Comment{$Cover(c_H)$ means points covered by $B(c_H, H)$}
+%             \State $CoverQueue \leftarrow CoverList$
+%             \While{$CoverQueue \neq \emptyset$}
+%                 \State $p_{new} \leftarrow CoverQueue.pop()$
+%                 \State $c_{new} \leftarrow$ a generated point such that $d(c_{new}, c_H)+d(c_{new},p_{new})=d(c_H,p_{new})$ \Comment{the time complexity of this step is the same as a GED computation}
+%                 \For{$p \in CoverList$}
+%                     \If{$d(p, c_{new}) \leq H_{next}$}
+%                     \State $Cover(c_{new}).add(p)$
+%                     \EndIf
+%                 \EndFor
+%                 \State $ND_{lower}.add(c_{new})$ \Comment{use Hash to prune the duplicates}
+%                 \State $ND_{lower}.add((c_H, c_{new}))$
+%             \EndWhile
+%         \EndFor
+%         \State $H \leftarrow H_{next}$
+%     \EndWhile
+    
+%     \State {\bf return} $ND_{lower}$
+% \end{algorithmic} \label{alg:build_under}
+% \end{algorithm}
+
+
+
+
+
+% \begin{algorithm}[t]
+% \footnotesize
+% \caption{Build NetDag ($\tt NetDagBuild$)}
+% \begin{algorithmic}[1]
+%   \Statex \hspace{-3.5ex} {\bf Input: } DB $\mathcal D$, parameters $\alpha$ and $\tau$
+%   \Statex \hspace{-3.5ex} {\bf Output: } $\tt NetDag$ of $\mathcal D$
+%   \State $H_0$ = $\tt const\_on\_or\_above\_\alpha$$({\mathcal D}, \alpha, \tau)$
+%   \State $H_1$ = $\tt const\_below\_\alpha$$(H_0, \alpha, \tau)$
+%   \State {\bf return} $(H_0, H_1)$
+% \end{algorithmic} \label{alg:pgbuild}
+% \end{algorithm}
+
+
+\begin{theorem}
+Given a database $\mathcal D$ of $N$ graphs, where the largest graph has $n$ nodes, the time complexity to construct $H$ is $O(N (\log_2 N) \log_2 (n^2 - \alpha) + n^{2(2\tau+1)\alpha} N)$.
+\end{theorem}
+
+
+\begin{proof}
+We separately compute the time costs for constructing the layers above and below $\alpha$.
+
+Time to construct the layers above $\alpha$: 
+\begin{itemize}
+\item Since the largest graph has $n$ nodes, the largest GED between any two graphs is $O(n^2)$. Hence, the number of layers in $H$ above $\alpha$ is $O(\log_2 (n^2/\alpha))$. The time to construct an $r$-net of $\mathcal D$ is $O(N\log_2 N)$. 
+\item Based on Lemma~\ref{lm:half}, the length of the friends in Line~15 is $2^{2+4} = O(1)$. (Recall that the KR expansion rate when GED exceeds $\alpha$ is $2$.) Therefore, the children of a node $u$ can be found in a constant time.
+\item \yun{Each node $u$ at the $i$-th layer needs to maintain $B(u, H_i.r+2\tau)$, which can be done during $r$-net construction. How is the time?}
+\item Therefore, the total time to construct the layers above $\alpha$ is $O(N (\log_2 N) \log_2 (n^2 - \alpha))$.
+\end{itemize}
+
+Time to construct the layers below $\alpha$: 
+\begin{itemize}
+\item For each node $u$ at the layers below $\alpha$, we need $O(n^{2(2\tau+1)})$ time to enumerate the $O(n^{2(2\tau+1)})$ children of $u$. Since there are $\alpha$ layers and there are $O(N)$ nodes at the $\alpha$-th layer, the total number of nodes at the layers below $\alpha$ is $O(n^{2(2\tau+1)\alpha} N)$. 
+\item Consider the balls at the $\alpha$-th layer, any point $p$ in $D$ is in at most a constant number of balls (can be proved by Lemma~\ref{lm:half}). (\yun{Recall each node $u$ at the $\alpha$-th layer maintain a ball $B(u,\alpha+2\tau)$.}) Therefore, $\sum_{u\in H_\alpha} |B(u,\alpha + 2\tau)| = O(N)$. For a node $u$ at the $\alpha$-th layer, each descendant $v$ of $u$ scans the points in $D\cap B(u,\alpha+2\tau)$ at most one pass. Therefore, the descendants of $u$ scan the points in $D\cap B(u,\alpha+2\tau)$ at most $O(n^{2(2\tau+1)\alpha})$ passes. The descendants of all the nodes at the $\alpha$-th layer scan $D$ for at most $O(n^{2(2\tau+1)\alpha}$ passes, which takes $O(n^{2(2\tau+1)\alpha} N)$ time. 
+\item Therefore, the total time cost for constructing the layers below $\alpha$ is $O(n^{2(2\tau+1)\alpha} N)$.
+\end{itemize}
+Therefore, the total time complexity for $H$'s construction is
+%In sum, the time to construct $H$ is 
+$O(N\cdot(\log_2 N)$$\log_2 (n^2 - \alpha)$ $+$ $n^{2(2\tau+1)\alpha} N)$.
+\end{proof}
+
+
+% \begin{theorem}
+% Given a database $\mathcal D$ of $N$ graphs, the time to construct $H_1$ and the size of $H_1$ is $O(n^{(4\tau+2)\alpha} N)$.
+% \end{theorem}
+
+
+% \begin{proof}
+% Since each ball $B$ has $n^{4\tau+2}$ children, each point in $B$ can be contained in $O(n^{4\tau+2})$ children, and the number of layers in $H_1$ is $\alpha$, the total time to construct $H_1$ is $O(n^{(4\tau+2)\alpha} N)$.
+% \end{proof}
+
+
+
+
+
+
+
+\subsection{ANN Search Algorithm}
+
+
+The search algorithm on our NetDag is presented in Algorithm~\ref{alg:pgsearch}. The main idea is a greedy routing from the $L$-th layer to the $1$-st layer. The routing starts from the only node at the $L$-th layer. Suppose the routing reaches a node $p$ at the $i$-th layer. The routing goes to a child $q$ of $p$ such that $B(q, H_{i-1}.r)$ has intersection with $B(Q,\tau)$. Once the routing reaches a node $p$ at the $1$-st layer, the point in $B(p,2\tau+1)$ that is the closest to $Q$ is returned.
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{Search algorithm ($\tt Search$)}
+\begin{algorithmic}[1]
+  \Statex \hspace{-3.5ex} {\bf Input: } a NetDag $H$ of $\mathcal D$, a query graph $Q$
+  \Statex \hspace{-3.5ex} {\bf Output: } NN $R$ of $Q$
+  \State $B(p,r)$ is the only ball at the $L$-th layer of $H$
+  \State {\bf return} $\tt search\_step$$(H,Q,B(p,r))$
+  \vspace{1ex}
+  \State {\bf function} $\tt search\_step$$(H,Q,B(p,r))$
+  \If {$r = 1$}
+  \State {\bf return} the point in $B(p,2\tau+1)$ that is the closest to $Q$ 
+  \EndIf
+  \For {each child $B'(q,r')$ of $B$}
+  \If {$d(Q,q)\leq r'+\tau$}
+  \State $\tt search\_step$$(H,Q,B'(q,r'))$
+  \EndIf
+  \EndFor
+\end{algorithmic} \label{alg:pgsearch}
+\end{algorithm}
+
+
+
+\begin{theorem}
+Given a database $\mathcal D$, a query graph $Q$, and a constant $\tau$, Algorithm~\ref{alg:pgsearch} returns the nearest neighbor of $Q$ in $\mathcal D$.
+\end{theorem}
+
+\begin{proof}
+
+\end{proof}
+
+
+
+
+\begin{theorem}
+Given a database $\mathcal D$, a query graph $Q$, and a constant $\tau$, the time complexity of Algorithm~\ref{alg:pgsearch} is $O(\alpha n^{4\tau +2} + \log_{2}{(n^2/\alpha)})$.
+\end{theorem}
+
+\begin{proof}
+The search time spent on or above the $\alpha$-th layer is $O(\log_{2}{(n^2/\alpha)})$. The reason is as follows. Each node above the $\alpha$-th layer has $O(2^4)=O(1)$ children. The total time is $O(\log_{2}{(n^2/\alpha)})$, as there are $O(\log_{2}{(n^2/\alpha)})$ layers above the $\alpha$-th layer. 
+
+The search time spent below the $\alpha$-th layer is $O(\alpha n^{4\tau +2})$. The reason is as follows. Each node under the $\alpha$-th layer has $O(n^{2(2\tau+1)})=O(n^{4\tau+2})$ children. The total time is $O(\alpha n^{4\tau +2})$, as there are $\alpha$ layers.
+
+In sum, the total time is $O(\alpha\cdot n^{4\tau +2} + \log_{2}{(n^2/\alpha)})$.
+\end{proof}
+

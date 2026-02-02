@@ -1,0 +1,231 @@
+\section{Methodology}
+
+\subsection{\ourPG Index}
+
+\begin{definition}
+\ourPG is a DAG,
+\begin{itemize}
+    \item The $i$-th layer $(i < H^*)$ is covered by $i$-balls ($ND_{lower}$).
+    \item The $i$-th layer $(i \geq H^*)$ is a $H^*\times 2^{i-H^*}$-net ($ND_{upper}$).
+    \item Each node $p$ in the $i$-th level $(i \leq H^*)$ connects to all nodes of $i-1$-th level whose GED with $p$ equals to $2\tau+1$.
+    \item Each node $p$ in the $i$-th level $(i \geq H^*+1)$ connects to all nodes of $i-1$-th level whose GED with $p$ is less than $1.5\times H^*\times 2^{i-H^*}+\tau$.
+\end{itemize}
+\end{definition}
+
+\begin{lemma}
+Given a metric space $(X,d)$ with expansion rate $c$, an $r$-net $Y_{r}$, and an $(r/2)$-net $Y_{r/2}$ of $X$, for any point $p\in Y_{r}$, the number of points of $Y_{r/2}$ in $B(p, 2^ar)$ is $c^{a+4}$.
+\end{lemma}
+\begin{proof}
+According to our assumption, $\forall q \in (X, d)$ and $r \geq \alpha,$
+\begin{equation}
+    \frac{|B(q, 2r)|}{|B(q, r)|} \leq c. \label{eq:KR-assumption}
+\end{equation}
+
+Let $p'$ be an arbitrary point in $Y_{r/2} \cap B(p, 2^ar)$. $B(p', 2^{a+1}r)$ covers $B(p, 2^ar)$. Then
+\begin{equation}
+    |B(p, 2^ar)| \leq |B(p', 2^{a+1}r)|
+\end{equation}
+Using Eq. (\ref{eq:KR-assumption}) repeatedly, we have
+\begin{equation}
+    |B(p, 2^{a+1}r)| \leq c|B(p, 2^ar)| \leq c|B(p', 2^{a+1}r)| \leq c^{a+4}|B(p', r/4)| \label{eq:continuous_scaling}
+\end{equation}
+Consider a list of balls $L$ containing balls $B(s, r/4)$ where $s \in Y_{r/2} \cap B(p, 2^ar)$. Those balls have no overlap with each other, and they are all covered by $B(p, 2^{a+1}r)$. Therefore,
+\begin{equation}
+    \sum_{s \in Y_{r/2} \cap B(p, 2^ar)}|B(s, r/4)| \leq |B(p, 2^{a+1}r)| \label{eq:sum}
+\end{equation}
+According to Eq. (\ref{eq:continuous_scaling}), 
+\begin{equation}
+    \sum_{s \in Y_{r/2} \cap B(p, 2^ar)}|B(s, r/4)|\leq c^{a+4}|B(p', r/4)| \label{eq:r/4}
+\end{equation}
+Let the number of balls in $L$ be $N_L$. It equals to the number of points of $Y_{r/2}$ in $B(p, 2^ar)$. Note that Eq. (\ref{eq:r/4}) holds for every $p'$ in $Y_{r/2} \cap B(p, 2^ar)$. Let $p'' = \mathop{\arg\min}\limits_{p' \in Y_{r/2} \cap B(p, 2^ar)}|B(p', r/4)|$. 
+\begin{equation}
+    \sum_{s \in Y_{r/2} \cap B(p, 2^ar)}|B(s, r/4)|\leq c^{a+4}|B(p'', r/4)| 
+\end{equation}
+Note that for any $s \in Y_{r/2} \cap B(p, 2^ar)$,
+\begin{equation}
+    |B(s, r/4)|\geq |B(p'', r/4)| 
+\end{equation}
+Therefore,
+\begin{equation}
+    N_L \leq \frac{\sum_{s \in Y_{r/2} \cap B(p, 2^ar)}|B(s, r/4)|}{|B(p'', r/4)|} \leq c^{a+4}
+\end{equation}
+\end{proof}
+
+
+The index construction algorithm is presented in Algorithm~\ref{alg:pgconst1} and ~\ref{alg:pgconst2}.
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{\ourPG construction above $H^*$($\tt PGConst1$) Modified from \cite{NetTree}}
+\begin{algorithmic}[1]
+\Statex \hspace{-3.5ex} {\bf Input: } database $DB$ 
+\Statex \hspace{-3.5ex} {\bf Output: } the upper part of \ourPG of $DB$: $ND_{upper}$
+
+\State Select a point $p_{root}$ as the root center. 
+\State $ND.add(p_{root})$.
+
+\For{each common points (points not in ND) $p \in DB$}
+    \State $heap_{p_{root}}.push((d(p, p_{root}), p))$ \Comment{build a max-heap for each center $p_c$ to maintain the common points that are closest to $c_p$ among all the centers. In the heap are tuples that including the distance to the center and the point.}
+\EndFor
+\State $p_{root}.FriendHeap.push((0, p_{root}))$ \Comment{maintain a FriendList for each center $p_c$ which contains all the centers in $B(p_c, 3heap_{p_c}.top()[0] + \tau)$}
+\State $d_{max} \leftarrow heap_{p_{root}}.top()[0]$
+\State $state \leftarrow \lfloor \log_{2}{d_{max}} \rfloor$
+\State $\mathcal{C}_{state}.add(p_{root})$ \Comment{maintain a set of centers for each layer}
+\While{$d_{max} > H^*$}
+    \State $state \leftarrow \lfloor \log_{2}{d_{max}} \rfloor$ 
+    \State $p_c \leftarrow \mathop{argmax}\limits_{p_c \in \mathcal{C}_{state}}(heap_{p_c}.top()[0])$
+    \State $(d_{new}, p_{new}) \leftarrow heap_{p_c}.pop()$
+    \State $ND.add(p_{new})$
+    \State $\mathcal{C}_{state}.add(p_{new})$
+    \For{each $p_f \in p_c.FriendList$}
+        \State $TempList \leftarrow \emptyset$
+        \State $d' = d(p_{new}, p_f)$
+        \While{$heap_{p_f} \neq \emptyset$ and $d' <= 2heap_{p_f}.top()[0]$}
+            \State $(d_{top}, p_{top}) \leftarrow heap_{p_f}.pop()$
+            \State $d_{new} \leftarrow d(p_{new}, p_{top})$
+            \If {$d_{top} > d_{new}$}
+            \State $heap_{p_{new}}.push((d_{new}, p_{top}))$
+            \Else {$TempList.add((d_{top}, p_{top}))$}
+            \EndIf
+        \EndWhile \Comment{After finding the new center point $p_{new}$ (originally in $heap_{p_c}$), we try to find all common points that are closer to $p_{new}$ than to $p_f$ in the $FriendList$ of $p_c$.}
+        \For {each tuple $t \in Templist$}
+            \State $heap_{p_f}.push(t)$
+        \EndFor
+        \State $d_f \leftarrow heap_{p_f}.top()[0]$ \Comment{new friend range for $p_f$}
+        \While{$p_f.FriendHeap \neq \emptyset$ and $d_f < p_f.FriendHeap.top()[0]$}
+            \State $p_f.FriendHeap.pop()$ \Comment{update the $FriendHeap$ of $p_f$}
+        \EndWhile
+    \EndFor
+    \State $d_{max} \leftarrow \mathop{max}\limits_{p_c \in \mathcal{C}_{state}}(heap_{p_c}.top()[0])$
+    \State $state' \leftarrow \lfloor \log_{2}{d_{max}} \rfloor$
+    \If {$state' < state$}
+        \For {each $p_c \in Centers_{state}$}
+            \For {each $p_f \in p_c.FriendHeap$}
+                \If {$p_f \in \mathcal{C}_{state+1}$}
+                \State $ND_{upper}.add((p_f, p_c))$
+                \EndIf
+            \EndFor
+        \EndFor
+    \EndIf \Comment{when the $state$ changes, this operation equals to link each $p_c^+ \in Centers_{state+1}$ to $p_c \in Centers_{state}$ in $B(p_c^+, 3\times 2^{state}+\tau)$}
+\EndWhile
+\State {\bf return} $ND_{upper}$
+
+\end{algorithmic} \label{alg:pgconst1}
+\end{algorithm}
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{\ourPG construction below $H^*$($\tt PGConst2$)}
+\begin{algorithmic}[1]
+    \Statex \hspace{-3.5ex} {\bf Input: } database $DB$, the upper part of \ourPG of $DB$: $ND_{upper}$ 
+    \Statex \hspace{-3.5ex} {\bf Output: } the lower part of \ourPG of $DB$: $ND_{lower}$
+    \State $H \leftarrow H^*$
+    \While{$H\ge 1$}
+        \State $H_{next} \leftarrow H-1$
+        \For {each center $c_H \in$ the $H$-th layer}
+            \State $CoverList \leftarrow Cover(c_H)$ \Comment{$Cover(c_H)$ means points covered by $B(c_H, H)$}
+            \State $CoverQueue \leftarrow CoverList$
+            \While{$CoverQueue \neq \emptyset$}
+                \State $p_{new} \leftarrow CoverQueue.pop()$
+                \State $c_{new} \leftarrow$ a generated point such that $d(c_{new}, c_H)+d(c_{new},p_{new})=d(c_H,p_{new})$ \Comment{the time complexity of this step is the same as a GED computation}
+                \For{$p \in CoverList$}
+                    \If{$d(p, c_{new}) \leq H_{next}$}
+                    \State $Cover(c_{new}).add(p)$
+                    \EndIf
+                \EndFor
+                \State $ND_{lower}.add(c_{new})$ \Comment{use Hash to prune the duplicates}
+                \State $ND_{lower}.add((c_H, c_{new}))$
+            \EndWhile
+        \EndFor
+        \State $H \leftarrow H_{next}$
+    \EndWhile
+    
+    \State {\bf return} $ND_{lower}$
+\end{algorithmic} \label{alg:pgconst2}
+\end{algorithm}
+
+
+The search algorithm on \ourPG is presented in Algorithm~\ref{alg:pgsearch}. The time complexity is $O(C_{\delta}^5 \times \log_{2}{(H_{max}-H^*)}+C_{\epsilon}^{2\tau +1}\times H^*)$.
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{Search algorithm ($\tt Search$)}
+\begin{algorithmic}[1]
+  \Statex \hspace{-3.5ex} {\bf Input: } \ourPG of $DB$: $ND$, query graph $q$
+  \Statex \hspace{-3.5ex} {\bf Output: } the nearest neighbor $NN$ of $q$
+ 
+  \State Let the top layer be the $H_{max}$-th layer. \Comment{this layer contains only one center point: $p_{root}$}
+  \State The top layer is a $D$-net, where $D = H^*\times 2^{H_{max}-H^*}$.
+  \State $r \leftarrow D$
+  \State $H \leftarrow H_{max}$
+  \State $p \leftarrow p_{root}$
+  \While {$H>1$}
+    \If{$H > H^*$}
+    \State $r_{next} \leftarrow r/2$
+    \Else{$r_{next} \leftarrow r-1$}
+    \EndIf
+    \For {$p' \in children(p)$}
+        \If {$d(p', q)\leq r_{next}+\tau$} 
+        \State $p \leftarrow p'$
+        \State break
+        \EndIf
+    \EndFor
+    \State $H \leftarrow H-1$
+    \State $r \leftarrow r_{next}$
+  \EndWhile
+  \For{each point $p_i \in B(p, 2\tau + 1)$}
+  \State $p_i$ with the smallest $d(p_i, q)$ is the answer $NN$
+  \EndFor
+  \State {\bf return} $NN$
+\end{algorithmic} \label{alg:pgsearch}
+\end{algorithm}
+
+\subsection{GED lower bound (to be decided)}
+\begin{definition}
+    A {\bf star} is a structure consist of a {\bf center vertex} $V_c$, all {\bf neighbor edges} $e_1, e_2, ..., e_m$ connected to the center node $V_c$, and $1/d_1, 1/d_2, ..., 1/d_m$ of the corresponding {\bf partial vertices} $v_1, v_2, ..., v_m$ connected to $e_1, e_2, ..., e_m$, where $d_i$ is the degree of $v_i (i = 1, 2, ..., m)$. A {\bf lollipop} $l_i$, denoted as $l_i=(e_i, v_i)$, is consist of a neighbor edge $e_i$ and its corresponding partial vertex $v_i$. Note that each vertex $v$ in a graph $G$ can be the center vertex of a star. Thus, a graph $G$ with $n$ vertices can generate $n$ stars by iteratively assuming $v_i$ in $G$ as the center vertex. A {\bf star set} of $G$ is a set containing all these $n$ stars. Figure~\ref{fig:divide_to_stars} provides an example of the above notions. 
+\end{definition}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{figures/divide_to_stars.pdf}
+  \caption{Let $v_{G}$ be the center vertex $v_c$, it forms $Star_1$, which also includes edges $e_1, e_2$ connected to $v_c$ and $1/2$ of $v_1$ and $1/4$ of $v_2$. $l_1=(e_1, v_1)$ is a lollipop. In this figure, different color stands for different vertex label, and single/double line stands for different edge label.}
+  \label{fig:divide_to_stars}
+\end{figure}
+
+\begin{lemma}
+A graph $G$ with $n$ vertices can be divided to $n$ stars, and the $n$ stars can exactly cover $G$ twice.
+\end{lemma}
+\begin{proof}
+Cover vertices twice: Each vertex $v$ in $G$ is as a center vertex once. And $v$ with $d$ degree is divided to $d$ parts as the neighbor vertex of $d$ different stars, and each part is a $1/d$ vertex. In total, $v$ appears $d\times 1/d=1$ time as partial vertex. Therefore, each vertex in $G$ is covered by stars twice.
+
+Cover edges twice: Each edge $e$ in $G$ appears in two stars. Therefore, each edge in $G$ is covered by stars twice.
+
+\end{proof}
+
+\begin{definition}
+    {\bf Lollipop edit distance} ($\tt LED$) is the edit distance between two lollipops. Let $l_1=(e_1, v_1), l_2=(e_2, v_2)$ be two lollipops. $LED$ is consist of the distance between two edges and the distance between two partial vertices.
+    \begin{equation}
+        LED(l_1, l_2) = ED(e_1, e_2) + PD(v_1, v_2),
+    \end{equation}
+    where $ED$ is edge distance and $PD$ is partial vertex distance.
+    \begin{equation}
+    \label{eq:ED}
+    ED(e_1, e_2)=\left\{
+    \begin{aligned}
+    0 & , & if\ l(e_1)=l(e_2), \\
+    1 & , & if\ l(e_1)\neq l(e_2),
+    \end{aligned}
+    \right.
+    \end{equation}
+    where $l(e_i)$ is the edge label of $e_i$.
+
+    \begin{equation}
+    \label{eq:PD}
+    PD(v_1, v_2)=\left\{
+    \begin{aligned}
+    0 & , & if\ l(e_1)=l(e_2), \\
+    1 & , & if\ l(e_1)\neq l(e_2).
+    \end{aligned}
+    \right.
+    \end{equation}
+\end{definition}
