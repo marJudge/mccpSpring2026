@@ -10,8 +10,6 @@ ENV/
 .venv
 
 # Output files
-*.html
-!templates/*.html  # Keep template HTML files
 *_extracted/
 *.log
 
