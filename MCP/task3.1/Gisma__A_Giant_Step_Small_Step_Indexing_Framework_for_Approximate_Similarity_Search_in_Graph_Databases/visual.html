@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Structure: []: Giant-Step-Small-Step Indexing for Approximate Similarity Search in Graph Databases</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .paper-title {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .paper-title h1 {
+            color: #2d3748;
+            font-size: 1.6em;
+            margin-bottom: 10px;
+        }
+        .paper-title .author {
+            color: #718096;
+            font-size: 0.95em;
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+        .section.level-1 {
+            border-left-color: #667eea;
+        }
+        .section.level-2 {
+            border-left-color: #48bb78;
+        }
+        .section.level-3 {
+            border-left-color: #ed8936;
+        }
+        .section-heading {
+            color: #2d3748;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .section-excerpt {
+            color: #4a5568;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+        .subsection {
+            margin-left: 30px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 3px solid #cbd5e0;
+        }
+        .subsection-heading {
+            color: #2d3748;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .subsection-excerpt {
+            color: #718096;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .subsubsection {
+            margin-left: 50px;
+            margin-top: 10px;
+            padding: 12px;
+            background: #edf2f7;
+            border-radius: 6px;
+            border-left: 2px solid #a0aec0;
+        }
+        .subsubsection-heading {
+            color: #2d3748;
+            font-size: 1.0em;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .subsubsection-excerpt {
+            color: #718096;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="paper-title">
+            <h1>[]: Giant-Step-Small-Step Indexing for Approximate Similarity Search in Graph Databases</h1>
+            <p class="author">First Author</p>
+        </div>
+        
+        <div class="section level-1">
+            <h1 class="section-heading">Introduction</h1>
+            <p class="section-excerpt">Similarity search in graph databases aims to retrieve graphs that are similar to a given query graph. It is a fundamental problem with a wide range of applications, including bioinformatics, cheminfor...</p>
+        </div>
+        <div class="section level-1">
+            <h1 class="section-heading">Preliminaries and Problem Statement</h1>
+            <p class="section-excerpt">In this section, we introduce the preliminaries of approximate similarity search in graph databases. Then, we present some background and an overview of %our solution our indexing framework []. For cl...</p>
+        
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Preliminaries</h2>
+                <p class="subsection-excerpt">We study a database of undirected graphs with vertex labels but without edge labels, following prior work~[citation: LAN,ghash,cheng2025computing,GEDGNN]. This setting is compatible with existing grap...</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Background of []</h2>
+                <p class="subsection-excerpt">To present [], we list several fundamental concepts in metric spaces, including the doubling constant~[citation: navnet], the expansion constant~[citation: KR2002,CoverTree], doubling spaces~[citation...</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">[] Overview</h2>
+                <p class="subsection-excerpt">Figure~[ref: fig:overview] provides an overview of our proposed two-stage indexing framework []. In particular, the first stage of [], namely [], consists of multiple layers of [r]-nets, where the rad...</p>
+            </div>
+            </div>
+        <div class="section level-1">
+            <h1 class="section-heading">Analysis of [] Space</h1>
+            <p class="section-excerpt">We start our investigation with an analysis of the [] space. In particular, we examine the [] space as a doubling space in Section~[ref: sec:analysis:space], and analyze its doubling constant in Secti...</p>
+        
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">[] space as a doubling space</h2>
+                <p class="subsection-excerpt">In this subsection, we show that the metric space induced by [] is a doubling space under the assumption that the number of vertices and distinct labels in a graph are bounded. lemma Given the set [X]...</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Doubling constant of [] space</h2>
+                <p class="subsection-excerpt">Since existing doubling-based indexes~[citation: navnet,NetTree] have query complexities of [O(^O(1) N)] (where [] is the doubling constant and [N] is the dataset size), their efficiency highly depend...</p>
+            </div>
+            </div>
+        <div class="section level-1">
+            <h1 class="section-heading">[]: Hierarchical doubling-based index for graphs having large GEDs</h1>
+            <p class="section-excerpt">In this section, we propose [], a hierarchical doubling-based index designed for indexing graphs having large GEDs using balls with large radii, defined in Definition~[ref: def:netdag]. Then, we descr...</p>
+        
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Index construction</h2>
+                <p class="subsection-excerpt">We construct [] based on the greedy permutation (Definition~[ref: def:greedy-permutation]) of the dataset. We follow the incremental construction procedure in~[citation: NetTree] (as introduced in Def...</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Query algorithm</h2>
+                <p class="subsection-excerpt">algorithm[t] Query Algorithm for [] FnProcedure{}{} [H]: [] [(Y_0, Y_1, , Y_, E)]; [Q]: query graph; []: threshold {[A]: set of leaf-layer nodes selected as entry points for the next-stage search} [A ...</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Analysis of [] and other doubling-based indexes</h2>
+                <p class="subsection-excerpt">table*[t] {}1.2 {}3pt Comparison of [] and representative doubling-based methods ([=2]) {}!{ tabularlccccccccc Index &amp;amp; Child Range &amp;amp; Child Separation &amp;amp;</p>
+            </div>
+            </div>
+        <div class="section level-1">
+            <h1 class="section-heading">Edit Path Forest: Path-based Index for Graphs Having Small []s</h1>
+            <p class="section-excerpt">Recall from Figures~[ref: fig:ged_small] and [ref: fig:cover] that when the [] between graphs is small, the efficiency of doubling-based indexes can be inefficient or sensitive to [r]. In response to ...</p>
+        
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Index construction</h2>
+                <p class="subsection-excerpt">algorithm[t] Construction of [] FnProcedure{}{} FuncFunction{}{} ComputeGEPsComputeGEPs {[G_{root}]: root (center) graph; [C]: data graphs to be indexed} {[T]: constructed []} Initi</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Connecting [] and EPF</h2>
+                <p class="subsection-excerpt">Remarks. There is a subtle technical detail at the boundary of [] and []. We briefly describe how [] is connected to []. As shown in Section~[ref: sec:ND_construction], during the construction of [], ...</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Query algorithm</h2>
+                <p class="subsection-excerpt">In the following, we propose the query processing and three optimizations for []. Query processing on [] proceeds as follows. Given the selected points [p_i Y_0] and their balls [B(p_i,)] identified b...</p>
+            </div>
+            
+                <div class="subsubsection level-3">
+                    <h3 class="subsubsection-heading">[] Subtree Pruning.</h3>
+                    <p class="subsubsection-excerpt">To reduce the number of [] computations, [] subtree pruning is proposed to prune the subtrees of an [] that cannot contain answers. Let [d_G] denote the maximum [] from [G] to any of its descendants. ...</p>
+                </div>
+                
+                <div class="subsubsection level-3">
+                    <h3 class="subsubsection-heading">Lower-bound Pruning and its Propagation.</h3>
+                    <p class="subsubsection-excerpt">For an edge [(G_p, G_c)] of [], once [d(G_p,Q)] is computed, we define [d(G_c,Q)=d(G_p,Q)-d(G_p,G_c)]. Also, [d(G_c,Q) d(G_c,Q)]. %the [d(G_c,Q)] satisfies [d(G_c,Q) d(G_p,Q)-d(G_p, G_c)]. If [d(G_c,Q...</p>
+                </div>
+                
+                <div class="subsubsection level-3">
+                    <h3 class="subsubsection-heading">Search Tree Reuse in [] Computations</h3>
+                    <p class="subsubsection-excerpt">We first recall that the A[^*] search algorithm~[citation: inves, LSaICDE20, LBMaTKDE22, xu2025graph] has been widely adopted for computing [], which formulates [] computation as a node-matching probl...</p>
+                </div>
+                </div>
+        <div class="section level-1">
+            <h1 class="section-heading">Cost Model for [] construction</h1>
+            <p class="section-excerpt">The efficiency bottleneck of graph similarity search in [] is [] computation during the search. [] and [] of [] minimize the number of [] computations (or simply the number of distance computations [N...</p>
+        </div>
+        <div class="section level-1">
+            <h1 class="section-heading">Experimental Evaluation</h1>
+            <p class="section-excerpt">In this section, we present an experimental evaluation to investigate the performance of []. We present the experimental settings in Section~[ref: sec:exp-setting]. We report the overall efficiency an...</p>
+        
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Experimental Settings</h2>
+                <p class="subsection-excerpt">Platform. We implemented [] in C++ and Python. We conducted the experimental evaluation on a machine equipped with a dual 64-core AMD EPYC 7742 processor CPU (2.25 GHz) and 2 TB RAM running Ubuntu OS....</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Baselines</h2>
+                <p class="subsection-excerpt">Benchmark methods. We compared [] with the representative related methods. While []~[citation: LBMaTKDE22] presents GED verification, the released code of [] contains some code for filtering. To have ...</p>
+            </div>
+            
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Overall Performance</h2>
+                <p class="subsection-excerpt">%Searching performance { figure[!t] width=1 {plots/overall/} minipage[t]0.487 [scale=0.285]{runtime-aid</p>
+            </div>
+            
+                <div class="subsubsection level-3">
+                    <h3 class="subsubsection-heading">Searching performance</h3>
+                    <p class="subsubsection-excerpt">{ figure[!t] width=1 {plots/overall/} minipage[t]0.487 [scale=0.285]runtime-aids.eps -1.4 {</p>
+                </div>
+                
+                <div class="subsubsection level-3">
+                    <h3 class="subsubsection-heading">Index size</h3>
+                    <p class="subsubsection-excerpt">} table[t] {}5pt {}1.1 Index sizes (MB) of different methods on the datasets tabularlcccc Method &amp;amp; [] &amp;amp; [] &amp;amp; [] &amp;amp; [] Database &amp;amp; 20.6 &amp;amp; 20.8 &amp;amp; 454.7 &amp;amp; 309.6 [] &amp;amp; 92.</p>
+                </div>
+                
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Detailed Evaluation of []</h2>
+                <p class="subsection-excerpt">In this section, we conduct an in-depth investigation of []. Specifically, we repor the index sizes and perform experimental analyses on its two stages, optimization techniques, and parameter selectio...</p>
+            </div>
+            </div>
+        <div class="section level-1">
+            <h1 class="section-heading">Related Work</h1>
+            <p class="section-excerpt">In this section, we first review methods for similarity search in doubling spaces, then summarize existing studies on graph similarity search, including exact and approximate methods. { Existing metho...</p>
+        </div>
+        <div class="section level-1">
+            <h1 class="section-heading">Conclusion</h1>
+            <p class="section-excerpt">In this paper, we presented [], a novel two-stage index for approximate graph similarity search. {Our analysis revealed that the GED space has a two-stage property: when the distance between graphs ex...</p>
+        </div>
+        <div class="section level-1">
+            <h1 class="section-heading">appendix</h1>
+            <p class="section-excerpt">lemma[Packing bound for [2^k r]-balls] Given a metric space [(X,d)] with expansion constant [c] (Def.~[ref: def:expansion_constant]) and an [r]-separated set [S_rX], for any point [pX] and any integer...</p>
+        
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Detailed construction of []</h2>
+                <p class="subsection-excerpt">The construction of [] is based on the incremental greedy permutation construction framework of Har-Peled and Mendel~[citation: NetTree], from which we adopt two important per-center structures: (i) t...</p>
+            </div>
+            </div>
+        <div class="section level-1">
+            <h1 class="section-heading">Full Proofs</h1>
+            <p class="section-excerpt">Proof of Theorem~[ref: theorem:upperpart-construction] proof Section~3.1 of~[citation: NetTree] shows that the number of distance computations conducted during the greedy-permutation construction is [...</p>
+        
+            <div class="subsection level-2">
+                <h2 class="subsection-heading">Proof of Theorem~{theorem:upperpart-construction</h2>
+                <p class="subsection-excerpt">} proof Section~3.1 of~[citation: NetTree] shows that the number of distance computations conducted during the greedy-permutation construction is [O(^O(1) N s)], where [s] is the number of phases. The...</p>
+            </div>
+            </div>
+    </div>
+</body>
+</html>
