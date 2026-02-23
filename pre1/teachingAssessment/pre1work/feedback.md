@@ -10,10 +10,10 @@ After the AI agent generates your presentation outline (via `genOutline.md`), re
 
 <!-- Rate the overall quality of the generated outline (1-5 stars) and explain briefly -->
 
-Rating: ___/5
+Rating: _5_/5
 
 Comments:
-
+good
 
 ---
 

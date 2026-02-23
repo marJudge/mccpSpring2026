@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accelerating Graph Similarity Search — Pre1 Presentation (V2)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700;800&display=swap');
+
+:root {
+  --color-primary: #0F766E;
+  --color-text: #1e293b;
+  --color-bg: #f8fafc;
+  --color-bg-alt: #f1f5f9;
+  --color-accent: #0d9488;
+  --color-highlight: #ccfbf1;
+  --color-red: #dc2626;
+  --color-green: #059669;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  /* 16:9 comfortable width: content area ~72% with margins */
+  --slide-content-max: 72%;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.slide {
+  width: 100vw;
+  height: 100vh;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0 4vh 0;
+  background: var(--color-bg);
+  position: absolute;
+  top: 0; left: 0;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.slide.active { display: flex; opacity: 1; }
+
+/* Content wrapper: limits width and adds side margins on 16:9 */
+.slide-inner {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 6vw;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Slide number on every slide */
+.slide-num {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Rubric / section label */
+.rubric-label {
+  font-size: 0.8rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+/* Transition cue */
+.transition-cue {
+  background: var(--color-highlight);
+  border-left: 4px solid var(--color-primary);
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--color-text);
+}
+
+.slide-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.slide-subtitle { font-size: clamp(1rem, 1.5vw, 1.3rem); color: #64748b; margin-bottom: 0.8rem; }
+
+.slide-body {
+  font-size: clamp(1rem, 1.35vw, 1.2rem);
+  line-height: 1.7;
+  max-width: 100%;
+}
+
+ul.bullets { list-style: none; padding: 0; margin: 0.6rem 0; }
+ul.bullets li {
+  font-size: clamp(0.98rem, 1.3vw, 1.15rem);
+  line-height: 1.75;
+  padding-left: 1.3rem;
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+ul.bullets li::before {
+  content: '•';
+  color: var(--color-primary);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.highlight-box {
+  background: var(--color-highlight);
+  border-left: 4px solid var(--color-primary);
+  padding: 0.9rem 1.3rem;
+  border-radius: 0 8px 8px 0;
+  margin: 0.8rem 0;
+  font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+  line-height: 1.55;
+}
+
+.caption { font-size: clamp(0.82rem, 1.05vw, 0.95rem); color: #64748b; margin-top: 0.5rem; }
+
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.6rem, 1.5vw, 1.2rem);
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+.flow-node {
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+  background: var(--color-highlight);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+.flow-arrow { font-size: 1.3rem; color: var(--color-primary); }
+
+.bar-comparison {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  margin: 1rem 0;
+  height: 140px;
+}
+.bar-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar {
+  width: clamp(50px, 8vw, 75px);
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.35rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
+  color: white;
+}
+.bar.bmao { background: var(--color-green); }
+.bar.lsa { background: #94a3b8; }
+.bar-item .label { margin-top: 0.4rem; font-weight: 600; font-size: clamp(0.75rem, 0.95vw, 0.88rem); }
+
+.two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 0.8rem 0;
+}
+.col-card {
+  background: var(--color-bg-alt);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  border-left: 4px solid var(--color-primary);
+}
+.col-card h3 {
+  font-family: var(--font-heading);
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+.col-card ul { margin: 0; }
+.col-card li { margin-bottom: 0.35rem; }
+
+.comp-table {
+  width: 100%;
+  max-width: 480px;
+  border-collapse: collapse;
+  margin: 0.8rem 0;
+  font-size: clamp(0.85rem, 1.1vw, 1rem);
+}
+.comp-table th, .comp-table td {
+  padding: 0.5rem 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+.comp-table th { background: var(--color-primary); color: white; font-weight: 600; }
+.comp-table .check { color: var(--color-green); font-weight: 700; }
+.comp-table .cross { color: var(--color-red); }
+
+.closing-slide .slide-body { text-align: center; }
+.closing-slide .thanks {
+  font-family: var(--font-heading);
+  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+  color: var(--color-primary);
+  margin-top: 1.2rem;
+  font-weight: 700;
+}
+
+/* Speaker note (small, for 8-min pacing) */
+.speaker-note {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.6rem;
+  font-style: italic;
+}
+
+.progress-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--color-primary);
+  width: 0%;
+  transition: width 0.3s ease;
+  z-index: 50;
+}
+
+.slide-counter {
+  position: fixed;
+  bottom: 10px;
+  right: 18px;
+  font-size: 0.85rem;
+  color: #64748b;
+  z-index: 50;
+}
+
+/* Edit toolbar */
+.edit-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 0.4rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+  z-index: 200;
+}
+.edit-toolbar button {
+  padding: 0.35rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  background: var(--color-primary);
+  color: white;
+}
+.edit-toolbar button:hover { filter: brightness(1.1); }
+.edit-toolbar .hint { color: #94a3b8; }
+
+/* Editable outline when focused */
+[contenteditable="true"]:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+@media (max-width: 768px) {
+  .two-cols { grid-template-columns: 1fr; }
+  .slide-inner { padding: 0 4vw; }
+}
+</style>
+</head>
+<body>
+
+<div class="edit-toolbar" id="editToolbar">
+  <span class="hint">Slides are editable. Edit text on the slide, then:</span>
+  <button type="button" id="btnSave">Save to browser</button>
+  <button type="button" id="btnDownload">Download as HTML</button>
+</div>
+
+<!-- Slide 1: Title -->
+<div class="slide" id="slide1">
+  <span class="slide-num" id="num1">Slide 1 of 10</span>
+  <div class="slide-inner">
+    <div class="rubric-label">Oral Presentation Assessment 1 — Research Story-telling (20%)</div>
+    <div class="slide-title" contenteditable="true">Accelerating Graph Similarity Search</div>
+    <div class="slide-subtitle" contenteditable="true">Research Story-telling — Oral Presentation Assessment 1</div>
+    <p class="slide-body" contenteditable="true">
+      <em>Accelerating Graph Similarity Search via Efficient GED Computation</em><br>
+      Chang, Feng, Yao, Qin, Zhang
+    </p>
+    <p class="caption" contenteditable="true" style="margin-top:1rem;">Presenter name and date</p>
+  </div>
+</div>
+
+<!-- Slide 2: Hook -->
+<div class="slide" id="slide2">
+  <span class="slide-num" id="num2">Slide 2 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">First, let me set the scene: when does “close enough” matter?</div>
+    <div class="rubric-label">Content appropriate to non-specialist audience</div>
+    <div class="slide-title" contenteditable="true">When “close enough” matters</div>
+    <div class="flow-diagram">
+      <span class="flow-node">Query graph</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node">Database of graphs</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node">Similar graphs</span>
+    </div>
+    <div class="highlight-box" contenteditable="true">
+      Like finding molecules or proteins that are <strong>similar</strong> to a query—not identical. The core step is measuring how many edits (add/delete/relabel nodes or edges) are needed to turn one graph into another.
+    </div>
+    <p class="slide-body" contenteditable="true"><strong>The bottleneck:</strong> computing this “edit distance” exactly is slow and memory-hungry. Today’s paper makes it faster and lighter.</p>
+    <p class="speaker-note">~1 min. Use metaphor; avoid jargon (e.g. say “edits” before “GED”).</p>
+  </div>
+</div>
+
+<!-- Slide 3: Problem -->
+<div class="slide" id="slide3">
+  <span class="slide-num" id="num3">Slide 3 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">So what’s the problem with the current best method?</div>
+    <div class="rubric-label">1. Introduction to the article — gap/problem</div>
+    <div class="slide-title" contenteditable="true">The previous best method hit a wall</div>
+    <ul class="bullets">
+      <li contenteditable="true">State-of-the-art (AStar-LSa) is fast in some settings but <strong>memory-hungry</strong></li>
+      <li contenteditable="true">When graphs get bigger or the allowed distance (threshold) gets larger → <strong>runs out of memory</strong></li>
+      <li contenteditable="true">This limits real-world use: e.g. large chemical compound or protein databases, or k-nearest neighbour search where the threshold can be large</li>
+    </ul>
+    <p class="caption" contenteditable="true">Graph size ↑ or threshold τ ↑ → memory ↑ → out of memory. (Rubric: explain disciplinary concepts in accessible way.)</p>
+    <p class="speaker-note">~1 min. Stress “memory” and “scalability”.</p>
+  </div>
+</div>
+
+<!-- Slide 4: Idea -->
+<div class="slide" id="slide4">
+  <span class="slide-num" id="num4">Slide 4 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">The paper’s idea: smarter cost estimation.</div>
+    <div class="rubric-label">1. Introduction — research objective</div>
+    <div class="slide-title" contenteditable="true">Smarter search, less memory</div>
+    <ul class="bullets">
+      <li contenteditable="true">New <strong>tighter lower-bound</strong> estimate → the search can prune more bad options earlier (smaller search space)</li>
+      <li contenteditable="true">Formally <strong>proved</strong> tighter than the bound used in AStar-LSa</li>
+      <li contenteditable="true"><strong>Efficient algorithms</strong> to compute the new bound → faster overall; a slightly relaxed version (lbBMao) trades a bit of tightness for speed</li>
+    </ul>
+    <div class="highlight-box" contenteditable="true">
+      Like a better map that tells you earlier when a path is a dead-end — so you explore less and use less memory.
+    </div>
+    <p class="speaker-note">~1 min. No formulas; focus on “tighter” and “proved + efficient”.</p>
+  </div>
+</div>
+
+<!-- Slide 5: Main result -->
+<div class="slide" id="slide5">
+  <span class="slide-num" id="num5">Slide 5 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">Here are the main results.</div>
+    <div class="rubric-label">2. Key findings — Content & structure</div>
+    <div class="slide-title" contenteditable="true">Result: faster and lighter</div>
+    <ul class="bullets">
+      <li contenteditable="true"><strong>AStar-BMao</strong> = new algorithm using the new bound</li>
+      <li contenteditable="true"><strong>Faster</strong> than AStar-LSa on real datasets (e.g. AIDS, PubChem, GR)</li>
+      <li contenteditable="true"><strong>Much less memory</strong> → scales to larger graphs and larger thresholds; where AStar-LSa runs out of memory, AStar-BMao still finishes</li>
+    </ul>
+    <div class="bar-comparison">
+      <div class="bar-item">
+        <div class="bar bmao" style="height: 70px;">BMao</div>
+        <span class="label">Faster, less memory</span>
+      </div>
+      <div class="bar-item">
+        <div class="bar lsa" style="height: 120px;">LSa</div>
+        <span class="label">Previous best</span>
+      </div>
+    </div>
+    <p class="speaker-note">~1.5 min. Point to the figure; “The findings reveal…” (Rubric: in-depth reflection, use of visual aids.)</p>
+  </div>
+</div>
+
+<!-- Slide 6: Why it works -->
+<div class="slide" id="slide6">
+  <span class="slide-num" id="num6">Slide 6 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">Why does it work?</div>
+    <div class="rubric-label">2. Key findings — methodology & evidence</div>
+    <div class="slide-title" contenteditable="true">Tighter bound + efficient computation</div>
+    <ul class="bullets">
+      <li contenteditable="true">Tighter bound → smaller search space → less memory; the paper proves the new bound is never looser than AStar-LSa’s</li>
+      <li contenteditable="true">Slightly relaxed version (lbBMao) → faster to compute → <strong>faster overall</strong> in practice</li>
+      <li contenteditable="true">Experiments show: smaller search space, lower memory, better runtime on multiple datasets</li>
+    </ul>
+    <p class="speaker-note">~0.5 min. Keep brief; avoid equations.</p>
+  </div>
+</div>
+
+<!-- Slide 7: Exact vs ML -->
+<div class="slide" id="slide7">
+  <span class="slide-num" id="num7">Slide 7 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">How does this compare to machine learning?</div>
+    <div class="rubric-label">2. Key findings — comparison</div>
+    <div class="slide-title" contenteditable="true">Exact method vs machine learning</div>
+    <table class="comp-table">
+      <tr>
+        <th></th>
+        <th>AStar-BMao (exact)</th>
+        <th>GENN-A* (ML)</th>
+      </tr>
+      <tr>
+        <td><strong>Speed</strong></td>
+        <td class="check">>10,000× faster (4+ orders of magnitude)</td>
+        <td class="cross">Slower</td>
+      </tr>
+      <tr>
+        <td><strong>Optimality</strong></td>
+        <td class="check">Guarantees optimal edit path</td>
+        <td class="cross">No guarantee</td>
+      </tr>
+    </table>
+    <p class="caption" contenteditable="true">Paper Section 6 & 7. Exact algorithms can still deliver huge gains. (Rubric: key findings with evidence.)</p>
+    <p class="speaker-note">~0.5 min.</p>
+  </div>
+</div>
+
+<!-- Slide 8: Significance -->
+<div class="slide" id="slide8">
+  <span class="slide-num" id="num8">Slide 8 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">Why does this matter for the field and for practice?</div>
+    <div class="rubric-label">3. Significance of the research</div>
+    <div class="slide-title" contenteditable="true">Why this matters</div>
+    <ul class="bullets">
+      <li contenteditable="true">Graph similarity search is a <strong>core</strong> operation in chemistry, biology, program analysis (e.g. compound DBs, protein DBs)</li>
+      <li contenteditable="true"><strong>Faster, lighter</strong> verification → better scalability without bigger hardware; practitioners can run larger queries or use more cores effectively</li>
+      <li contenteditable="true">Same ideas apply to <strong>graph classification, clustering</strong>, and anywhere we need “distance between graphs”</li>
+    </ul>
+    <p class="caption" contenteditable="true">Applications: molecules · proteins · networks. (Rubric: content appropriate to non-specialist; implications.)</p>
+    <p class="speaker-note">~1 min.</p>
+  </div>
+</div>
+
+<!-- Slide 9: Takeaways -->
+<div class="slide" id="slide9">
+  <span class="slide-num" id="num9">Slide 9 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">Finally, what I take away for my own research and writing.</div>
+    <div class="rubric-label">4. Impact on my research & writing (with evidence from the article)</div>
+    <div class="slide-title" contenteditable="true">Takeaways for my research</div>
+    <div class="two-cols">
+      <div class="col-card">
+        <h3 contenteditable="true">Research design</h3>
+        <ul class="bullets">
+          <li contenteditable="true">Invest in better cost estimation and memory scalability; “tight bound + efficient implementation” pays off.</li>
+          <li contenteditable="true">Consider similar trade-offs when I design algorithms.</li>
+        </ul>
+      </div>
+      <div class="col-card">
+        <h3 contenteditable="true">Writing</h3>
+        <ul class="bullets">
+          <li contenteditable="true">Clear problem framing (application, bottleneck, limitation) as in the paper’s introduction.</li>
+          <li contenteditable="true">Explicit contributions list and organisation; back claims with experiments and comparisons (Section 6, 7).</li>
+        </ul>
+      </div>
+    </div>
+    <p class="speaker-note">~1.5 min. Be specific and personal. (Rubric: in-depth reflection well-integrated.)</p>
+  </div>
+</div>
+
+<!-- Slide 10: Summary -->
+<div class="slide closing-slide" id="slide10">
+  <span class="slide-num" id="num10">Slide 10 of 10</span>
+  <div class="slide-inner">
+    <div class="transition-cue" contenteditable="true">To sum up…</div>
+    <div class="rubric-label">Well-structured; clear logical flow; transition statements</div>
+    <div class="slide-title" contenteditable="true">Summary</div>
+    <p class="slide-body" contenteditable="true">
+      Faster, lighter, scalable graph similarity verification — with a proved tighter bound and efficient algorithms. AStar-BMao outperforms the previous best in both time and memory, and scales better; it also vastly outperforms a recent ML-based method in speed and optimality.
+    </p>
+    <p class="thanks" contenteditable="true">Thank you. Any questions?</p>
+    <p class="caption" style="margin-top:1rem;">Oral Presentation Assessment 1 — Research Story-telling by Experienced Writers (20%)</p>
+  </div>
+</div>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
+
+<script>
+const SLIDES_CACHE_KEY = 'pre1work_slidesV2_html';
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+const progressBar = document.getElementById('progressBar');
+const slideCounter = document.getElementById('slideCounter');
+
+function showSlide(n) {
+  if (n < 0 || n >= total) return;
+  slides[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  progressBar.style.width = ((current + 1) / total * 100) + '%';
+  slideCounter.textContent = (current + 1) + ' / ' + total;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); showSlide(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); showSlide(current - 1); }
+  if (e.key === 'Home') { e.preventDefault(); showSlide(0); }
+  if (e.key === 'End') { e.preventDefault(); showSlide(total - 1); }
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.edit-toolbar') || e.target.closest('button')) return;
+  if (e.clientX > window.innerWidth / 2) showSlide(current + 1);
+  else showSlide(current - 1);
+});
+
+function getFullHTML() {
+  const doc = document.documentElement.cloneNode(true);
+  const script = doc.querySelector('script');
+  if (script) script.remove();
+  return '<!DOCTYPE html>\n' + doc.outerHTML;
+}
+
+document.getElementById('btnSave').addEventListener('click', () => {
+  try {
+    localStorage.setItem(SLIDES_CACHE_KEY, getFullHTML());
+    alert('Slides saved to browser (localStorage). Use "Download as HTML" to get a file.');
+  } catch (err) {
+    alert('Save failed: ' + (err.message || 'storage quota or disabled'));
+  }
+});
+
+document.getElementById('btnDownload').addEventListener('click', () => {
+  const html = getFullHTML();
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'slidesV2_edited.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+showSlide(0);
+</script>
+
+</body>
+</html>
