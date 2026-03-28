@@ -2,7 +2,9 @@
 
 ## Instructions
 
-After the AI agent generates your presentation outline (via `genOutline.md`), review it carefully and provide your feedback below. Be as specific as possible — the AI will use your feedback to revise the outline and generate your HTML slides.
+After the AI agent generates your presentation outline, review it carefully and provide your feedback below. Be as specific as possible so the AI can revise the outline and improve the HTML slides.
+
+If your source text is a literature review rather than a single empirical article, you may comment on **key insights / themes / gaps** instead of experimental findings.
 
 ---
 
@@ -10,24 +12,22 @@ After the AI agent generates your presentation outline (via `genOutline.md`), re
 
 <!-- Rate the overall quality of the generated outline (1-5 stars) and explain briefly -->
 
-Rating: _5_/5
+Rating: ___ / 5
 
 Comments:
-good
 
 ---
 
 ## Content Accuracy
 
-<!-- Is the outline accurate to your paper? Are there any misinterpretations or missing points? -->
+<!-- Is the outline accurate to your source text? Are there any misinterpretations or missing points? -->
 
-- [ ] The introduction accurately represents the paper's topic and context
-- [ ] The key findings are correctly summarized
-- [ ] The significance section captures the real importance of the research
+- [ ] The introduction accurately represents the topic and context
+- [ ] The key findings / key insights are correctly summarised
+- [ ] The significance section captures the real importance of the text
 - [ ] The "impact on my research" section makes sense for my situation
 
 Issues or corrections:
-
 
 ---
 
@@ -40,7 +40,6 @@ Issues or corrections:
 - [ ] The content is engaging for a general audience
 
 Suggestions:
-
 
 ---
 
@@ -55,7 +54,6 @@ Suggestions:
 
 Suggestions:
 
-
 ---
 
 ## Visual Aid Preferences
@@ -64,10 +62,9 @@ Suggestions:
 
 - Preferred color scheme/style:
 - Specific diagrams or charts to include:
-- Key quotes from the paper to highlight:
+- Key quotes or phrases to highlight:
 - Any images or visuals you want:
 - Other design preferences:
-
 
 ---
 
@@ -84,5 +81,3 @@ Suggestions:
 ## Additional Notes
 
 <!-- Anything else the AI should know when revising -->
-
-

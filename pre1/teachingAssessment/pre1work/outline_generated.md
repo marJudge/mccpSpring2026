@@ -1,103 +1,113 @@
-# Presentation Outline — AStar-BMao Paper  
+# Presentation Outline - Machine Learning for Graph Similarity Search
 ## Oral Presentation Assessment 1: Research Story-telling by Experienced Writers
 
-**Paper:** *Accelerating Graph Similarity Search via Efficient GED Computation*  
-**Authors:** Lijun Chang, Xing Feng, Kai Yao, Lu Qin, Wenjie Zhang  
-**Source:** Journal article (conference-style), graph algorithms / databases
+**Source text:** `writing/writingSampleCollection/MCCP6020_Writing_Assignment_Machine_Learning_Graph_Similarity_Search.md`  
+**Type of source:** Introduction and literature review / research proposal in computer science  
+**Important note:** Because this source text is a literature review rather than a single empirical journal article, the "key findings" section below focuses on the paper's **synthesised insights from previous studies** and the **research gaps** it identifies.
+
+**Suggested timing:** 1:00 + 1:30 + 2:00 + 1:30 + 1:30 + 0:30 = 8:00
 
 ---
 
 ## Opening (~1 minute)
 
 ### Content
-- **Hook:** “Imagine searching a huge library of chemical molecules or protein structures for ones that *look similar* to a query—not identical, but close. The core step is measuring *how many changes* you need to turn one graph into another. That step used to be slow and memory-hungry; today’s paper makes it faster and much lighter on memory.”
-- **Context:** This is a paper from **graph and data management**: it improves the speed and memory use of “graph similarity search,” which is used in chemistry, biology, and other areas where data is naturally represented as graphs (nodes and edges).
-- **Transition:** “I’ll introduce the problem and the article, summarise the main findings, say why they matter, and then reflect on what I take away for my own research and writing.”
+- **Hook:** "Imagine searching a huge database of molecules, software networks, or biological structures. You are not looking for an exact copy. You are looking for something *close enough* to be useful. For humans, that idea feels simple. For computers, it can be extremely expensive."
+- **Context:** This paper sits at the intersection of **machine learning, graph databases, and data retrieval**. It matters because many real-world objects can be represented as graphs, and searching for similar graphs is useful in bioinformatics, chemoinformatics, software engineering, and computer vision.
+- **Transition:** "Today I will explain what graph similarity search is, what this review reveals about current machine-learning methods, why those insights matter, and what I learn from the writer's research design and writing choices."
 
 ### Presenter notes
-- **Content/Structure:** Keep the hook to one concrete scenario (e.g. molecules or proteins). Avoid jargon (e.g. “GED” can wait until after you’ve said “minimum number of edits”).
-- **Delivery:** Pause after the hook; make eye contact. Use a clear transition: “First, …” / “I’ll start by …”.
-- **Visual Aids:** Title slide with paper title, authors, and a simple “graph = nodes + edges” icon if helpful.
-- **Language:** e.g. “The impetus for this study stems from…” / “The pressing question we seek to answer is how to make this step faster and more memory-efficient.”
+- **Content/Structure:** Start with one concrete example such as drug discovery. Explain a graph as "dots connected by lines." Keep the opening accessible and practical.
+- **Delivery:** Pause after "close enough." Stress "extremely expensive" and "real-world objects." Make eye contact before moving into the roadmap.
+- **Visual Aids:** Title slide plus a simple diagram: query graph -> database -> similar matches.
+- **Language:** "The impetus for this topic stems from..." / "This issue matters because..."
 
 ---
 
 ## Section 1: Introduction to the Article (~1.5 minutes)
 
 ### Content
-- **What the research is about:** The article tackles **graph similarity search**: given a query graph and a database of graphs, find all graphs that are “similar enough.” Similarity is measured by the **minimum number of edit operations** (add/delete/relabel nodes or edges) needed to turn the query into a data graph. Computing this “edit distance” exactly is the bottleneck.
-- **Gap/problem:** The best previous method (AStar-LSa) is fast in some settings but **uses a lot of memory** when graphs get bigger or when the allowed distance gets larger, and can even run out of memory. That limits real-world use.
-- **Research question/objective:** Can we design a **better way to estimate costs** during the search so that we **prune more bad options earlier**, and thus run **faster** and use **much less memory** than AStar-LSa?
+- **What the research is about:** This text reviews how **machine learning can accelerate graph similarity search**. In simple terms, the task is to search a database and find graphs that are similar to a query graph.
+- **Key concept explained simply:** Similarity is often measured by **graph edit distance (GED)**, which means the minimum number of changes needed to turn one graph into another. You can compare it to the way spell-check measures how many edits turn one word into another, but here the objects are graphs instead of words.
+- **Gap/problem:** Exact GED computation is **NP-hard**, so searching large graph databases is expensive. Existing ML methods help, but many solve only part of the problem. Some reduce the number of comparisons but may lose recall or become costly at large thresholds. Others estimate GED faster for one pair of graphs, but are not well integrated into a full search pipeline.
+- **Research objective:** The writer aims to **survey existing ML-based approaches**, compare their strengths and limitations, identify research gaps, and motivate a **unified framework** that combines learned components with metric-space indexing.
 
 ### Presenter notes
-- **Content/Structure:** Explain “edit distance” with one simple example (e.g. “change one edge, relabel one node = 2 edits”). Use a metaphor: “like spell-check distance between two words, but for graphs.”
-- **Delivery:** Slight stress on “minimum number of edits” and “memory.” Avoid reading; use short phrases.
-- **Visual Aids:** One slide with “Query graph → Database → Similar graphs”; optional second slide with a tiny example of two small graphs and “3 edits” between them.
-- **Language:** “The research design was structured around improving the lower bound estimation…” / “We were prompted to investigate this issue due to the memory limits of the state-of-the-art.”
+- **Content/Structure:** Avoid formulas. Translate `threshold tau` into "distance limit" or "allowed difference." Mention clearly that this is a structured review, not a single lab experiment.
+- **Delivery:** Stress "minimum number of changes," "expensive," and "unified framework." Use short phrases rather than full sentences.
+- **Visual Aids:** One slide with a small before/after graph example and a label such as "2 or 3 edits." Another option: a simple "problem -> challenge -> review objective" flow.
+- **Language:** "The research design was structured around synthesising existing methods..." / "The pressing question the writer seeks to answer is..."
 
 ---
 
-## Section 2: Key Findings (~2 minutes)
+## Section 2: Key Findings / Key Insights from the Review (~2 minutes)
 
 ### Content
-- **Finding 1 — Speed and memory:** The authors’ new algorithm **AStar-BMao** is **faster** than AStar-LSa and uses **much less main memory** on real datasets (e.g. AIDS, PubChem, GR). On large graphs or large distance thresholds, AStar-LSa often runs out of memory while AStar-BMao still finishes. So AStar-BMao **scales better**.
-- **Finding 2 — Why it works:** They propose a new **tighter lower-bound estimate** (so the search can discard more branches earlier). They **prove formally** that their bound is never looser than the one in AStar-LSa. They also give **efficient algorithms** to compute it, and a slightly relaxed version (lbBMao) that trades a bit of tightness for **faster computation**, so overall runtime improves.
-- **Finding 3 — Exact vs machine learning:** Compared to a recent machine-learning method (GENN-A*) that also predicts an edit path, AStar-BMao is **more than four orders of magnitude faster** and, importantly, **guarantees an optimal edit path**, whereas the ML method does not.
+- **Finding 1 - The literature falls into three clear themes:**  
+  The review groups existing studies into **three main strategies**:  
+  1. **Filtering and indexing methods** that reduce the number of exact GED computations.  
+  2. **Approximate GED methods** that make individual graph-pair comparison faster.  
+  3. **Hybrid or two-stage methods** that combine indexing with learned components.
+- **Finding 2 - Every strategy involves trade-offs:**  
+  Embedding- and hashing-based methods such as **GHashing** and **LAN** can narrow the candidate set quickly, but performance may weaken when the distance threshold becomes large. Approximate GED methods such as **App-BMao**, **GEDHOT**, and **GREED** can speed up pairwise estimation, but they are often evaluated outside a full end-to-end search system.
+- **Finding 3 - Hybrid design looks especially promising:**  
+  The review highlights newer work such as **Gisma**, which combines metric-space indexing with learned approximate distances. This suggests that the most promising direction is not choosing between theory and machine learning, but **combining them** to improve both efficiency and recall.
 
-**Evidence from the paper:** The experimental section (Section 6) reports processing time, memory, and search space on multiple datasets and varying thresholds; the conclusion (Section 7) states that AStar-BMao outperforms AStar-LSa in both time and memory for graph similarity search and for GED verification/computation.
+**Evidence from the text:** The literature review explicitly organises the field into the three themes above and later states three major gaps: limited integration of learned approximate GED into full indexing frameworks, limited comparative evaluation across datasets and thresholds, and underexplored use of metric-space structure such as the doubling property of GED space.
 
 ### Presenter notes
-- **Content/Structure:** Present 2–3 findings in order: (1) main result (faster + less memory), (2) how (tighter bound + efficient computation), (3) comparison to ML. Use signaling language.
-- **Delivery:** “The findings reveal…” / “Our data indicates…” — refer to “the paper’s experiments” or “the figures” without going into formulas.
-- **Visual Aids:** One slide summarising “Faster + Less memory + Better scaling”; optional second slide with a simple bar or trend (e.g. “AStar-BMao vs AStar-LSa: time and memory” from the figures).
-- **Language:** “The findings reveal a significant improvement in both processing time and memory consumption.” / “The analysis demonstrates that the new method scales to larger graphs and larger thresholds.”
+- **Content/Structure:** Make it clear that these are **synthesised findings from prior studies**, not the results of one experiment. Use signposting: "The review identifies...", "The literature suggests...", "A key contrast is..."
+- **Delivery:** Use your voice to distinguish the three themes. Pause briefly between themes so the audience can follow the structure.
+- **Visual Aids:** A three-column taxonomy slide works well here. You can also add a simple trade-off chart: speed, recall, scalability, and system integration.
+- **Language:** "The findings reveal three broad patterns..." / "The analysis demonstrates that no single approach solves every part of the problem."
 
 ---
 
 ## Section 3: Significance of the Research (~1.5 minutes)
 
 ### Content
-- **Why it matters:** Graph similarity search is a **core operation** in applications that use graph databases (e.g. chemical compounds, proteins, program call graphs). Making the verification step faster and less memory-heavy **directly improves** what practitioners can do without bigger hardware.
-- **Contribution to the field:** The paper shows that **smarter cost estimation** (tighter lower bounds plus efficient algorithms) can beat the previous best and scale better. It also shows that **exact algorithms** can still vastly outperform a recent ML-based approach in both speed and optimality.
-- **Broader implications:** The same verification and computation methods apply beyond similarity search—e.g. graph classification, clustering, and other areas where “distance between graphs” is needed. So the improvement is useful across several research and application areas.
+- **Why it matters:** This review helps make a technically complex field more understandable. It shows that improving graph similarity search is not only about building a faster model; it is also about building a better **search system**.
+- **Contribution to the field:** The paper contributes a **clear taxonomy**, a comparison of **strengths and limitations**, and a **future research agenda**. It shows where current ML approaches are useful, where they remain weak, and where hybrid systems may create better solutions.
+- **Broader implications:** These insights matter for large graph databases in chemistry, biology, and related fields, where researchers need fast search, strong recall, and scalable systems. More broadly, the paper shows the value of combining **learning** with **structural or theoretical insights**.
 
 ### Presenter notes
-- **Content/Structure:** Link to “real-world impact”: faster search, ability to handle larger data, no need for ML training or sacrificing optimality.
-- **Delivery:** Connect to audience: “If you’ve ever waited for a search to finish or seen a program run out of memory, this is the kind of improvement that addresses that.”
-- **Visual Aids:** One slide: “Why this matters” — applications (chemistry, biology, etc.) and “Faster + Less memory = More scalable systems.”
-- **Language:** “This research contributes to the field by…” / “The implications of the findings suggest that exact algorithms can still deliver large gains.”
+- **Content/Structure:** Connect to problems a non-specialist can imagine: bigger databases, slower search, and the risk of missing useful matches.
+- **Delivery:** Use emphasis on "better search system," "taxonomy," and "future research agenda." Keep the tone confident but explanatory.
+- **Visual Aids:** One slide with three application icons or labels: chemistry, biology, software. Add a short line such as "faster search + better recall + better scalability."
+- **Language:** "This research contributes to the field by..." / "The implications of these insights suggest that..."
 
 ---
 
 ## Section 4: Impact on My Own Research (~1.5 minutes)
 
 ### Content
-- **Impact on research design:** In my own work, when I use or implement graph-based or search-style algorithms, I will pay more attention to **memory scalability** and **cost estimation**. The paper shows that investing in **theoretically better bounds** (with proofs) and **efficient computation** of those bounds can yield practical wins. I would consider similar “tight bound + efficient implementation” trade-offs in my designs.
-- **Writing skills learned (with evidence from the article):**  
-  - **Clear problem framing:** The introduction states the application (graph similarity search), the bottleneck (GED verification), and the limitation of the state-of-the-art (memory) in a few sentences.  
-  - **Explicit contributions:** The “Contributions” bullet list and the “Organization” paragraph make the structure and contributions easy to follow.  
-  - **Evidence-based claims:** The abstract and conclusion are backed by empirical studies (Section 6) and a comparison with another paradigm (ML).  
-  I will aim to state the gap, list contributions clearly, and support claims with experiments and comparisons in my own writing.
+- **Impact on my research design:** This review reminds me that I should not evaluate a method only by how accurate it is on one graph pair. I should also consider **recall, runtime, threshold sensitivity, database size, and index construction cost**. It encourages me to think in system terms and to combine machine learning with algorithmic structure rather than treating them separately.
+- **Writing skills I learned from this article:**  
+  - **Clear move structure:** The introduction is organised as territory -> niche -> purpose, so the reader quickly understands the field, the gap, and the objective.  
+  - **Strong thematic organisation:** The literature review is grouped by theme, not by a loose list of authors, which makes the comparison clearer.  
+  - **Explicit gap statements:** Phrases such as "Despite these advances..." and "The literature reveals several gaps" make the argument easy to follow.  
+  - **Purpose-driven conclusion:** The final paragraph explains exactly how the review leads to the writer's next research step.
+- **Evidence from the text:** The source uses labelled moves in the introduction and literature review, a section called **Thematic Overview**, a focused **Research Gaps** section, and a closing paragraph that links the review to a future unified framework.
 
 ### Presenter notes
-- **Content/Structure:** Be specific and personal: “In my research I…” / “I learned from this article to…”. Quote or refer to the paper (e.g. “as the authors do in their Introduction and Contributions”).
-- **Delivery:** Genuine reflection; avoid generic praise. One concrete writing takeaway and one research-design takeaway.
-- **Visual Aids:** One slide: “Takeaways for my research” — two bullets (research design; writing) with short sub-points.
-- **Language:** “This study has influenced my research design by…” / “One of the writing strategies I will adopt is…”
+- **Content/Structure:** Make this section personal and specific. Say "In my own research, I would..." rather than giving generic praise.
+- **Delivery:** Sound reflective rather than descriptive. Slow down slightly when talking about writing skills so the audience can see the connection to the course.
+- **Visual Aids:** Two-column slide: "Research Design" on one side and "Writing Lessons" on the other.
+- **Language:** "This text has influenced my research design by..." / "One writing strategy I will adopt is..."
 
 ---
 
 ## Closing (~0.5 minutes)
 
 ### Content
-- **Summary:** This article improves graph similarity search by a new, tighter cost estimation and efficient algorithms. The result is **faster** and **much less memory-intensive** verification than the previous best, and better scaling; it also vastly outperforms a recent ML-based method in speed and optimality.
-- **Thank audience and invite questions:** “Thank you for listening. I’m happy to take any questions.”
+- **Summary:** This source text shows that machine learning can help graph similarity search, but its strongest message is that **no single technique is enough**. The field needs better combinations of learning, indexing, and careful evaluation.
+- **Closing line:** "Thank you for listening. I would be happy to take any questions."
 
 ### Presenter notes
-- **Content/Structure:** One sentence to sum up the main result; one sentence to close.
-- **Delivery:** “To sum up…” / “In conclusion…”; maintain eye contact; smile and pause before “Any questions?”
-- **Visual Aids:** Optional “Summary” slide with one line: “Faster, lighter, scalable graph similarity verification.”
-- **Language:** Concluding phrases from Session 4 materials; keep it brief.
+- **Content/Structure:** Use one sentence for the main takeaway and one sentence for the ending.
+- **Delivery:** Use a clear concluding phrase such as "To sum up..." or "In conclusion..." Maintain eye contact and pause before inviting questions.
+- **Visual Aids:** Final slide with one takeaway sentence and a simple "Questions?" prompt.
+- **Language:** "To sum up..." / "In conclusion..." / "Thank you for your attention."
 
 ---
 
@@ -105,13 +115,13 @@
 
 | Rubric criterion | How this outline addresses it |
 |------------------|--------------------------------|
-| Content appropriate to non-specialist audience | Plain language; metaphors (e.g. edit distance ≈ spell-check for graphs); minimal jargon; applications (chemistry, biology) explained. |
-| In-depth reflection integrated into analysis | Section 4 ties the article to research design and writing skills with specific evidence (problem framing, contributions, experiments). |
-| Well-structured, clear logical flow | Fixed sections (Opening → Intro → Findings → Significance → My research → Closing); transition statements in presenter notes. |
-| Delivery / body language / timing | Notes on pausing, eye contact, stress, signaling language, and no reading from script. |
-| Visual aids | Each section has slide suggestions; minimal text, key points and one visual per slide where possible. |
-| Language range and accuracy | Suggested phrases from Session 4 (motivation, methodology, findings, significance, contributions, conclusion). |
+| Content appropriate to non-specialist audience | Uses plain-language explanations of graphs and GED; avoids formulas; links the topic to molecules, biology, and software. |
+| In-depth reflection integrated into analysis | Section 4 connects the source to research design and writing practice with specific evidence from the text. |
+| Well-structured and logically clear | Follows a clear progression: hook -> introduction -> key insights -> significance -> personal impact -> closing. |
+| Delivery, body language, and timing | Each section includes delivery notes on pausing, emphasis, eye contact, and pacing. |
+| Use of visual aids | Each section suggests simple, purposeful visuals rather than text-heavy slides. |
+| Language range and accuracy | Includes useful academic presentation phrases from Session 4 materials. |
 
 ---
 
-*Outline generated according to `genOutline.md`. Slide-by-slide plan for HTML slides is in `slide_plan.md`.*
+*This outline was regenerated from scratch based on `writing/writingSampleCollection/MCCP6020_Writing_Assignment_Machine_Learning_Graph_Similarity_Search.md`.*

@@ -1,13 +1,21 @@
-mccpSpring2026/pre1/teachingAssessment/pre1workDemo/slides4pre1demo.html
-consider the slides generated as well as materials on the presentation mccpSpring2026/pre1/materials especially mccpSpring2026/pre1/materials/pre1AssessmentRubrics.md
+# Revise HTML Slides - Instructions for AI Agent
 
+Read the following files before revising the slide deck:
+- `pre1/teachingAssessment/pre1work/outline_generated.md`
+- `pre1/teachingAssessment/pre1work/slide_plan.md`
+- `pre1/teachingAssessment/pre1work/feedback.md`
+- `pre1/teachingAssessment/pre1work/genHTMLguide.md`
+- `pre1/materials/pre1AssessmentRubrics.md`
+- `pre1/materials/Presentation_1_Brief.md`
 
-create a slidesV2.html to address the following issues 
-- the slide is too wide on a 16:9 screen; we need more margin on both sides 
-- the slide contents are not enough to speak for 8 minutes
-- we need slide no on each slide 
-- more labelling making reference to the assessment instructions nad rubrics 
-- more transitional cues across slides 
-- also we want to the html to be editable on browser (changes can be saved in cache and downloaded as a new html file) 
+Then revise `slides.html` so that it:
+- matches the speaker's feedback
+- stays intelligible to a non-specialist audience
+- has enough content for an 8-minute presentation
+- includes slide numbers on every slide
+- includes rubric labels where appropriate
+- includes transition cues across content slides
+- remains editable in the browser
+- remains a single self-contained HTML file
 
-commit and push all changes to github 
+If a major revision is made, save the revised version as `slidesV2.html`.

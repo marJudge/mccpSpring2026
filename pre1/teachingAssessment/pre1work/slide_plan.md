@@ -1,160 +1,194 @@
-# HTML Slide Plan — AStar-BMao Presentation
+# HTML Slide Plan - Machine Learning for Graph Similarity Search
 
 ## Overview
 
-- **Total slides:** 10 (for an 8-minute presentation)
-- **Format:** Single-file HTML using custom CSS (e.g. Reveal.js or simple custom CSS; no heavy dependencies)
-- **Navigation:** Arrow keys (← →) and click to advance; optional progress bar at bottom
-- **Design:** Clean, modern; minimal text; large font; high contrast; suitable for projectors
-- **Responsive:** Usable on laptop and projector screens
-- **Sample reference:** Check `sample_slides/` for format examples (if present)
+- **Source text:** `writing/writingSampleCollection/MCCP6020_Writing_Assignment_Machine_Learning_Graph_Similarity_Search.md`
+- **Presentation type:** 8-minute academic presentation for a non-specialist audience
+- **Recommended total slides:** 11
+- **Slide logic:** Title -> hook/context -> core concept -> gap/objective -> three literature themes -> synthesis/gap -> significance -> personal reflection -> closing
+- **Important note:** Because the source is a literature review rather than a single empirical article, the slides should focus on **themes, trade-offs, and research gaps**, not on one experiment's methodology/results table.
 
 ---
 
 ## Slide-by-Slide Plan
 
 ### Slide 1: Title Slide
-**Title:** Accelerating Graph Similarity Search  
-**Subtitle:** Research Story-telling — Oral Presentation Assessment 1  
+**Title:** Machine Learning for Graph Similarity Search  
+**Subtitle:** Research Story-telling - Oral Presentation Assessment 1  
 **Content:**
-- Paper: *Accelerating Graph Similarity Search via Efficient GED Computation*
-- Authors: Chang, Feng, Yao, Qin, Zhang
-- Presenter name and date
+- Source text title
+- Presenter name
+- Course / date if needed
+- Small note: "Introduction and literature review"
 
-**Visual:** Simple title layout; optional small icon (e.g. two small graphs with an arrow).  
-**Design notes:** Large title; one or two lines of subtitle; no clutter.
+**Visual:** Minimal title layout with a simple graph icon or node-link motif.  
+**Design notes:** Large heading, low text density, strong first impression.
 
 ---
 
-### Slide 2: The Hook — Searching for Similar Graphs
-**Title:** When “close enough” matters  
+### Slide 2: Hook - Why "Similar Enough" Matters
+**Title:** Searching for what is similar, not identical  
 **Content:**
-- Icon or diagram: “Query graph” → “Database of graphs” → “Similar graphs”
-- Caption: “Like finding molecules or proteins that are *similar* to a query—not identical.”
-- One line: “The bottleneck: how many edits to turn one graph into another?”
+- "Imagine searching a huge database of molecules or networks"
+- "We want graphs that are close enough to a query"
+- "That idea is useful, but computationally expensive"
 
-**Visual:** Simple diagram: one query graph, a database cloud, and a few result graphs.  
-**Design notes:** No formulas. One key idea per line. Large, readable text.
+**Visual:** Query graph -> database -> similar matches flow diagram.  
+**Design notes:** No jargon yet; use one concrete example and a clean visual.
 
 ---
 
-### Slide 3: The Problem — Speed vs Memory
-**Title:** The previous best method hit a wall  
+### Slide 3: Core Concept
+**Title:** What is graph similarity search?  
 **Content:**
-- Bullet: State-of-the-art (AStar-LSa) is fast but **memory-hungry**
-- Bullet: When graphs get bigger or the allowed distance gets larger → **runs out of memory**
-- Bullet: Limits real-world use (e.g. large chemical or protein databases)
+- Graph = dots and lines representing relationships
+- Graph edit distance (GED) = number of changes needed to transform one graph into another
+- Search task = return graphs within an allowed distance limit
 
-**Visual:** Simple “scale” or “graph size / threshold ↑ → memory ↑” sketch; optional “out of memory” icon.  
-**Design notes:** 3 short bullets; high contrast; no jargon.
+**Visual:** Tiny before/after graph example with a label such as "2 edits."  
+**Design notes:** Use metaphor such as spell-check distance for graphs; avoid formulas.
 
 ---
 
-### Slide 4: The Idea — Smarter Cost Estimation
-**Title:** Smarter search, less memory  
+### Slide 4: Why This Review Is Needed
+**Title:** The problem behind the review  
 **Content:**
-- Bullet: New **tighter lower-bound** estimate → prune more bad options earlier
-- Bullet: Formally **proved** tighter than the previous method
-- Bullet: **Efficient algorithms** to compute it → faster overall
+- Exact GED is expensive because the problem is NP-hard
+- Existing ML methods help, but often solve only part of the full search problem
+- The review asks how ML can be integrated more effectively with indexing and scalable retrieval
 
-**Visual:** Metaphor: “Like a better map that tells you earlier when a path is dead-end.” Optional: simple “search tree” with pruned branches.  
-**Design notes:** No formulas. Focus on “tighter estimate” and “proved + efficient.”
+**Visual:** Problem -> limitation -> review objective flow.  
+**Design notes:** Keep the slide focused on challenge and purpose, not technical detail.
 
 ---
 
-### Slide 5: Main Result — AStar-BMao
-**Title:** Result: faster and lighter  
+### Slide 5: Theme 1 - Filtering and Indexing
+**Title:** Theme 1: reduce the number of comparisons  
 **Content:**
-- **AStar-BMao** = new algorithm using the new bound
-- **Faster** than AStar-LSa on real datasets
-- **Much less memory** → scales to larger graphs and larger thresholds
-- Where AStar-LSa runs out of memory, AStar-BMao still finishes
+- Methods such as GHashing and LAN try to narrow the candidate set quickly
+- Strength: faster filtering before exact GED verification
+- Limitation: recall-efficiency trade-offs and possible difficulty when the threshold is large
 
-**Visual:** Two bars or two trend lines: “Time” and “Memory” — AStar-BMao vs AStar-LSa (simplified from paper figures).  
-**Design notes:** Emphasise “faster” and “less memory”; one simple visual.
+**Visual:** Two cards labelled "Strength" and "Limitation," plus a small filter funnel icon.  
+**Design notes:** Use bold keywords like "faster filtering" and "trade-off."
 
 ---
 
-### Slide 6: Finding 2 — Why It Works
-**Title:** Tighter bound + efficient computation  
+### Slide 6: Theme 2 - Approximate GED
+**Title:** Theme 2: make each comparison faster  
 **Content:**
-- Tighter bound → smaller search space → less memory
-- Slightly relaxed version (lbBMao) → faster to compute → **faster overall**
-- Experiments: smaller search space, lower memory, better runtime
+- Methods such as App-BMao, GEDHOT, and GREED estimate GED more quickly
+- Strength: faster pairwise similarity estimation
+- Limitation: often studied outside a full end-to-end search pipeline
 
-**Visual:** Optional: “Bound tightness” vs “Computation cost” trade-off (one simple diagram).  
-**Design notes:** Max 3 bullets; avoid equations.
+**Visual:** Stopwatch icon + pairwise comparison cards.  
+**Design notes:** Present this as a second strategy, not as a competing final answer.
 
 ---
 
-### Slide 7: Finding 3 — Exact vs Machine Learning
-**Title:** Exact method vs machine learning  
+### Slide 7: Theme 3 - Hybrid / Two-Stage Methods
+**Title:** Theme 3: combine indexing and learning  
 **Content:**
-- Compared to ML method (GENN-A*): AStar-BMao **>10,000× faster** (4+ orders of magnitude)
-- AStar-BMao: **guarantees optimal** edit path
-- ML: no optimality guarantee
+- Newer work such as Gisma combines metric-space indexing with learned approximate distances
+- Stage 1 narrows the search region
+- Stage 2 explores the promising candidates in more detail
 
-**Visual:** Simple comparison table or two icons: “Exact” vs “ML” with “Speed” and “Optimality” checkmarks.  
-**Design notes:** One number (e.g. “4 orders of magnitude”); rest in bullets.
+**Visual:** Two-step pipeline diagram: giant step -> small step.  
+**Design notes:** This slide should feel like the most forward-looking part of the literature review.
 
 ---
 
-### Slide 8: Significance
-**Title:** Why this matters  
+### Slide 8: Main Insight of the Review
+**Title:** The key insight: no single method is enough  
 **Content:**
-- Graph similarity search is **core** in chemistry, biology, program analysis
-- **Faster, lighter** verification → better scalability without bigger hardware
-- Same ideas apply to **graph classification, clustering**, and other areas
+- Filtering methods, approximation methods, and hybrid methods all solve different parts of the problem
+- The best future direction is integration, not isolation
+- The review identifies clear research gaps: limited end-to-end integration, limited comparison across datasets/thresholds, and underused metric-space structure
 
-**Visual:** 3 small icons: molecules, proteins, networks (or similar).  
-**Design notes:** Application-focused; no technical details.
+**Visual:** Three columns converging into one "unified framework" box.  
+**Design notes:** This is the synthesis slide; make the argument very explicit.
 
 ---
 
-### Slide 9: Impact on My Research & Writing
-**Title:** Takeaways for my research  
+### Slide 9: Why This Matters
+**Title:** Why these insights matter  
 **Content:**
-- **Research design:** Invest in better cost estimation and memory scalability; “tight bound + efficient implementation” pays off.
-- **Writing:** Clear problem framing; explicit contributions list; back claims with experiments and comparisons (as in this article).
+- Relevant to chemistry, biology, and software/network analysis
+- Better search systems need speed, recall, and scalability together
+- The review offers a taxonomy and a research agenda, not just a list of papers
 
-**Visual:** Two columns or two bullets with short sub-points.  
-**Design notes:** Personal and specific; minimal text.
+**Visual:** Three application icons plus a short takeaway banner.  
+**Design notes:** Keep this audience-facing and practical.
 
 ---
 
-### Slide 10: Summary & Thank You
+### Slide 10: Impact on My Research and Writing
+**Title:** What I learned for my own work  
+**Content:**
+- **Research design:** evaluate runtime, recall, thresholds, database size, and indexing cost together
+- **Writing:** use move structure, thematic organisation, explicit gap statements, and a purpose-driven conclusion
+- **Evidence from the text:** labelled moves, thematic grouping, research gap section, concluding agenda
+
+**Visual:** Two-column layout: "Research Design" and "Writing Skills."  
+**Design notes:** Personal, reflective, and clearly linked to the course rubric.
+
+---
+
+### Slide 11: Summary and Q&A
 **Title:** Summary  
 **Content:**
-- One line: “Faster, lighter, scalable graph similarity verification — with a proved tighter bound and efficient algorithms.”
-- “Thank you. Any questions?”
+- Machine learning helps graph similarity search, but stronger systems need integration with indexing and careful evaluation
+- This review clarifies the field and points to future hybrid approaches
+- Thank you / questions
 
-**Visual:** Clean closing slide; optional course/assessment title.  
-**Design notes:** One sentence summary; friendly sign-off.
+**Visual:** Clean closing slide with one-line takeaway.  
+**Design notes:** Minimal text and strong closing emphasis.
 
 ---
 
 ## HTML Format Specifications
 
 1. **Structure**
-   - Single HTML file; optional single CSS block or external CSS.
-   - Use semantic sections (e.g. `<section>` per slide) for accessibility and navigation.
+   - Single self-contained HTML file
+   - One `<section>` or `.slide` block per slide
+   - All CSS in `<style>` and all JavaScript in `<script>`
 
 2. **Design**
-   - Clean, modern look (e.g. Reveal.js theme or simple custom CSS).
-   - Minimal text on each slide; key points and one main visual per slide where possible.
-   - Large font size (e.g. title 2–2.5rem, body 1.25–1.5rem); high contrast (e.g. dark text on light background or the reverse).
+   - Modern academic style with white or very light background
+   - Dark teal or green accent color
+   - Large fonts suitable for projector display
+   - Minimal text, strong hierarchy, generous margins
 
-3. **Navigation**
-   - Advance: arrow keys (← / →) and click (e.g. next/previous button or click on slide).
-   - Optional: progress bar or slide counter (e.g. “5 / 10”).
+3. **Rubric Support**
+   - Add small rubric tags such as `NON-SPECIALIST`, `KEY INSIGHT`, `SIGNIFICANCE`, `WRITING SKILLS`
+   - Add transition cues at the bottom of content slides
+   - Show slide number on every slide
 
-4. **Responsive**
-   - Use relative units (rem, %) and simple media queries so slides are readable on different screen sizes and projectors.
+4. **Navigation**
+   - Arrow keys, Space, click left/right, Home/End
+   - Fixed progress bar at the bottom
 
-5. **Content**
-   - No full paragraphs; bullet points and short phrases only.
-   - Use bold for emphasis (e.g. “Faster,” “Much less memory”).
-   - If using figures from the paper, use simplified versions and cite the paper.
+5. **Editable Mode**
+   - Press `E` to toggle editable mode
+   - Press `T` to show toolbar
+   - Toolbar buttons: save to cache, load from cache, download HTML, clear cache
 
-6. **Reference**
-   - Check `sample_slides/` for layout and style examples when generating the HTML.
+6. **Responsiveness**
+   - Use `clamp()` for large, readable text
+   - Keep layouts flexible for laptop and projector screens
+
+7. **Visual Strategy**
+   - Prefer CSS/HTML diagrams over screenshots
+   - Use diagrams for flows, trade-offs, and theme comparison
+   - Avoid dense tables unless the comparison is very simple
+
+---
+
+## Slide Generation Reminder
+
+When generating the HTML deck, frame the presentation as a **literature-based research story**. The strongest visuals should therefore show:
+- topic and context
+- the three themes in the literature
+- trade-offs among methods
+- the research gap
+- what the presenter learns for future research and writing
